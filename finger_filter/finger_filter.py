@@ -15,7 +15,7 @@ class TemporalFilter:
     if self.state[0] == None:
       self.state[0] = value
     else:
-      innovation = 0.001
+      innovation = 0.0015
       rest = value
       for i in range(len(self.state)-1):
         self.state[i] = iir(self.state[i], rest, innovation)
@@ -49,7 +49,7 @@ filters = [None]*9
 for i in range(len(filters)):
   filters[i] = TemporalFilter(8)
 
-template = [-0.15, 0.32, -0.35, 0.08, 1.2, -0.47, 0, 0, 0]
+template = [-0.16, 0.3, -0.26, 0.0, 0.9, -0.34, 0, 0, 0]
 template_l2 = sum([v*v for v in template])
 filtered = [0.0]*9
 
@@ -73,7 +73,7 @@ while True:
   #    b2.addDouble(filters[i].bands[j]*(s2**j))
 
   for i in range(9):
-    filtered[i] = sum([filters[i].bands[b]*(s2**b) for b in range(2,7)])
+    filtered[i] = sum([filters[i].bands[b]*(s2**b) for b in range(1,5)])
 
   val = sum([v*t for v, t in zip(filtered, template)])/template_l2
 
