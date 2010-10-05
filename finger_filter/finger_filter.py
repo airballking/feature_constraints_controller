@@ -50,15 +50,23 @@ port_hf.open(basename + '/hf')
 port_touch = yarp.BufferedPortBottle()
 port_touch.open(basename + '/touch')
 
+port_touch_filtered = yarp.BufferedPortBottle()
+port_touch_filtered.open(basename + '/touch_filtered')
+
 filters = [None]*(3*4)
 
 for i in range(len(filters)):
   filters[i] = TemporalFilter(8)
 
-template = [-0.16, 0.3, -0.26,  0.0, 0.9, -0.34,  0, 0, 0,  0, 0, 0]
+#template = [0.15, -0.20, 0.08,  0.0, 0.5, -0.9,  0.20, 0.05, 0.05,  0, 0, 0]
+#template = [0.2, -0.70, 0.28,  0.0, -0.18, 0.0,  0.24, 0.12, 0.2,  0, 0, 0]
+template = [0.2, -0.40, 0.15,  0.0, 0.3, -0.7,  0.20, 0.05, 0.05,  0, 0, 0]
 template_l2 = sum([v*v for v in template])
 filtered = [0.0]*(3*4)
 jumps = [0.0]*(3*4)
+
+last_hf = yarp.Time_now()
+last_val_filtered = yarp.Time_now()
 
 while True:
   bottle = port_hand_in.read(True)
@@ -75,7 +83,7 @@ while True:
   # the s2**b term gives more weight to the higher frequencies
   s2 = sqrt(2)
   for i in range(len(filters)):
-    filtered[i] = sum([filters[i].bands[b]*(s2**b) for b in range(1,5)])
+    filtered[i] = sum([filters[i].bands[b]*(s2**b) for b in range(2,5)])
     bottle.addDouble(filtered[i])
 
   port_filtered_torques.write()
@@ -109,3 +117,21 @@ while True:
   bottle.addDouble(jumps[9] + jumps[10] + jumps[11])
   port_hf.write()
 
+  if (jumps[0] + jumps[1] + jumps[2] > 1.7 or
+     jumps[3] + jumps[4] + jumps[5] > 1.7 or
+     jumps[6] + jumps[7] + jumps[8] > 1.7):
+    last_hf = yarp.Time_now()
+
+
+  # try to determine touch in the presence of finger jumps
+  if val > 0.3 and yarp.Time_now() - last_hf > 0.8:
+    val_filtered = 10.0
+    last_val_filtered = yarp.Time_now()
+  else:
+    val_filtered = 0
+
+  bottle = port_touch_filtered.prepare()
+  bottle.clear()
+  bottle.addDouble(val_filtered)
+  bottle.addDouble(last_val_filtered)
+  port_touch_filtered.write()
