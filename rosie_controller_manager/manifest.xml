@@ -1,0 +1,31 @@
+<package>
+  <description brief="hooks up pr2 realtime controllers with ROSIE">
+    controller manager for rosie.
+  </description>
+  <author>Ingo Kresse</author>
+  <license>BSD</license>
+  <review status="unreviewed"/>
+  <depend package="roscpp"/>
+  <depend package="std_msgs" />
+  <depend package="nav_msgs" />
+  <depend package="sensor_msgs" />
+  <depend package="pr2_msgs" />
+  <depend package="geometry_msgs" />
+  <depend package="opencv2" />
+  <depend package="diagnostic_updater" />
+  <depend package="diagnostic_msgs" />
+  <depend package="pr2_hardware_interface" />
+  <depend package="pr2_controller_manager" />
+  <depend package="pr2_mechanism_model" />
+  <depend package="tinyxml" />
+  <depend package="bullet" />
+  <depend package="urdf" />
+
+  <!-- -->
+
+  <depend package="yarp2"/>
+
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
+</package>
