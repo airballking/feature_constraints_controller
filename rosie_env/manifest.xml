@@ -1,0 +1,11 @@
+<package>
+  <description brief="dlr_environment">
+    This package contains robot description and
+    launch files to test a DLR robot environment.
+  </description>
+  <author>Ingo Kresse</author>
+  <email>kresse@in.tum.de</email>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+</package>
+
