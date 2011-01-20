@@ -1,0 +1,11 @@
+<package>
+  <description brief="force_viz">
+    visualization for forces
+  </description>
+  <author>Ingo Kresse</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <depend package="geometry_msgs"/>
+  <depend package="visualization_msgs"/>
+  <depend package="rospy"/>
+</package>

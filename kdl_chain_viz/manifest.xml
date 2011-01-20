@@ -1,0 +1,13 @@
+<package>
+  <description brief="kdl_chain_viz">
+    communication and visualization for KDL chains
+  </description>
+  <author>Ingo Kresse</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <depend package="geometry_msgs"/>
+  <depend package="visualization_msgs"/>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+</package>
+
