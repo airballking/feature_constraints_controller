@@ -1,0 +1,5 @@
+some miscellaneous information:
+
+* The CartesianTwistController takes a geometry_msgs/Twist with the
+root_name as reference frame and tip_name as reference point.
+
