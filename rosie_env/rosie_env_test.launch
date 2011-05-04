@@ -1,5 +1,5 @@
 <launch>
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find ias_robot_defs)/robots/rosie.urdf.xml'"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find rosie_description)/robots/rosie.urdf.xacro'"/>
 
   <node name="right_arm_joints" pkg="joint_state_gui" type="joint_state_sliders.py">
     <rosparam param="axes">
@@ -19,5 +19,4 @@
 
   <node name="rviz" pkg="rviz" type="rviz" args="" output="screen"/>
 </launch>
-
 
