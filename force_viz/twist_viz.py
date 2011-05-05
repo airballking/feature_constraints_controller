@@ -110,13 +110,13 @@ def axis_marker(tw):
   direction = t.rot
   location = cross(t.rot, t.vel) / kdl.dot(t.rot, t.rot)
 
-  min_length = 0.08
+  min_length = 0.03
   l = direction.Norm()
 
   if l == 0:
     # remove this marker
     return make_marker(id=12, ns='twist', action=Marker.DELETE)
-  elif l < min_length:
+  elif direction.Norm() < min_length:
     direction = direction / l * min_length
 
   m = make_marker(12, 'twist', Marker.CYLINDER)
