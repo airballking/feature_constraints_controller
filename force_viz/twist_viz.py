@@ -9,25 +9,22 @@ roslib.load_manifest('force_viz')
 import rospy
 import tf
 import PyKDL as kdl
-import tf_conversions.posemath as pm
+import tf_conversions.posemath as posemath
 from std_msgs.msg import ColorRGBA
 from visualization_msgs.msg import Marker,MarkerArray
 from geometry_msgs.msg import Pose,Point,Quaternion,Vector3,Twist
 
 
-class Vec(kdl.Vector):
-  def cross(a, b):
-    x = a.y()*b.z() - a.z()*b.y()
-    y = a.z()*b.x() - a.x()*b.z()
-    z = a.x()*b.y() - a.y()*b.x()
-    return Vec(x, y, z)
-  cross = staticmethod(cross)
+def cross(a, b):
+  """ cross product of two kdl vectors """
+  x = a.y()*b.z() - a.z()*b.y()
+  y = a.z()*b.x() - a.x()*b.z()
+  z = a.x()*b.y() - a.y()*b.x()
+  return kdl.Vector(x, y, z)
 
 
-
-# playground for now
-
-def make_marker(id=0, ns='force', type=Marker.CUBE, action=Marker.ADD):
+def make_marker(id=0, ns='twist', type=Marker.CUBE, action=Marker.ADD):
+  """ create a marker message for rviz """
   m = Marker()
 
   m.id = id
@@ -57,7 +54,7 @@ def align(marker, frm, to, width):
 
       expected types:
       * marker: visualzation_msgs/Marker
-      * frm, to: Vec
+      * frm, to: kdl.Vector
       * width: scalar
   """
   eps = 1e-10 # some small number for numeric stability test
@@ -69,31 +66,32 @@ def align(marker, frm, to, width):
     marker.pose.position = Point(frm.x(), frm.y(), frm.z())
     marker.scale = Vector3(x=0.771*scale, y=width, z=width)
 
-    axis = Vec.cross(Vec(1,0,0), direction)
+    axis = cross(kdl.Vector(1,0,0), direction)
     angle = direction.x()
   else:
     midpoint = (frm + to)*0.5
     marker.pose.position = Point(midpoint.x(), midpoint.y(), midpoint.z())
     marker.scale = Vector3(x=width, y=width, z=scale)
 
-    axis = Vec.cross(Vec(0,0,1), direction)
+    axis = cross(kdl.Vector(0,0,1), direction)
     angle = direction.z()
 
   laxis = axis.Norm()
   if laxis > eps and scale > eps:
     l  = sqrt((1 - angle / scale) / 2) / laxis
     qu = sqrt((1 + angle / scale) / 2)
-    q = [qu, axis.x()*l, axis.y()*l, axis.z()*l]
+    q = [axis.x()*l, axis.y()*l, axis.z()*l, qu]
   else:
     # aligned with x/z-axis or zero-length: no rotation needed
-    q = [1, 0, 0, 0]
+    q = [0, 0, 0, 1]
 
-  marker.pose.orientation = Quaternion(x=q[1], y=q[2], z=q[3], w=q[0])
+  marker.pose.orientation = Quaternion(*q)
   return marker
 
 
 def axis_marker(tw):
-  """make a marker message showing the instantaneous rotation axis of a twist message"""
+  """ make a marker message showing the instantaneous
+      rotation axis of a twist message"""
 
   t = kdl.Twist(kdl.Vector(tw.linear.x,  tw.linear.y,  tw.linear.z),
                 kdl.Vector(tw.angular.x, tw.angular.y, tw.angular.z))
@@ -103,24 +101,21 @@ def axis_marker(tw):
     (trans, rotp) = listener.lookupTransform(target_frame, ref_point, rospy.Time(0))
   except (tf.LookupException, tf.ConnectivityException):
     print 'tf exception!'
-    return [make_marker(id=12, ns='twist', action=Marker.DELETE)]
+    return make_marker(id=12, ns='twist', action=Marker.DELETE)
 
   # put the twist in the right frame
-  f = pm.fromTf( (trans, rot) )
-  f.p = -f.p
+  f = posemath.fromTf( (trans, rot) )
   t = f*t
 
-  direction = Vec(t.rot[0], t.rot[1], t.rot[2])
-  s0 = Vec(t.vel[0], t.vel[1], t.vel[2])
-  location = Vec.cross(s0, direction) / kdl.dot(direction, direction)
+  direction = t.rot
+  location = cross(t.rot, t.vel) / kdl.dot(t.rot, t.rot)
 
   min_length = 0.08
-
   l = direction.Norm()
 
   if l == 0:
     # remove this marker
-    return [make_marker(id=12, ns='twist', action=Marker.DELETE)]
+    return make_marker(id=12, ns='twist', action=Marker.DELETE)
   elif l < min_length:
     direction = direction / l * min_length
 
@@ -129,12 +124,12 @@ def axis_marker(tw):
   m.frame_locked = True
   m = align(m, location - direction, location + direction, 0.02)
 
-  return [m]
+  return m
 
 # main #
 
 def callback(tw):
-  pub.publish(*axis_marker(tw))
+  pub.publish(axis_marker(tw))
 
 
 rospy.init_node('twist_viz')
