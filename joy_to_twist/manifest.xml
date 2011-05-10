@@ -1,0 +1,17 @@
+<package>
+  <description brief="Joystick to Twist converter">
+
+   Converts the axes of a joystick message into a
+   twist. Tha mapping can be configured through a parameter.
+
+  </description>
+  <author>Ingo Kresse</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+
+  <depend package="rospy"/>
+  <depend package="joy"/>
+  <depend package="geometry_msgs"/>
+</package>
+
+
