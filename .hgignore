@@ -1,4 +1,8 @@
 build/
-src/
+__init__*
 msg_gen
 msg/lisp/
+bin/
+
+syntax: regexp
+msg\/_.*\.py
