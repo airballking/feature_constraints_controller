@@ -2,7 +2,7 @@
   <description brief="Joystick to Twist converter">
 
    Converts the axes of a joystick message into a
-   twist. Tha mapping can be configured through a parameter.
+   twist. The mapping can be configured through a parameter.
 
   </description>
   <author>Ingo Kresse</author>
