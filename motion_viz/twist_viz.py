@@ -69,12 +69,14 @@ def axis_marker(tw, id = 0, ns = 'twist'):
 
 # handle a twist
 def twist_callback(msg):
-  pub.publish(axis_marker(msg, 2, 'twistx'))
+  global marker_id, node_name
+  pub.publish(axis_marker(msg, marker_id, node_name))
 
 # handle a set of twists
 def jac_callback(msg):
+  global node_name
   for i,twist in enumerate(msg.columns):
-    pub.publish(axis_marker(twist, i, 'jacobian'))
+    pub.publish(axis_marker(twist, i, node_name))
 
 # use message to override frames 
 def locate(msg, callback, attribute):
@@ -110,6 +112,8 @@ rospy.loginfo('ref_frame=%s, ref_point=%s, target_frame=%s'
                % (ref_frame, ref_point, target_frame))
 
 use_colors = rospy.get_param('~colors', True)
+marker_id = rospy.get_param('marker_id', 1)
+node_name = rospy.get_name()[1:]
 
 # set up connections
 listener = tf.TransformListener()
