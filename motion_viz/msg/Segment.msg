@@ -10,5 +10,5 @@ string name
 byte type  # type of the joint (FIXED, ROTATIONAL or TRANSLATIONAL)
 string frame_id # used in combination witch reset_transform to start a second chain piece
 bool reset_transform  # used to show special rotation axes
-geometry_msgs/Transform link  # transform to the next joint
+geometry_msgs/Pose link  # transform to the next joint
 geometry_msgs/Vector3 axis  # direction of the actuated axis
