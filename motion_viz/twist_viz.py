@@ -69,7 +69,7 @@ def axis_marker(tw, id = 0, ns = 'twist'):
 
 # handle a twist
 def twist_callback(msg):
-  pub.publish(axis_marker(msg, 1, 'twist'))
+  pub.publish(axis_marker(msg, 2, 'twistx'))
 
 # handle a set of twists
 def jac_callback(msg):
