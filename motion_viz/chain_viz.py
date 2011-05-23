@@ -223,13 +223,13 @@ spatula_desired_angles = [0.0]*3
 
 def callback_desired(msg):
   global spatula_desired_angles
-  drawer_baker.set_desired_angles([msg.data[0], msg.data[2], msg.data[1]])
+  drawer_baker.set_desired_angles(msg.data[0:3])
   # RPY needs special handling
   spatula_desired_angles = msg.data[3:6]
 
 def callback(msg):
   global redraw_flag, spatula_angles
-  drawer_baker.set_angles([msg.data[0], msg.data[2], msg.data[1]])
+  drawer_baker.set_angles(msg.data[0:3])
   spatula_angles = [msg.data[3], msg.data[4], msg.data[5]]
   if redraw_flag:
     drawer_spatula.set_angles([0,0,0])
