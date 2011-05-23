@@ -1,0 +1,23 @@
+<package>
+  <description brief="rtt_ros_integration_std_msgs">
+    
+    Provides all rtt typekits for motion_viz
+    
+  </description>
+  <author>Ingo Kresse kresse@in.tum.de</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <depend package="rtt_ros_integration"/>
+  <depend package="rtt_ros_integration_geometry_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="motion_viz"/>
+  <depend package="std_msgs"/>
+  <depend package="roslib"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include"/>
+  </export>
+
+
+</package>
+
