@@ -11,4 +11,7 @@
   <depend package="kdl"/>
   <depend package="tf"/>
   <depend package="tf_conversions"/>
+  <export>
+    <python path="${prefix}"/>
+  </export>
 </package>
