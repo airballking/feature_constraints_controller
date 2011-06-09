@@ -3,7 +3,10 @@ __init__*
 msg_gen
 msg/lisp/
 bin/
-~
+.pyc
 
 syntax: regexp
 msg\/_.*\.py
+rtt_ros_integration.*\/src
+rtt_ros_integration.*\/lib
+rtt_ros_integration.*\/include
