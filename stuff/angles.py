@@ -5,12 +5,12 @@
 from math import *
 
 import roslib
-roslib.load_manifest('force_viz')
+roslib.load_manifest('motion_viz')
 import rospy
 import tf
 import PyKDL as kdl
 from geometry_msgs.msg import Pose,Point,Quaternion,Vector3,Twist
-from kdl_chain_viz.msg import Jacobian
+from motion_viz.msg import Jacobian
 
 def get_frame():
   try:
