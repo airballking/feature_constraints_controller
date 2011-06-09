@@ -4,6 +4,7 @@ msg_gen
 msg/lisp/
 bin/
 .pyc
+~
 
 syntax: regexp
 msg\/_.*\.py
