@@ -1,7 +1,7 @@
 <package>
-  <description brief="dlr_environment">
-    This package contains robot description and
-    launch files to test a DLR robot environment.
+  <description brief="stuff">
+    This packace contains yet unfinished and unsorted programs.
+    Just a few things to test out.
   </description>
   <author>Ingo Kresse</author>
   <email>kresse@in.tum.de</email>
