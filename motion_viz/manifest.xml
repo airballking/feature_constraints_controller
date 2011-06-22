@@ -12,6 +12,6 @@
   <depend package="tf"/>
   <depend package="tf_conversions"/>
   <export>
-    <python path="${prefix}"/>
+    <python path="${prefix}:${prefix}/src"/>
   </export>
 </package>

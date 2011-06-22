@@ -73,6 +73,39 @@ def arrow(frm, to, width, ns=''):
   return [marker]
 
 
+def sector(vector1, vector2, ns='', id=1):
+  """ create a sector between 'vector1', 'vector2' and the origin.
+      This marker is a triangle list. The interpolation used
+      is SLERP and the vectors may be of different lengths.
+  """
+  marker = create(ns=ns, id=id, type=Marker.TRIANGLE_LIST)
+
+  l_v1 = vector1.Norm()
+  l_v2 = vector2.Norm()
+
+  if l_v1 == 0 or l_v2 == 0:
+    return marker
+
+  l_arc = acos(kdl.dot(vector1, vector2)) / (l_v1 * l_v2)
+
+  n_steps = int(l_arc / 0.1)
+  v_last = vector1
+  for i in range(1,n_steps+1):
+    t = float(i) / n_steps
+
+    # perform SLERP
+    v = (1-t)*vector1 + t*vector2  # interpolate vectors
+    l = (1-t)*l_v1 + t*l_v2        # interpolate lengths
+    v = v * l / v.Norm()           # set vector length
+
+    marker.points.append(Point(v_last.x(), v_last.y(), v_last.z()))
+    marker.points.append(Point(0.0, 0.0, 0.0))
+    marker.points.append(Point(v.x(), v.y(), v.z()))
+
+    v_last = v
+
+  return marker
+
 def publish(marker):
   if publish.publisher == None:
     publish.publisher = rospy.Publisher('visualization_marker', Marker)
