@@ -84,6 +84,7 @@ def sector(vector1, vector2, ns='', id=1):
   l_v2 = vector2.Norm()
 
   if l_v1 == 0 or l_v2 == 0:
+    marker.action = Marker.DELETE
     return marker
 
   l_arc = acos(kdl.dot(vector1, vector2)) / (l_v1 * l_v2)
