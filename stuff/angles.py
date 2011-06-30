@@ -11,6 +11,9 @@ import tf
 import PyKDL as kdl
 from geometry_msgs.msg import Pose,Point,Quaternion,Vector3,Twist
 from motion_viz.msg import Jacobian
+from std_msgs.msg import ColorRGBA
+import marker
+from visualization_msgs.msg import Marker
 
 def get_frame():
   try:
@@ -82,9 +85,32 @@ def publish_jacobian(jac):
   jac_pub.publish(msg)
 
 
+def visualize_angles(frame):
+  global source_frame, target_frame
+  print '---- visualizing.'
+
+  m = marker.create(ns='task angles', type=marker.Marker.ARROW, id=2)
+  m.header.frame_id = '/frame'
+  marker.align(m, kdl.Vector(), kdl.Vector(frame[2,0]*0.2, frame[2,1]*0.2, 0.0), 0.3)
+
+
+
+  #viz_pub.publish(m)
+
+  v1 = kdl.Vector(1.0, 0.0, 0.0)*0.2
+  v2 = kdl.Vector(frame[2,0]*0.2, frame[2,1]*0.2, 0.0)
+
+  m = marker.sector(v1, v2, ns='task angles', id=3)
+  m.header.frame_id = '/base_link'
+  m.color = ColorRGBA(1.0, 1.0, 0.0, 0.5)
+  viz_pub.publish(m)
+
+
+
 rospy.init_node('angles_dev')
 listener = tf.TransformListener()
 jac_pub = rospy.Publisher('rot_jac', Jacobian)
+viz_pub = rospy.Publisher('visualization_marker', Marker)
 
 source_frame = rospy.get_param('~source_frame', '/base_link')
 target_frame = rospy.get_param('~target_frame', '/frame')
@@ -100,6 +126,7 @@ while not rospy.is_shutdown():
   print jac_inv
   print 'a0,a1,a2 = '+str(angles)
   publish_jacobian(jac)
+  visualize_angles(frame)
   
 
   rate.sleep()
