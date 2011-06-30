@@ -78,5 +78,6 @@ def publish(marker):
     publish.publisher = rospy.Publisher('visualization_marker', Marker)
     rospy.sleep(0.5) # hack to wait for the connections to establish
   publish.publisher.publish(marker)
+publish.publisher = None
 
 publish.publisher = None
