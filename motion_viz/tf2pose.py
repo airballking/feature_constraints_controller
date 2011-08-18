@@ -4,37 +4,78 @@
 # as a PoseStamped message.
 
 import sys
-
 import roslib
 roslib.load_manifest('motion_viz')
 import rospy
 import tf
-from geometry_msgs.msg import PoseStamped,Point,Quaternion
+from geometry_msgs.msg import PoseStamped,Pose, Point,Quaternion
 
-rospy.init_node('tf2pose')
-l = tf.TransformListener()
 
-if len(sys.argv) >= 4:
-  target_frame = sys.argv[1]
-  base_frame = sys.argv[2]
-  topic = sys.argv[3]
-else:
-  print 'usage: %s target_frame base_frame topic_name' % sys.argv[0]
-  sys.exit()
+class TF2PoseBase:
+  def __init__(self, target_frame, base_frame, topic):
+    self.target_frame = target_frame
+    self.base_frame = base_frame
+    self.listener = tf.TransformListener()
 
-pub = rospy.Publisher(topic, PoseStamped)
+  def wait_for_ready(self, time=10.0):
+    self.listener.waitForTransform(self.base_frame, self.target_frame, rospy.Time(), rospy.Duration(time))
 
-rate = rospy.Rate(10)
+  def pose(self):
+    transform = self.listener.lookupTransform(self.base_frame, self.target_frame, rospy.Time(0))
+    return Pose(Point(*transform[0]), Quaternion(*transform[1]))
 
-l.waitForTransform(base_frame, target_frame, rospy.Time(), rospy.Duration(10))
 
-while not rospy.is_shutdown():
-  transform = l.lookupTransform(base_frame, target_frame, rospy.Time(0))
-  p = PoseStamped()
-  p.header.stamp = rospy.Time.now()
-  p.header.frame_id = base_frame
-  p.pose.position = Point(*transform[0])
-  p.pose.orientation = Quaternion(*transform[1])
-  pub.publish(p)
-  rate.sleep()
+class TF2Pose(TF2PoseBase):
+  def __init__(self, target_frame, base_frame, topic):
+    TF2PoseBase.__init__(self, target_frame, base_frame, topic)
+    self.pub = rospy.Publisher(topic, Pose)
+
+  def spin(self):
+    self.pub.publish(self.pose())
+
+
+class TF2PoseStamped(TF2PoseBase):
+  def __init__(self, target_frame, base_frame, topic):
+    TF2PoseBase.__init__(self, target_frame, base_frame, topic)
+    self.pub = rospy.Publisher(topic, PoseStamped)
+
+  def spin(self):
+    p = PoseStamped()
+    p.header.stamp = rospy.Time.now()
+    p.header.frame_id = self.base_frame
+    p.pose = self.pose()
+    self.pub.publish(p)
+
+
+
+def main():
+  if len(sys.argv) >= 4:
+    target_frame = sys.argv[1]
+    base_frame = sys.argv[2]
+    topic = sys.argv[3]
+    if len(sys.argv) >= 5:
+      stamped = (sys.argv[4] == '-stamped')
+    else:
+      stamped = True
+  else:
+    print 'usage: %s target_frame base_frame topic_name [-stamped|-plain]' % sys.argv[0]
+    sys.exit()
+
+  rospy.init_node('tf2pose')
+  rate = rospy.Rate(10)
+
+  if stamped:
+    posepub = TF2PoseStamped(target_frame, base_frame, topic)
+  else:
+    posepub = TF2Pose(target_frame, base_frame, topic)
+
+  posepub.wait_for_ready()
+
+  while not rospy.is_shutdown():
+    posepub.spin()
+    rate.sleep()
+
+
+if __name__ == "__main__":
+    main()
 
