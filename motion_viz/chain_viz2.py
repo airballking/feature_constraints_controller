@@ -27,155 +27,248 @@ from motion_viz.msg import ChainState, ChainInfo, Segment
 import marker
 
 
+# create the spatula chain message
+info = ChainInfo()
+info.name = "virtual linkage"
+
+# cylinder coords
+s = Segment()
+s.type = Segment.ROTATIONAL
+s.name = 'angle'
+s.pose_index = -1
+s.axis = Vector3(0.0, 0.0, 1.0)
+info.segments.append(s)
+
+s = Segment()
+s.type = Segment.TRANSLATIONAL
+s.name = 'distance'
+s.pose_index = -1
+s.axis = Vector3(1.0, 0.0, 0.0)
+info.segments.append(s)
+
+s = Segment()
+s.type = Segment.TRANSLATIONAL
+s.name = 'height'
+s.pose_index = -1
+s.axis = Vector3(0.0, 0.0, 1.0)
+info.segments.append(s)
+
+#reverse RPY
+
+s = Segment()
+s.type = Segment.ROTATIONAL
+s.name = 'roll'
+s.pose_index = 0
+s.axis = Vector3(1.0, 0.0, 0.0)
+info.segments.append(s)
+
+s = Segment()
+s.type = Segment.ROTATIONAL
+s.name = 'pitch'
+s.pose_index = 0
+s.axis = Vector3(0.0, 1.0, 0.0)
+info.segments.append(s)
+
+s = Segment()
+s.type = Segment.ROTATIONAL
+s.name = 'yaw'
+s.pose_index = 0
+s.axis = Vector3(0.0, 0.0, 1.0)
+info.segments.append(s)
+
+
+def _mid_pose(chi):
+  mid_pos = kdl.Vector(cos(chi[0])*chi[1], sin(chi[0])*chi[1], chi[2])
+  mid_pose = kdl.Frame(kdl.Rotation.Rot(kdl.Vector(1,0,0), chi[0]), mid_pos)
+  return mid_pose
+
+
+def fk(chi):
+  mid_pose = _mid_pose(chi)
+  rpy = kdl.Frame(kdl.Rotation.RPY(chi[3], chi[4], chi[5]))
+  return [mid_pose * rpy.Inverse()]
+
+def ik(pose):
+  angle = atan2(pose.p.y(), pose.p.x())
+  distance = sqrt(pose.p.x()**2, pose.p.y()**2)
+  height = pose.p.z()
+
+  mid_pose = _mid_pose([angle, distance, height])
+  rot = pose * (mid_pose.Inverse()*pose).M.Inverse()
+
+  (roll, pitch, yaw) = rot.GetRPY()
+
+  return [angle, distance, height, roll, pitch, yaw]
+
+
+
+def color_code(index):
+  intervals = [0.0, 0.5, 1.0]
+  colors = [[0.0, 1.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0, 1.0],
+            [1.0, 0.0, 0.0, 1.0]]
+
+  # handle corner cases
+  if index <= intervals[0] or isnan(index):
+    return ColorRGBA(*colors[0])
+
+  if index >= intervals[-1]:
+    return ColorRGBA(*colors[-1])
+
+  # pick interval
+  (i0, i1) = ((i-1,i+1) for i,t in enumerate(intervals) if t >= index).next()
+  (t0, t1) = intervals[i0:i1]
+  (c0, c1) = colors[i0:i1]
+
+  t = (index-t0)/(t1-t0)
+  return ColorRGBA(*[(1-t)*x0 + t*x1 for (x0,x1) in zip(c0,c1)])
+
+
+
+#factory function for creating Segment objects
+def createSegment(segment_info, seg_id, jnt_id):
+  if segment_info.type == Segment.ROTATIONAL:
+    return SegmentRotational(segment_info, seg_id, jnt_id)
+  if segment_info.type == Segment.TRANSLATIONAL:
+    return SegmentTranslational(segment_info, seg_id, jnt_id)
+
+
+class SegmentBase:
+  def __init__(self, segment_info, seg_id, jnt_id):
+    self.chi = 0
+    self.desired_chi = 0
+    self.seg_id = seg_id
+    self.jnt_id = jnt_id
+    self.set_info(segment_info)
+    # TODO: deal with the constant link offset. For virtual linkages we dont have that now...
+
+
+  def set_info(self, segment_info):
+    '''set type and axis of the segment'''
+    a = segment_info.axis
+    self.name = segment_info.name
+    self.axis = kdl.Vector(a.x, a.y, a.z)
+    self.pose_base_index = segment_info.pose_index
+
+  def set_pose_base(self, poses, chain_pose):
+    '''set the current pose for the segment'''
+    if self.pose_base_index < 0:
+      self.pose_base = chain_pose
+      return chain_pose * self.pose_segment()
+    else:
+      self.pose_base = poses[self.pose_base_index]
+      return self.pose_segment()
+
+  def pose_segment(self):
+    '''return the relative pose, caused directly by this segment'''
+    return kdl.Frame()
+
+  def set_chi(self, chi):
+    '''set axis angle. We want to override later at this point.'''
+    self.chi = chi[self.jnt_id]
+
+  def set_desired_chi(self, chi):
+    self.desired_chi = chi[self.jnt_id]
+
+  def update(self):
+    '''update the marker according to the current state.'''
+   
+
+
+# TODO: some config data, not shure where to put them right now...
+error_length = 0.2
+error_angle  = pi/6
+axisWidth = 0.02
+axisLength = 2.5 * axisWidth
+
+
+
+class SegmentRotational(SegmentBase):
+  def __init__(self, segment_info, seg_id, jnt_id):
+    SegmentBase.__init__(self, segment_info, seg_id, jnt_id)
+    self.marker = marker.create(type=Marker.CYLINDER, id=self.seg_id)
+
+  def pose_segment(self):
+    '''return the relative pose, caused directly by this segment'''
+    return kdl.Frame(kdl.Rotation.Rot2(self.axis, self.chi))
+
+  def update(self):
+    self.update_marker()
+
+  def update_marker(self):
+    '''update the marker to reflect the current joint angle'''
+
+    f = self.pose_base
+    p1 = f*(-self.axis * axisLength)
+    p2 = f*(self.axis  * axisLength)
+
+    marker.align(self.marker, p1, p2, axisWidth)
+    self.marker.color = color_code(abs(self.chi - self.desired_chi) / error_angle)
+
+
+class SegmentTranslational(SegmentBase):
+  def __init__(self, segment_info, seg_id, jnt_id):
+    SegmentBase.__init__(self, segment_info, seg_id, jnt_id)
+    self.marker = marker.create(type=Marker.CUBE, id=seg_id)
+
+  def pose_segment(self):
+    '''return the relative pose, caused directly by this segment'''
+    return kdl.Frame(self.axis * self.chi)
+
+  def update(self):
+    self.update_marker()
+
+  def update_marker(self):
+    '''update the marker to reflect the current joint angle'''
+    f = self.pose_base
+    p1 = f.p
+    p2 = f*(self.axis*self.chi)
+
+    marker.align(self.marker, p1, p2, axisWidth)
+    self.marker.color = color_code(abs(self.chi - self.desired_chi) / error_length)
+
+
+
+
+##############################################
+
 class ChainDrawer:
 
   def __init__(self):
     self.chain_info = None
-    self.next_id = 0
     self.angles = []
     self.desired_angles = []
     self.angle_errors = []
     self.chain_state = None
     # configuration
-    self.axisWidth = 0.02
-    self.axisLength = 2.5 * self.axisWidth
-    self.linkWidth = self.axisWidth / 2.0
-    self.linkColor = ColorRGBA(0.5, 0.5, 0.5, 1.0)
-    self.error_length = 0.2
-    self.error_angle  = pi/6
 
-  def set_chain_info(self, chain_info):
-    self.chain_info = chain_info
+    self.segments = []
+
+  def set_info(self, chain_info):
+    if self.segments == []:
+      self.create_markers(chain_info)
 
   def set_state(self, chain_state):
-    self.chain_state = chain_state
+    poses = chain_state.poses
+    chi = chain_state.position_measured
+    chain_pose = kdl.Frame()
+    for seg in self.segments:
+      seg.set_chi(chi)
+      chain_pose = seg.set_pose_base(poses, chain_pose)
+      seg.update()
+
+  def create_markers(self, chain_info):
+    self.frame_id = chain_info.header.frame_id
+    segment_index = 0
+    joint_index = 0
+    for seg in chain_info.segments:
+      self.segments.append(createSegment(seg, segment_index, joint_index))
+      if seg.type != Segment.FIXED:
+        joint_index += 1
+      segment_index += 1
 
   def get_markers(self):
-    if self.chain_info == None or self.chain_state == None:
-      rospy.logwarn('no state yet')
-      return []
-
-    markers = []
-    self.next_id = 0
-
-    nJoints = len([1 for s in self.chain_info.segments if s.type != Segment.FIXED])
-    nSegments = len(self.chain_info.segments)
-
-    if (len(self.chain_state.position_measured) < nJoints or
-        len(self.chain_state.position_desired) < nJoints):
-      rospy.logwarn('state invalid')
-      return []
-
-    f = kdl.Frame.Identity()
-    j = 0
-    for i in range(nSegments):
-      seg_markers = []
-
-      segment = self.chain_info.segments[i]
-
-      a = segment.axis
-      axis = kdl.Vector(a.x, a.y, a.z)
-      type = segment.type
-
-      q = self.chain_state.position_measured[j]
-      q_des = self.chain_state.position_desired[j]
-      if type != Segment.FIXED:
-        j += 1  # used one joint angle, proceed with next one
-
-      # this starts a new chain piece
-      if segment.reset_transform:
-        f = kdl.Frame()
-
-      # create the axis marker
-      if type == Segment.ROTATIONAL:
-        joint_pose = kdl.Frame(kdl.Rotation.Rot2(axis, q))
-        seg_markers.append(self._rot_marker(f, axis, q, q_des))
-      if type == Segment.TRANSLATIONAL:
-        joint_pose = kdl.Frame(axis * q)
-        seg_markers.append(self._trans_marker(f, axis, q, q_des))
-      if type == Segment.FIXED:
-        joint_pose = kdl.Frame()
-        seg_markers.append(self._fixed_marker(f))
-
-      # draw skeleton
-      f_next = f * joint_pose * pm.fromMsg(segment.link)
-      if f.p != f_next.p:
-        seg_markers.extend(self._link_markers(f.p, f_next.p))
-      f = f_next
-
-      # configure 'the rest'
-      for m in seg_markers:
-        m.ns = self.chain_info.name
-        m.header.frame_id = segment.frame_id
-
-      markers.extend(seg_markers)
-
-    return markers
-
-
-  def _rot_marker(self, f, axis, q, q_des):
-    m = marker.create(type=Marker.CYLINDER, id=self.next_id)
-    self.next_id += 1
-
-    p1 = f*(-axis) * self.axisLength
-    p2 = f*  axis  * self.axisLength
-
-    marker.align(m, p1, p2, self.axisWidth)
-    m.color = self._color_code(abs(q - q_des) / self.error_angle)
-    return m
-
-
-  def _trans_marker(self, f, axis, q, q_des):
-    m = marker.create(type=Marker.CUBE, id=self.next_id)
-    self.next_id += 1
-
-    p1 = f.p
-    p2 = f*(axis*q)
-
-    marker.align(m, p1, p2, self.axisWidth)
-    m.color = self._color_code(abs(q - q_des) / self.error_length)
-    return m
-
-  def _fixed_marker(self, f):
-    m = marker.create(type=Marker.SPHERE, id=self.next_id)
-    m.scale = Vector3(*([self.axisWidth]*3))
-    m.color = self.linkColor
-    self.next_id += 1
-    return m
-
-  def _link_markers(self, frm, to):
-    m = marker.create(type=Marker.CYLINDER, id=self.next_id)
-    marker.align(m, frm, to, self.linkWidth)
-    m.color = self.linkColor
-
-    mj = marker.create(type=Marker.SPHERE, id=self.next_id+1)
-    mj.scale = Vector3(*([self.linkWidth]*3))
-    mj.pose.position = Point(to[0], to[1], to[2])
-    mj.color = self.linkColor
-    self.next_id += 2
-    return [m, mj]
-
-
-  def _color_code(self, index):
-    intervals = [0.0, 0.5, 1.0]
-    colors = [[0.0, 1.0, 0.0, 1.0],
-              [1.0, 1.0, 0.0, 1.0],
-              [1.0, 0.0, 0.0, 1.0]]
-
-    # handle corner cases
-    if index <= intervals[0] or isnan(index):
-      return ColorRGBA(*colors[0])
-
-    if index >= intervals[-1]:
-      return ColorRGBA(*colors[-1])
-
-    # pick interval
-    (i0, i1) = ((i-1,i+1) for i,t in enumerate(intervals) if t >= index).next()
-    (t0, t1) = intervals[i0:i1]
-    (c0, c1) = colors[i0:i1]
-
-    t = (index-t0)/(t1-t0)
-    return ColorRGBA(*[(1-t)*x0 + t*x1 for (x0,x1) in zip(c0,c1)])
+    return [s.marker for s in self.segments]
 
 
 # main #
@@ -186,7 +279,7 @@ global redraw_flag
 redraw_flag = True
 
 drawer = ChainDrawer()
-
+drawer.set_info(info)
 
 def callback_structure(msg):
   # change the structure of the chain drawer
@@ -203,6 +296,16 @@ def callback_state(msg):
     redraw()
 
 
+def callback_chi(msg):
+  global redraw_flag
+  state = ChainState()
+  state.position_measured = msg.data
+  state.poses = fk(msg.data)
+  drawer.set_state(state)
+  if redraw_flag:
+    redraw_flag = False
+    redraw()
+
 def redraw():
   mrks = drawer.get_markers()
   for m in mrks:
@@ -213,8 +316,12 @@ pub = rospy.Publisher('/visualization_marker', Marker)
 
 rospy.Subscriber("/chain_info", ChainInfo, callback_structure)
 rospy.Subscriber("/chain_state", ChainState, callback_state)
+rospy.Subscriber("/chi", Float64MultiArray, callback_chi)
 
 rate = rospy.Rate(2)
+
+
+
 
 while not rospy.is_shutdown():
   redraw_flag = True
