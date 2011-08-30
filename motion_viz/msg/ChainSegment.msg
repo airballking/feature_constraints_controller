@@ -9,5 +9,4 @@ byte ROTATIONAL=2
 string name
 byte type  # type of the joint (FIXED, ROTATIONAL or TRANSLATIONAL)
 int32 pose_index # at which pose (transmitted in the status message does this frame start? -1 means proceed in the chain)
-geometry_msgs/Pose link  # transform to the next joint
 geometry_msgs/Vector3 axis  # direction of the actuated axis
