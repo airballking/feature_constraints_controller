@@ -25,7 +25,7 @@ def callback(msg):
   twist = kdl.Twist(lin, rot)
 
 frame_name = rospy.get_param('~frame_name', '/frame')
-parent_name = rospy.get_param('~frame_name', '/base_link')
+parent_name = rospy.get_param('~parent_name', '/base_link')
 f = rospy.get_param('~rate', 30)
 
 rospy.Subscriber("twist", Twist, callback)
@@ -35,9 +35,8 @@ rate = rospy.Rate(f)
 
 while not rospy.is_shutdown():
   t = kdl.Twist(twist)
-  #t.RefPoint(-frame.p)
-  #frame = kdl.addDelta(frame, t, 1.0/f)
-  frame = kdl.addDelta(frame, frame*t, 1.0/f)
+  #frame = kdl.addDelta(frame, t, 1.0/f) # global mode
+  frame = kdl.addDelta(frame, kdl.Frame(frame.M)*t, 1.0/f) # local mode
   tf_pub.sendTransform(frame.p, frame.M.GetQuaternion(),
                        rospy.Time.now(), frame_name, parent_name)
   rate.sleep()
