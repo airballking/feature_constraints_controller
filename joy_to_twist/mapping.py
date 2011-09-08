@@ -86,9 +86,13 @@ class MultiMapping:
 
   def __call__(self, msg):
     """ handle joystick messages """
+    # first, try mapings with modifier key
     for b, pressed in enumerate(msg.buttons):
       if pressed and self.mappings.has_key(b):
         return self.mappings[b](msg)
+    # try default mapping
     if self.mappings.has_key('_'):
       return self.mappings['_'](msg)
+    # no key mapping applies, return zeros
+    return [0.0]*6
 
