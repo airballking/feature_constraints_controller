@@ -290,6 +290,7 @@ def redraw():
     redraw_flag = False
     mrks = drawer.get_markers()
     for m in mrks:
+      m.header.stamp = rospy.Time.now()
       pub.publish(m)
 
 
