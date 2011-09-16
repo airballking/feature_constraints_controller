@@ -8,6 +8,7 @@ import roslib
 roslib.load_manifest('motion_viz')
 import rospy
 import tf
+import tf_conversions.posemath as pm
 from geometry_msgs.msg import PoseStamped,Pose, Point,Quaternion
 
 
@@ -24,11 +25,15 @@ class TF2PoseBase:
     transform = self.listener.lookupTransform(self.base_frame, self.target_frame, rospy.Time(0))
     return Pose(Point(*transform[0]), Quaternion(*transform[1]))
 
+  def pose_kdl(self):
+    return pm.fromMsg(self.pose())
+
 
 class TF2Pose(TF2PoseBase):
-  def __init__(self, target_frame, base_frame, topic):
+  def __init__(self, target_frame, base_frame, topic=None):
     TF2PoseBase.__init__(self, target_frame, base_frame, topic)
-    self.pub = rospy.Publisher(topic, Pose)
+    if topic:
+      self.pub = rospy.Publisher(topic, Pose)
 
   def spin(self):
     self.pub.publish(self.pose())
