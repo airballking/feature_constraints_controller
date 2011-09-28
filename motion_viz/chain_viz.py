@@ -18,7 +18,7 @@ import marker
 
 from std_msgs.msg import ColorRGBA, Float64MultiArray
 from visualization_msgs.msg import Marker,MarkerArray
-from geometry_msgs.msg import Pose,Point,Quaternion,Vector3
+from geometry_msgs.msg import Pose,PoseStamped,Point,Quaternion,Vector3
 from motion_viz.msg import ChainState, ChainInfo, ChainSegment
 
 # Note: we don't use kdl chain because
@@ -151,6 +151,7 @@ class SegmentBase:
     '''set the current pose for the segment'''
     self.chi = chain_state.chi[self.jnt_id]
     self.chi_desired = chain_state.chi_desired[self.jnt_id]
+    self.weight = chain_state.weights[self.jnt_id]
 
     if self.pose_base_index < 0:
       self.pose_base = chain_pose
@@ -186,6 +187,8 @@ class SegmentRotational(SegmentBase):
 
     marker.align(self.marker, p1, p2, config.axisWidth)
     self.marker.color = color_code(abs(self.chi - self.chi_desired) / config.error_angle)
+    if self.weight == 0.0:
+      self.marker.color = ColorRGBA(0.0, 0.0, 1.0, 1.0)
 
 
 class SegmentTranslational(SegmentBase):
@@ -207,6 +210,8 @@ class SegmentTranslational(SegmentBase):
 
     marker.align(self.marker, p1, p2, config.axisWidth)
     self.marker.color = color_code(abs(self.chi - self.chi_desired) / config.error_length)
+    if self.weight == 0.0:
+      self.marker.color = ColorRGBA(0.0, 0.0, 1.0, 1.0)
 
 
 
@@ -264,6 +269,7 @@ drawer.set_info(info)
 state = ChainState()
 state.chi = [0.0]*6
 state.chi_desired = [0.0]*6
+state.weights = [1.0]*6
 state.poses = [kdl.Frame()]
 drawer.set_state(state)
 
@@ -271,16 +277,27 @@ def callback_pose(msg):
   drawer.set_pose(msg)
   redraw()
 
+def callback_end_pose(msg):
+  global state
+  state.poses = [pm.fromMsg(msg.pose)]
+  drawer.set_state(state)
+
+
 def callback_chi(msg):
   global state
   state.chi = msg.data
-  state.poses = fk(msg.data)
   drawer.set_state(state)
   redraw()
 
 def callback_chi_desired(msg):
   global state
   state.chi_desired = msg.data
+  drawer.set_state(state)
+  redraw()
+
+def callback_weights(msg):
+  global state
+  state.weights = msg.data
   drawer.set_state(state)
   redraw()
 
@@ -299,7 +316,9 @@ pub = rospy.Publisher('/visualization_marker', Marker)
 
 sub_chi = rospy.Subscriber("/chi_f", Float64MultiArray, callback_chi)
 sub_chi_desired = rospy.Subscriber("/chi_f_desired", Float64MultiArray, callback_chi_desired)
+sub_weights = rospy.Subscriber("/task_weights", Float64MultiArray, callback_weights)
 sub_pose = rospy.Subscriber("/object_pose", Pose, callback_pose)
+sub_end_pose = rospy.Subscriber("/o1o2_pose", PoseStamped, callback_end_pose)
 
 rate = rospy.Rate(8)
 
