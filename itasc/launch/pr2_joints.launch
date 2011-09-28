@@ -47,10 +47,10 @@
   <node name="spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/spatula /l_gripper_tool_frame /tool_pose -plain"/>
 <!--  <node name="pancake_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/pancake /torso_lift_link /object_pose -plain"/> -->
 
-  <node name="spatula_model" pkg="pancake_baking" type="spatula_model.py" args="/l_gripper_tool_frame"/>
-  <node name="baker_model" pkg="pancake_baking" type="baker_model.py" args="/table"/>
+  <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/l_gripper_tool_frame"/>
+  <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
 
-  <node name="rviz" type="rviz" pkg="rviz" args="-d $(find pancake_baking)/baking.vcg"/>
+  <node name="rviz" type="rviz" pkg="rviz" args="-d $(find itasc)/baking.vcg"/>
 
   <node name="chain_viz" type="chain_viz.py" pkg="motion_viz" cwd="node"/>
 

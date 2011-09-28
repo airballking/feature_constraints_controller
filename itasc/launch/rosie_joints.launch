@@ -33,11 +33,11 @@
     <remap from="pose" to="/object_pose"/>
   </node>
 
-  <node name="rviz" type="rviz" pkg="rviz" args="-d $(find pancake_baking)/baking.vcg"/>
+  <node name="rviz" type="rviz" pkg="rviz" args="-d $(find itasc)/baking.vcg"/>
 
   <!-- visualization stuff -->
-  <node name="spatula_model" pkg="pancake_baking" type="spatula_model.py" args="/left_handle" />
-  <node name="baker_model" pkg="pancake_baking" type="baker_model.py" args="/table"/>
+  <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/left_handle" />
+  <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
 
   <node name="chain_viz" type="chain_viz.py" pkg="motion_viz" cwd="node"/>
 
