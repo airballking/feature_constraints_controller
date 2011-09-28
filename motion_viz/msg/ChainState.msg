@@ -5,3 +5,4 @@ geometry_msgs/Pose[] poses
 string[] joint_names
 float64[] chi
 float64[] chi_desired
+float64[] weights
