@@ -1,0 +1,55 @@
+import("itasc")
+import("kdl_typekit")
+#import("rtt_ros_integration_geometry_msgs")
+#import("rtt_ros_integration_motion_viz")
+
+
+loadComponent("LeftArm", "iTaSC::ROSRobot")
+setActivity("LeftArm", 0.005, HighestPriority-1, ORO_SCHED_RT)
+
+LeftArm.base_name = "base_link"
+LeftArm.ee_name = "left_arm_7_link"
+LeftArm.configure()
+
+loadComponent("Scene","iTaSC::Scene")
+setActivity("Scene", 0.005, HighestPriority-1, ORO_SCHED_RT)
+loadComponent("PancakeMaker","iTaSC::ROSObject")
+setActivity("PancakeMaker", 0.005, HighestPriority-1, ORO_SCHED_RT)
+loadComponent("Chef","ChainTask")
+setActivity("Chef",0.005,HighestPriority-1, ORO_SCHED_RT)
+loadComponent("Solver","iTaSC::WDLSVelocitySolver")
+
+#INGO: adding joint limit avoidance
+loadComponent("LimitAvoider","iTaSC::ROSLimitAvoider")
+setActivity("LimitAvoider",0.005,HighestPriority-1, ORO_SCHED_RT)
+LimitAvoider.base_name = "base_link"
+LimitAvoider.ee_name = "left_arm_7_link"
+LimitAvoider.configure()
+
+
+Chef.ros_prefix = ""
+
+Scene.iTaSC_configuration = "rosie_config.xml"
+
+addPeer( "Scene","LeftArm" )
+addPeer( "Scene","PancakeMaker" )
+addPeer( "Scene","Chef" )
+addPeer( "Scene","Solver" )
+
+Scene.configure()
+PancakeMaker.configure()
+Chef.configure()
+Solver.configure()
+
+connect("Scene.arm_J","LimitAvoider.jac",ConnPolicy())
+connect("Scene.LeftArm_qdot", "LimitAvoider.qdot_task",ConnPolicy())
+connect("LeftArm.q", "LimitAvoider.q", ConnPolicy())
+
+LeftArm.start()
+PancakeMaker.start()
+Chef.start()
+LimitAvoider.start()
+
+Scene.start()
+
+Scene.Chef_Wy_global=1.0

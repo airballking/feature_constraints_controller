@@ -1,0 +1,51 @@
+<launch>
+  <rosparam ns="/loopback_controllers/joints">
+    name: ['right_hand_thumb_joint', 'left_hand_thumb_joint',
+           'left_arm_0_joint', 'left_arm_1_joint',
+           'left_arm_2_joint', 'left_arm_3_joint',
+           'left_arm_4_joint', 'left_arm_5_joint',
+           'left_arm_6_joint']
+    position: [1.57, 1.57,
+               0.264149, -0.476302,
+              -0.576542, -1.639763,
+              -0.42, 1.76,
+               1.14]
+  </rosparam>
+
+  <include file="$(find ias_mechanism_controllers)/launch/rosie_loopback.launch"/>
+
+  <node name="spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/spatula /left_arm_7_link /tool_pose -plain"/>
+<!--  <node name="pancake_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/pancake /base_link /object_pose -plain"/>
+  -->
+
+  <node pkg="tf" type="static_transform_publisher" name="left_hand_trans"
+        args="0.05 -0.02 0.17 1.5708 -1.5708 0 /left_arm_hand_link /left_handle 100" />
+
+  <node name="spatula_transform" pkg="tf" type="static_transform_publisher"
+        args="0 -0.05 0.2  0 0 -0.2 /left_handle /spatula 100"/>
+
+  <node name="table_transform" pkg="tf" type="static_transform_publisher"
+        args="0.1 0.0 -0.763  0 0 0 /pancake /table 100"/>
+
+  <node name="pancake_transform" pkg="motion_viz" type="pose2tf.py">
+    <param name="frame_name" value="/pancake"/>
+    <param name="parent_name" value="/base_link"/>
+    <remap from="pose" to="/object_pose"/>
+  </node>
+
+  <node name="rviz" type="rviz" pkg="rviz" args="-d $(find pancake_baking)/baking.vcg"/>
+
+  <!-- visualization stuff -->
+  <node name="spatula_model" pkg="pancake_baking" type="spatula_model.py" args="/left_handle" />
+  <node name="baker_model" pkg="pancake_baking" type="baker_model.py" args="/table"/>
+
+  <node name="chain_viz" type="chain_viz.py" pkg="motion_viz" cwd="node"/>
+
+  <node name="spatula_frame" type="tf2pose.py" pkg="motion_viz" args="spatula base_link /spatula_frame -stamped"/>
+  <node name="pancake_frame" type="tf2pose.py" pkg="motion_viz" args="pancake base_link /pancake_frame -stamped"/>
+
+
+  <node launch-prefix="$(find itasc)/scripts/exec_in_dir.sh $(find itasc)/launch" name="itasc" type="cdeployer-gnulinux" pkg="ocl" args="-s rosie_joints.ops -l Error --" output="log">
+    <remap from="qdot_mixed_ros" to="/l_arm_vel/command"/>
+  </node>
+</launch>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "cpf.dtd">
+<properties>
+  <struct name="LeftArm" type="Robot">
+    <simple name="PeerName" type="string"><value>LeftArm</value></simple>
+    <struct name="BaseLocation" type="KDL.Frame">
+      <description></description>
+      <struct name="p" type="KDL.Vector">
+        <simple name="X" type="double"><description>X Value</description><value>0</value></simple>
+        <simple name="Y" type="double"><description>Y Value</description><value>0</value></simple>
+        <simple name="Z" type="double"><description>Z Value</description><value>0.0</value></simple>
+      </struct>
+      <struct name="M" type="KDL.Rotation">
+        <simple name="X_x" type="double"><description>X_x</description><value>1</value></simple>
+        <simple name="X_y" type="double"><description>X_y</description><value>0</value></simple>
+        <simple name="X_z" type="double"><description>X_z</description><value>0</value></simple>
+        <simple name="Y_x" type="double"><description>Y_x</description><value>0</value></simple>
+        <simple name="Y_y" type="double"><description>Y_y</description><value>1</value></simple>
+        <simple name="Y_z" type="double"><description>Y_z</description><value>0</value></simple>
+        <simple name="Z_x" type="double"><description>Z_x</description><value>0</value></simple>
+        <simple name="Z_y" type="double"><description>Z_y</description><value>0</value></simple>
+        <simple name="Z_z" type="double"><description>Z_z</description><value>1</value></simple>
+      </struct>
+    </struct>
+  </struct>
+  
+  <struct name="PancakeMaker" type="Robot">
+    <simple name="PeerName" type="string"><value>PancakeMaker</value></simple>
+    <struct name="BaseLocation" type="KDL.Frame">
+      <description></description>
+      <struct name="p" type="KDL.Vector">
+        <simple name="X" type="double"><description>X Value</description><value>0.0</value></simple>
+        <simple name="Y" type="double"><description>Y Value</description><value>0.0</value></simple>
+        <simple name="Z" type="double"><description>Z Value</description><value>0.0</value></simple>
+      </struct>
+      <struct name="M" type="KDL.Rotation">
+        <simple name="X_x" type="double"><description>X_x</description><value>1</value></simple>
+        <simple name="X_y" type="double"><description>X_y</description><value>0</value></simple>
+        <simple name="X_z" type="double"><description>X_z</description><value>0</value></simple>
+        <simple name="Y_x" type="double"><description>Y_x</description><value>0</value></simple>
+        <simple name="Y_y" type="double"><description>Y_y</description><value>1</value></simple>
+        <simple name="Y_z" type="double"><description>Y_z</description><value>0</value></simple>
+        <simple name="Z_x" type="double"><description>Z_x</description><value>0</value></simple>
+        <simple name="Z_y" type="double"><description>Z_y</description><value>0</value></simple>
+        <simple name="Z_z" type="double"><description>Z_z</description><value>1</value></simple>
+      </struct>
+    </struct>
+  </struct>
+
+  <struct name="Pancake_baking" type="Task">
+    <simple name="PeerName" type="string"><value>Chef</value></simple>
+    <simple name="Object1" type="string"><value>PancakeMaker</value></simple>
+    <simple name="Object2" type="string"><value>LeftArm</value></simple>
+  </struct>
+
+  <struct name="Solver" type="Solver">
+    <simple name="PeerName" type="string"><value>Solver</value></simple>
+  </struct>
+  
+</properties>

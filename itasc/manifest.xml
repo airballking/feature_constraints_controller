@@ -1,0 +1,40 @@
+<package>
+  <description brief="iTaSC">
+
+     IAS iTaSC-manipulation package, currently geared towards
+     pancake baking.
+
+     This package contains modified components from kul-ros-pkg/iTaSC.
+ 
+     This package is expecting an ouverhaul regarding the interface:
+     Modular task function specifications are planned.
+
+  </description>
+  <author>Ruben Smits, Ingo Kresse, Ruben Smits</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/iTaSC</url>
+
+  <depend package="eigen"/>
+  <depend package="orocos_kdl"/>
+  <depend package="rtt_ros_integration_geometry_msgs"/>
+  <depend package="tf_conversions"/>
+  <depend package="ocl"/>
+  <depend package="rtt"/>
+  <depend package="geometry_msgs" />
+  <depend package="rtt_ros_integration_std_msgs" />
+  <depend package="rtt_ros_integration_sensor_msgs" />
+  <depend package="rtt_ros_integration_motion_viz" />
+
+  <depend package="kdl_typekit" />
+  <depend package="kdl_parser" />
+  <depend package="motion_viz" />
+
+
+  <export> 
+    <cpp cflags="-I${prefix}/src" /> 
+  </export> 
+
+</package>
+
+
