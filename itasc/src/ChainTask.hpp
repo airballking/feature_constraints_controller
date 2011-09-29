@@ -106,6 +106,17 @@ private:
   std::string ros_prefix;
   std::vector< vector<std::string> > axis_names;
   std::vector< std::string > object_names;
+
+
+  void RPY_angles(KDL::Rotation);
+
+  void compute_angles(KDL::Frame frame, double *a0, double *a1, double *a2);
+  void derive_angles(KDL::Frame frame, double dd=0.001);
+
+  // helper matrices for derive_angles
+  Eigen::MatrixXd U, V, jac, jacinv;
+  Eigen::VectorXd S, Sp, tmp;
+  bool new_rotation;
 };
 
 #endif

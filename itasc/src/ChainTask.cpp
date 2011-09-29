@@ -6,6 +6,9 @@
 
 #include <ros/ros.h>
 
+#include <kdl/utilities/svd_eigen_HH.hpp>
+
+
 /*
  * Using this macro, only one component may live
  * in one library. If you have put your component
@@ -54,7 +57,11 @@ ChainTask::ChainTask(const std::string& name) :
   feedback_gain(NC,1.0),weights(NC,1.0),
   desired_values(NC,1.0),
   Wy(Matrix<double,NC,NC>::Identity()),
-  ros_prefix("left")
+  ros_prefix("left"),
+  // allocate helper matrices for angle representation
+  U(3,3), V(3,3), jac(3,3), jacinv(3,3),
+  S(3), Sp(3), tmp(3),
+  new_rotation(false)
 {
   chain_baker.addSegment(Segment(Joint(Joint::RotZ)));
   chain_baker.addSegment(Segment(Joint(Joint::TransX)));
@@ -73,6 +80,7 @@ ChainTask::ChainTask(const std::string& name) :
   properties()->addProperty("weights_property", weights).doc("local weights of the constraints");
   properties()->addProperty("gain", feedback_gain).doc("feedback gains for the constraints");
   properties()->addProperty("ros_prefix", ros_prefix).doc("prefix for the ROS topic names");
+  properties()->addProperty("new_rotation", new_rotation).doc("use new angle representation?");
 
   // to be taken from configuration objects
   axis_names.resize(2);
@@ -92,6 +100,8 @@ ChainTask::ChainTask(const std::string& name) :
   RTT_init();
 
   nc=NC;
+
+
 }
 
 
@@ -289,8 +299,8 @@ void ChainTask::updateHook(){
 						   weights.size());
   Wy_port.write(Wy);
 
-  RTT_receive();
   ROS_receive();
+  RTT_receive();
 
   if(ros_mode.data == 0)
     doControl();
@@ -368,7 +378,7 @@ void ChainTask::doControl_ranges()
     double lo = ros_constraint_command.pos_lo[i];
     double hi = ros_constraint_command.pos_hi[i];
 
-    if(i >= 3) /// HACK FOR THE RPY ANGLES, PART 2
+    if(i >= 3 && !new_rotation) /// HACK FOR THE RPY ANGLES, PART 2
     {
       lo = value + rot(i-3) - margin[i-3];
       hi = value + rot(i-3) + margin[i-3];
@@ -420,8 +430,8 @@ void ChainTask::doControl()
   rot = measured.Inverse()*rot;
 
   for(unsigned int i=0;i<NC;i++) {
-    if(i<N_CHIF_BAKER)
-      ydot(i)=feedback_gain[i]*(desired_values[i] - chi_f_baker(i));
+    if(i<N_CHIF_BAKER || new_rotation)
+      ydot(i)=feedback_gain[i]*(desired_values[i] - chi_f(i));
     else
       ydot(i)=feedback_gain[i]*rot(i-N_CHIF_BAKER);
   }
@@ -438,7 +448,11 @@ void ChainTask::model_update(){
   fksolver_baker->JntToCart(chi_f_baker,baker_pose);
 
   Rotation rot = (baker_pose.Inverse()*pose).M.Inverse();
-  rot.GetRPY(chi_f_spatula(0),chi_f_spatula(1),chi_f_spatula(2));
+
+  if(new_rotation)
+    derive_angles(Frame(rot));
+  else
+    RPY_angles(rot);
 
   geometry_msgs::PoseStamped pp;
 
@@ -451,12 +465,6 @@ void ChainTask::model_update(){
   tf::PoseKDLToMsg(pose, pp.pose);
   ros_o1o2_pose_port.write(pp);
 
-  Frame ff = Frame(Rotation::RPY(desired_values[3],desired_values[4],desired_values[5]));
-
-  pp.header.frame_id = "/spatula";
-  tf::PoseKDLToMsg(ff, pp.pose);
-  ros_desired_pose_port.write(pp);
-
   /*
   Frame spatula_pose;
   fksolver_spatula->JntToCart(chi_f_spatula,spatula_pose);
@@ -465,8 +473,6 @@ void ChainTask::model_update(){
     log(Warning)<<"model update failed for some reason :("<<endlog();
   */
 
-  //reference frame is spatula, reference point is end of spatula chain
-  jacsolver_spatula->JntToJac(chi_f_spatula_init, Jf_spatula);
   //reference frame is baker, reference point is end of baker chain
   jacsolver_baker->JntToJac(chi_f_baker,Jf_baker);
 
@@ -489,3 +495,96 @@ void ChainTask::model_update(){
 
 }
 
+void ChainTask::RPY_angles(Rotation rot)
+{
+  rot.GetRPY(chi_f_spatula(0),chi_f_spatula(1),chi_f_spatula(2));
+  
+  geometry_msgs::PoseStamped pp;
+
+  Frame ff = Frame(Rotation::RPY(desired_values[3],desired_values[4],desired_values[5]));
+
+  // stupid hack for rviz (running locally, wtf?!)
+  pp.header.stamp = ros::Time::now() - ros::Duration(0.1);
+  pp.header.frame_id = "/spatula";
+  tf::PoseKDLToMsg(ff, pp.pose);
+  ros_desired_pose_port.write(pp);
+
+  // compute Jacobian matrix
+
+  //reference frame is spatula, reference point is end of spatula chain
+  jacsolver_spatula->JntToJac(chi_f_spatula_init, Jf_spatula);
+}
+
+
+void ChainTask::compute_angles(Frame frame, double *a0, double *a1, double *a2)
+{
+
+  Vector rx = frame.M.UnitX();
+  Vector ry = frame.M.UnitY();
+  Vector rz = frame.M.UnitZ();
+
+  if(a0)
+    *a0 = dot(ry, Vector(1,0,0)); // front edge aliged <=> a0 == 0
+
+  if(a1)
+    *a1 = dot(ry, Vector(0,0,1)); // side edge aligned <=> a1 == 0
+
+  // tool direction:
+  // * look from above -> project rz onto y-z-plane , yields rzp
+  // * take angle with z
+  // (tool direction towards center <=> a3 == 1)
+
+  Vector rzp = Vector(rx.z(), 0, rz.z());
+
+  if(a2)
+    *a2 = dot(rzp, Vector(0,0,1)) / rzp.Norm();
+}
+
+void ChainTask::derive_angles(Frame frame, double dd)
+{
+  double a0, a1, a2;
+
+  compute_angles(frame, &a0, &a1, &a2);
+  Vector an(a0, a1, a2);
+
+  chi_f_spatula(0) = a0;
+  chi_f_spatula(1) = a1;
+  chi_f_spatula(2) = a2;
+
+  Twist tx(Vector(0,0,0), Vector(1,0,0));
+  Twist ty(Vector(0,0,0), Vector(0,1,0));
+  Twist tz(Vector(0,0,0), Vector(0,0,1));
+
+  Frame fx = addDelta(frame, tx, dd);
+  compute_angles(fx, &a0, &a1, &a2);
+  Vector ax(a0, a1, a2);
+  
+  Frame fy = addDelta(frame, ty, dd);
+  compute_angles(fy, &a0, &a1, &a2);
+  Vector ay(a0, a1, a2);
+
+  Frame fz = addDelta(frame, tz, dd);
+  compute_angles(fz, &a0, &a1, &a2);
+  Vector az(a0, a1, a2);
+
+  Vector dx = -(ax - an) / dd;
+  Vector dy = -(ay - an) / dd;
+  Vector dz = -(az - an) / dd;
+
+  jacinv(0,0) = dx.x(); jacinv(0,1) = dy.x(); jacinv(0,2) = dz.x();
+  jacinv(1,0) = dx.y(); jacinv(1,1) = dy.y(); jacinv(1,2) = dz.y();
+  jacinv(2,0) = dx.z(); jacinv(2,1) = dy.z(); jacinv(2,2) = dz.z();
+
+  // now invert this
+  svd_eigen_HH(jacinv, U, S, V, tmp);
+
+  double eps = 1e-7;
+  for(int i=0; i < 3; ++i)
+      Sp(i) = (S(i) > eps) ? 1.0 / S(i) : 0.0;
+
+  jac = V * Sp.asDiagonal() * U.transpose();
+
+  Jf_spatula.setColumn(0, Twist(Vector(0,0,0), Vector(jac(0,0), jac(1,0), jac(2,0))));
+  Jf_spatula.setColumn(1, Twist(Vector(0,0,0), Vector(jac(0,1), jac(1,1), jac(2,1))));
+  Jf_spatula.setColumn(2, Twist(Vector(0,0,0), Vector(jac(0,2), jac(1,2), jac(2,2))));
+}
