@@ -316,7 +316,7 @@ pub = rospy.Publisher('/visualization_marker', Marker)
 
 sub_chi = rospy.Subscriber("/chi_f", Float64MultiArray, callback_chi)
 sub_chi_desired = rospy.Subscriber("/chi_f_desired", Float64MultiArray, callback_chi_desired)
-sub_weights = rospy.Subscriber("/task_weights", Float64MultiArray, callback_weights)
+sub_weights = rospy.Subscriber("/weights", Float64MultiArray, callback_weights)
 sub_pose = rospy.Subscriber("/object_pose", Pose, callback_pose)
 sub_end_pose = rospy.Subscriber("/o1o2_pose", PoseStamped, callback_end_pose)
 
