@@ -8,7 +8,7 @@
 
   <node name="tool_tf" type="moveable_tf.py" pkg="motion_viz" args="">
     <param name="frame_name"  value="/tool"/>
-    <param name="parent_name" value="/left_arm_hand_link"/> <!-- TODO: change base_link to robot hand -->
+    <param name="parent_name" value="/left_arm_hand_link"/>
     <remap from="/twist" to="/twist_tool"/>
   </node>
 
