@@ -1,4 +1,6 @@
 
+set (CMAKE_CXX_FLAGS "-DEIGEN_USE_NEW_STDVECTOR -DEIGEN2_SUPPORT")
+
 #GLOBAL_ADD_COMPONENT(ublas_toolkit ublas_toolkit.cpp)
 orocos_library(eigen_toolkit eigen_toolkit.cpp)
 set_target_properties(eigen_toolkit PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib/orocos/types)
