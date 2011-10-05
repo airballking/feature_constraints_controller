@@ -11,3 +11,4 @@ msg\/_.*\.py
 rtt_ros_integration.*\/src
 rtt_ros_integration.*\/lib
 rtt_ros_integration.*\/include
+rtt_ros_integration.*rtt_ros_integration.*\.pc
