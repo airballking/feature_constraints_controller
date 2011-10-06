@@ -2,6 +2,7 @@ build/
 __init__*
 msg_gen
 msg/lisp/
+lib/orocos
 bin/
 .pyc
 ~
@@ -12,3 +13,6 @@ rtt_ros_integration.*\/src
 rtt_ros_integration.*\/lib
 rtt_ros_integration.*\/include
 rtt_ros_integration.*rtt_ros_integration.*\.pc
+Deployer.ior
+orocos\.log
+\.tb_history
