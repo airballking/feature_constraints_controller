@@ -108,84 +108,12 @@ class Wave:
     im = self.A*sin(self.c*self._distance(self.index, pos))
     return (re, im, self.bias)
 
-### old code ...
-
-def wave(positions, num, wave_speed, weights, origins):
-  ss = [size*0.5, size*0.5, size*0.5, 0.5, 0.5, 0.5] 
-  ww = []
-  for pos in positions:
-    wi = []
-    for o,c,s in zip(origins, wave_speed, ss):
-      A = (1.0/num)*size*0.5*sin(c*distance(o, pos))
-      B = (1.0/num)*size*0.5*cos(c*distance(o, pos))
-      wi.append((A,B))
-    ww.append(tuple(wi))
-  return ww
-
-
-def apply_modulation(markers, ww, t, f, num):
-  ct = cos(t*T)
-  st = sin(t*T)
-  s = size*0.5/num
-  stamp = rospy.Time(t)
-  for m,w in zip(markers, ww):
-    m.header.stamp = stamp
-    m.scale.x = w[0][0]*ct + w[0][1]*st + s
-    m.scale.y = w[1][0]*ct + w[1][1]*st + s
-    m.scale.z = w[2][0]*ct + w[2][1]*st + s
-    m.color.r = w[3][0]*ct + w[3][1]*st + 0.5
-    m.color.g = w[4][0]*ct + w[4][1]*st + 0.5
-    m.color.b = w[5][0]*ct + w[5][1]*st + 0.5
-
-
-def modulate_marker(marker, t, amplitude, weight, wave_speed, index):
-  """ modulate scale and color of all this marker """
-  pp = marker.pose.position
-  pos = [pp.x, pp.y, pp.z]
-  values = [ w*a*cos(T*t + c*distance(pos, ind)) + a
-             for a,w,c,ind in zip(amplitude, weight, wave_speed, index) ]
-
-  #values = [0.2,0.2,0.2, dist(pos, [1,1,1]), 0, 0]
-
-  marker.header.stamp = rospy.Time(t)
-  marker.scale = Vector3(*values[0:3])
-  marker.color = ColorRGBA(*values[3:6]+[alpha])
-
-  return marker
-
-
-def modulate_markers(markers, t, amplitude, weights, wave_speed, index):
-  return map(lambda m: modulate_marker(m, t, amplitude, weights, wave_speed, index), markers)
-
 
 pub = rospy.Publisher('visualization_marker', Marker)
 rospy.sleep(0.5) # hack to wait for the connections to establish
 
-def test_run():
 
-  aa = [0.05, 0.05, 0.05, 0.5, 0.5, 0.5]
-  ww = [1.0, 0.0, 0.0, 1.0, 1.0, 1.0]
-  cc = [4.0, 3.4, 3.5, 1.5, 3.7, 3.8]
-  #index = [[1, 1, 1], [0,0,1], [-1,1,0], [-1,-1,-1], [1, -1, 1], [1, 1, 1]]
-  index = [[1, 1, 1], [0,0,0], [0,0,0], [-1,0,0], [0, 1, 0], [0, 0, 1]]
-
-  rate = rospy.Rate(1)
-
-  markers = marker_grid(2,3)
-
-  wwave = wave(grid(2,3), 6, cc, ww, index)
-
-  while True:
-    t = rospy.Time.now().to_sec()
-    apply_modulation(markers, wwave, t, 1.0, 2)
-    #markers = modulate_markers(markers, t, aa, ww, cc, index)
-    for m in markers:
-      pub.publish(m)
-    rate.sleep()
-
-
-
-def test2():
+def test():
   wave_grid = MarkerWaveCube(6,3)
 
   wave_grid.set_wave_scale('x', 1.5, [1,1,1])
@@ -198,7 +126,7 @@ def test2():
 
   rate = rospy.Rate(10)
 
-  while True:
+  while not rospy.is_shutdown():
     t = rospy.Time.now().to_sec()
     wave_grid.apply_modulation(t)
     for m in wave_grid._markers:
@@ -208,7 +136,7 @@ def test2():
 
 def main():
   rospy.init_node('test')
-  test_run()
+  test()
 
 
 if __name__ == "__main__":
