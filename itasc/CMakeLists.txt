@@ -17,7 +17,7 @@ set( RTT_HINTS HINTS ${rtt_PACKAGE_PATH}/install )
 set( OCL_HINTS HINTS ${ocl_PACKAGE_PATH}/install )
 
 
-find_package(Orocos-RTT HINTS ${rtt_PACKAGE_PATH}/install )
+find_package(OROCOS-RTT HINTS ${rtt_PACKAGE_PATH}/install )
 include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 
 
