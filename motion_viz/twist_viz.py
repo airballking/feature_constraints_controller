@@ -28,6 +28,7 @@ colors = [ColorRGBA(0.6, 0.3, 0.3, 1),
 def axis_marker(tw, id = 0, ns = 'twist'):
   """ make a marker message showing the instantaneous
       rotation axis of a twist message"""
+  min_length = 0.03
 
   t = kdl.Twist(kdl.Vector(tw.linear.x,  tw.linear.y,  tw.linear.z),
                 kdl.Vector(tw.angular.x, tw.angular.y, tw.angular.z))
@@ -46,17 +47,29 @@ def axis_marker(tw, id = 0, ns = 'twist'):
   direction = t.rot
   location = t.rot * t.vel / kdl.dot(t.rot, t.rot)
 
-  min_length = 0.03
-  l = direction.Norm()
-
-  if l == 0:
-    # remove this marker
-    return marker.create(id=id, ns=ns, action=Marker.DELETE)
-  elif direction.Norm() < min_length:
-    direction = direction / l * min_length
+  lr = t.rot.Norm()
+  lt = t.vel.Norm()
 
   m = marker.create(id=id, ns=ns, type=Marker.CYLINDER)
-  m = marker.align(m, location - direction, location + direction, 0.02)
+
+  if lr < 0.0001 and lt < 0.0001:
+    return marker.create(id=id, ns=ns, action=Marker.DELETE)
+
+  if lr < 0.001:
+    # very short axis, assume linear movement
+    location = kdl.Vector(0,0,0)
+    direction = t.vel
+    if lt < min_length:
+      direction *= min_length / lt
+    m.type = Marker.CUBE
+    m = marker.align(m, location, location + direction, 0.02)
+  elif lr < min_length:
+    direction = direction / lr * min_length
+    m = marker.align(m, location - direction, location + direction, 0.02)
+  else:
+    #BAH! How do I make this better?
+    m = marker.align(m, location - direction, location + direction, 0.02)
+
   m.header.frame_id = target_frame
   m.frame_locked = True
 
@@ -101,7 +114,7 @@ def any_callback(msg):
 
 ### main ###
 
-rospy.init_node('any_viz')
+rospy.init_node('twist_viz')
 
 # retrieve frame names from parameters
 target_frame = rospy.get_param('~target_frame', '/base_link')
