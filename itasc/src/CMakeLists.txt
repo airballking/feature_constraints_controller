@@ -14,8 +14,9 @@ target_link_libraries(iTaSC_Scene ${RTT_PLUGIN_rtt-marshalling_LIBRARIES})
 orocos_component(iTaSC_WDLSSolver WDLSVelocitySolver.cpp )
 #component_add_libs(iTaSC_WDLSSolver ${KDL_LIBS})
 
-orocos_component(chain_task ChainTask.cpp) # ...you may add multiple source files
-orocos_component(ros_robot ROSRobot.cpp) # ...you may add multiple source files
+orocos_component(feature_task FeatureTask.cpp)
+orocos_component(chain_task ChainTask.cpp)
+orocos_component(ros_robot ROSRobot.cpp)
 orocos_component(ros_object ROSObject.cpp)
 orocos_component(ros_limitavoider ROSLimitAvoider.cpp)
 

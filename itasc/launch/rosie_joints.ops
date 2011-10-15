@@ -15,7 +15,7 @@ loadComponent("Scene","iTaSC::Scene")
 setActivity("Scene", 0.005, HighestPriority-1, ORO_SCHED_RT)
 loadComponent("PancakeMaker","iTaSC::ROSObject")
 setActivity("PancakeMaker", 0.005, HighestPriority-1, ORO_SCHED_RT)
-loadComponent("Chef","ChainTask")
+loadComponent("Chef", "FeatureTask")
 setActivity("Chef",0.005,HighestPriority-1, ORO_SCHED_RT)
 loadComponent("Solver","iTaSC::WDLSVelocitySolver")
 
@@ -28,6 +28,7 @@ LimitAvoider.configure()
 
 
 Chef.ros_prefix = ""
+Chef.new_rotation = true
 
 Scene.iTaSC_configuration = "rosie_config.xml"
 

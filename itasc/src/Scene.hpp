@@ -153,7 +153,7 @@ private:
 	RobotMap robots;
 	TaskMap tasks;
 
-	unsigned int nq_total, nc_total;
+	unsigned int nq_total, nc_total, nc_task;
 
 	Eigen::MatrixXd A_total, Wy_total, Wq_total, tmpJq, tmpCfJf, tmpJf, Uf, Vf;
 	Eigen::VectorXd qdot_total, ydot_total, Sf, temp;

@@ -51,6 +51,10 @@ Scene::Scene(const string& name) :
 	this->ports()->addPort("ydot", ydot_port);
 	this->ports()->addPort("qdot", qdot_port);
 
+    nc_task=6;
+	this->properties()->addProperty("nc_task", nc_task).doc(
+			"number of constraints for the feature task");
+
 	// INGO: hacked in to get joint limit avoidance working
 	this->ports()->addPort("arm_J", arm_J_port);
 	arm_J = Jacobian(6);
@@ -454,7 +458,7 @@ void Scene::prepareSystem() {
 	tmpJq.setZero();
 	tmpCfJf = MatrixXd((int) nc_total, 6);
 	tmpCfJf.setZero();
-	tmpJf = MatrixXd(6, 6);
+	tmpJf = MatrixXd(nc_task, 6);
 	tmpJf.setZero();
 	Uf = MatrixXd(6, 6);
 	Uf.setIdentity();
@@ -518,6 +522,8 @@ void Scene::updateHook() {
 			arm_J_port.write(arm_J);
 		}
 
+        // INGO: inversion takes place inside the Feature Task
+        /*
 		if (0 != svd_eigen_HH(task->Jf.data, Uf, Sf, Vf, temp)) {
 			log(Error) << "Could not invert virtual linkage jacobian of task "
 					<< task->peer->getName();
@@ -535,8 +541,9 @@ void Scene::updateHook() {
 				Uf.col(j) *= 1 / Sf(j);
 			else
 				Uf.col(j).setZero();
+		*/
 
-		tmpJf = (Vf * Uf.transpose()).lazy();
+		tmpJf = task->Jf.data.transpose(); //(Vf * Uf.transpose()).lazy();
 		//log(Info)<<"Jf_inv"<<tmpJf<<endlog();
 
 		task->Cf_port.read(task->Cf_local);
