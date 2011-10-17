@@ -39,7 +39,13 @@
   <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/left_handle" />
   <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
 
-  <node name="chain_viz" type="chain_viz.py" pkg="motion_viz" cwd="node"/>
+  <node name="jac_chain_viz" type="jac_chain_viz.py" pkg="motion_viz" cwd="node">
+    <remap from="/jacobian" to="/task_jacobian"/>
+    <remap from="/pose" to="/o1o2_pose"/>
+    <param name="ref_frame" value="/pancake"/>
+    <param name="ref_point" value="/pancake"/>
+    <param name="target_frame" value="/pancake"/>
+  </node>
 
   <node name="spatula_frame" type="tf2pose.py" pkg="motion_viz" args="spatula base_link /spatula_frame -stamped"/>
   <node name="pancake_frame" type="tf2pose.py" pkg="motion_viz" args="pancake base_link /pancake_frame -stamped"/>

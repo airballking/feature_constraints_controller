@@ -58,7 +58,7 @@ class VirtualChain:
     rospy.loginfo('ref_frame=%s, ref_point=%s, target_frame=%s'
                    % (self.ref_frame, self.ref_point, self.target_frame))
 
-    self.eps = 0.005
+    self.eps = 0.01
     self.rot_length = 0.06
     self.width = 0.02
 
