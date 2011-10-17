@@ -1,5 +1,4 @@
-string name
-string function
-geometry_msgs/Vector3 pos
-geometry_msgs/Vector3 dir
-geometry_msgs/Vector3 ref_dir
+string name      # 'human readable' name for the constraint
+string function  # name of the constraint function ('perpendicular', etc.)
+Feature tool_feature
+Feature world_feature
