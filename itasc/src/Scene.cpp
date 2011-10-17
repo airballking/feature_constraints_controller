@@ -470,6 +470,31 @@ void Scene::prepareSystem() {
 	temp.setZero();
 }
 
+
+Matrix<double, 6, 6> inverse_twist_proj(KDL::Frame f)
+{
+  // Rotation matrix of f
+  Matrix3d Rt = Map<Matrix3d>(f.M.data);
+
+  double x = f.p.x(), y = f.p.y(), z = f.p.z();
+
+  // Skew symmetric matrix of p, [p]_x for expressing a cross product
+  Matrix3d px;
+  px << 0, -z,  y,
+        z,  0, -x,
+       -y,  x,  0;
+
+  // the inverse twist projection matrix
+  Matrix<double, 6, 6> Mi;
+  Mi.block<3,3>(0,0) = Rt;
+  Mi.block<3,3>(3,3) = Rt;
+  Mi.block<3,3>(0,3) = -Rt*Rt.transpose()*px*Rt;
+  Mi.block<3,3>(3,0) = Matrix3d::Zero();
+
+  return Mi;
+}
+
+
 void Scene::updateHook() {
 	Logger::In in(this->getName());
 
@@ -514,7 +539,10 @@ void Scene::updateHook() {
 
 		//Get Jf, transform it to the base and invert it.
 		task->Jf_port.read(task->Jf);
-		task->Jf.changeRefFrame(T_w_o1);
+		//task->Jf.changeRefFrame(T_w_o1);
+        //INGO: changing the reference frame for the inverted (and transposed) jacobian
+        task->Jf.data = (task->Jf.data.transpose()*inverse_twist_proj(T_w_o1)).transpose();
+
 
 		// INGO: hacked in to get joint limit avoidance working
 		if(task->peer->getName() == "Chef") {
