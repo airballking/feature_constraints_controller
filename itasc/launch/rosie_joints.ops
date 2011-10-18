@@ -28,7 +28,6 @@ LimitAvoider.configure()
 
 
 Chef.ros_prefix = ""
-Chef.new_rotation = true
 
 Scene.iTaSC_configuration = "rosie_config.xml"
 

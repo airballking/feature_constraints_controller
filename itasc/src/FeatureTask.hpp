@@ -13,6 +13,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <motion_viz/ConstraintCommand.h>
+#include <motion_viz/ConstraintState.h>
 #include <motion_viz/Jacobian.h>
 
 #include "SubTask.hpp"
@@ -35,19 +36,10 @@ class FeatureTask
 
 
 private:
-  bool pose_valid;
   int start_count;
+  int guard_time;
 
-  KDL::Chain chain_baker;
-  KDL::Chain chain_spatula;
-  KDL::ChainFkSolverPos_recursive* fksolver_baker;
-  KDL::ChainJntToJacSolver* jacsolver_baker;
-  KDL::ChainFkSolverPos_recursive* fksolver_spatula;
-  KDL::ChainJntToJacSolver* jacsolver_spatula;
-
-  KDL::Jacobian Jf_total,Jf_baker,Jf_spatula;
-  KDL::JntArray chi_f_baker;
-  KDL::JntArray chi_f_spatula, chi_f_spatula_init;
+  KDL::Jacobian Jf_total;
   KDL::JntArray chi_f;
   KDL::JntArray ydot;
   std::vector<double> feedback_gain, weights, desired_values;
@@ -64,10 +56,11 @@ private:
   RTT::OutputPort<std_msgs::Float64MultiArray> ros_chi_f_desired_port;
   RTT::InputPort<motion_viz::ConstraintCommand> ros_constraint_command_port;
   RTT::InputPort<std_msgs::Int8> ros_constraint_mode_port;
+  RTT::OutputPort<motion_viz::ConstraintState> ros_constraint_state_port;
 
-  RTT::OutputPort<geometry_msgs::PoseStamped> ros_chain_pose_port;
   RTT::OutputPort<geometry_msgs::PoseStamped> ros_o1o2_pose_port;
-  RTT::OutputPort<geometry_msgs::PoseStamped> ros_desired_pose_port;
+
+  // debugging and visualization
   RTT::OutputPort<geometry_msgs::Twist> ros_task_twist_port;
   RTT::OutputPort<motion_viz::Jacobian> ros_task_jacobian_port;
   RTT::OutputPort<std_msgs::Float64MultiArray> ros_weights_port;
@@ -78,16 +71,16 @@ private:
   std_msgs::Float64MultiArray ros_chi_f;
   std_msgs::Float64MultiArray ros_chi_f_desired;
   std_msgs::Float64MultiArray ros_weights;
-  std_msgs::Int8 ros_mode;
+  std_msgs::Int8 ros_mode;  // 0: position mode 1: range mode
 
   geometry_msgs::Twist ros_task_twist;
   motion_viz::Jacobian ros_task_jacobian;
 
   motion_viz::ConstraintCommand ros_constraint_command;
+  motion_viz::ConstraintState ros_constraint_state;
   std_msgs::Float64MultiArray ros_chi_f_command;
   std_msgs::Float64MultiArray ros_weight_command;
 
-  void model_update();
   void doControl();
   void doControl_ranges();
 
@@ -105,27 +98,14 @@ private:
 				       P &port);
 
   // configuration
-  std::string chain_name;
   std::string ros_prefix;
-  std::vector< vector<std::string> > axis_names;
-  std::vector< std::string > object_names;
+  std::vector<std::string> axis_names;
 
-
-  void RPY_angles(KDL::Rotation);
-
-  void compute_angles(KDL::Frame frame, double *a0, double *a1, double *a2);
-  void derive_angles(KDL::Frame frame, double dd=0.001);
 
   //! requires at least 'nc' doubles to be in the array feature_values
   void compute_features(double *feature_values, KDL::Frame frame);
   void derive_features(KDL::Frame frame, double dd=0.001);
   KDL::Jacobian J_inv_t;
-
-
-  // helper matrices for derive_angles
-  Eigen::MatrixXd U, V, jac, jacinv;
-  Eigen::VectorXd S, Sp, tmp;
-  bool new_rotation;
 };
 
 #endif
