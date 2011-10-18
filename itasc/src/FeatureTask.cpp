@@ -97,6 +97,7 @@ void FeatureTask::ROS_init()
 
   ROS_add_port("constraint_command", ros_prefix+"/constraint_command", ros_constraint_command_port);
   ROS_add_port("constraint_mode", ros_prefix+"/constraint_mode", ros_constraint_mode_port);
+  ROS_add_port("constraint_select", ros_prefix+"/constraint_select", ros_constraint_select_port);
 
   ros_chi_f.data.resize(NC);
   ros_chi_f_desired.data.resize(NC);
@@ -108,7 +109,8 @@ void FeatureTask::ROS_init()
   ros_constraint_command.pos_lo.resize(NC);
   ros_constraint_command.pos_hi.resize(NC);
   ros_constraint_command.weight.resize(NC);
-  ros_mode.data = 0;
+  ros_mode.data   = 0;
+  ros_select.data = 0;
 
   ros_constraint_state.joint_names.resize(nc);
   ros_constraint_state.chi.resize(nc);
@@ -198,6 +200,7 @@ void FeatureTask::ROS_receive()
 
   ros_constraint_command_port.read(ros_constraint_command);
   ros_constraint_mode_port.read(ros_mode);
+  ros_constraint_select_port.read(ros_select);
 }
 
 void FeatureTask::RTT_receive()
@@ -380,6 +383,8 @@ void FeatureTask::doControl()
 
 void FeatureTask::compute_features(double *feature_values, KDL::Frame frame)
 {
+  // TODO: switch to different functions, depending on ros_select.data
+
   Vector p = frame.p;
 
   double x0 = atan2(p.y(), p.x());

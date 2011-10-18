@@ -56,6 +56,7 @@ private:
   RTT::OutputPort<std_msgs::Float64MultiArray> ros_chi_f_desired_port;
   RTT::InputPort<motion_viz::ConstraintCommand> ros_constraint_command_port;
   RTT::InputPort<std_msgs::Int8> ros_constraint_mode_port;
+  RTT::InputPort<std_msgs::Int8> ros_constraint_select_port;
   RTT::OutputPort<motion_viz::ConstraintState> ros_constraint_state_port;
 
   RTT::OutputPort<geometry_msgs::PoseStamped> ros_o1o2_pose_port;
@@ -71,7 +72,8 @@ private:
   std_msgs::Float64MultiArray ros_chi_f;
   std_msgs::Float64MultiArray ros_chi_f_desired;
   std_msgs::Float64MultiArray ros_weights;
-  std_msgs::Int8 ros_mode;  // 0: position mode 1: range mode
+  std_msgs::Int8 ros_mode;    // 0: position mode 1: range mode
+  std_msgs::Int8 ros_select;  // which constraint set to use: 0: cylinder+alignment
 
   geometry_msgs::Twist ros_task_twist;
   motion_viz::Jacobian ros_task_jacobian;
