@@ -13,7 +13,7 @@ import rospy
 import tf
 import PyKDL as kdl
 import tf_conversions.posemath as posemath
-from std_msgs.msg import ColorRGBA, Float64MultiArray
+from std_msgs.msg import ColorRGBA, Float64MultiArray, Int8
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Pose,PoseStamped, Point, Quaternion, Vector3, Twist
 from motion_viz.msg import Jacobian, ConstraintCommand
@@ -170,9 +170,8 @@ class VirtualChain:
 
   def _color(self, index):
     err_scale = self.error_scales[self.joint_types[index]]
-    color = color_code(abs(self.errors[index]) / err_scale)
-    #TODO: do coloring for weights
-    return color
+    c = color_code(abs(self.errors[index]) / err_scale)
+    return color_code(self.weights[index], [0.0, 1.0], [[0.0, 0.0, 1.0, 1.0], [c.r, c.g, c.b, c.a]])
     
 
   def _transform(self):
@@ -188,6 +187,9 @@ class VirtualChain:
     return posemath.fromTf( (trans, rot) )
 
 
+chi = None
+active = True
+
 
 def pose_callback(msg):
   ''' receive Pose of the chain end '''
@@ -198,17 +200,23 @@ def pose_callback(msg):
 def jac_callback(msg):
   ''' receive jacobian '''
   global chain
+  global active
   chain.set_jac(msg)
   for m in chain.markers():
+    if not active:
+      m.action = Marker.DELETE
     pub.publish(m)
 
 
+def active_callback(msg):
+  global active
+  active = (msg.data != 0)
 
-chi = None
 
 def chi_callback(msg):
   global chi
   chi = msg.data
+
 
 def chi_des_callback(msg):
   global chain
@@ -217,6 +225,7 @@ def chi_des_callback(msg):
   if chi != None:
     errors = [c_des - c for c,c_des in zip(chi, msg.data)]
     chain.set_errors(errors)
+
 
 def weights_callback(msg):
   global chain
@@ -240,6 +249,8 @@ if __name__ == "__main__":
   sub_chi     = rospy.Subscriber('/chi_f', Float64MultiArray, chi_callback)
   sub_chi_des = rospy.Subscriber('/chi_f_desired', Float64MultiArray, chi_des_callback)
   sub_weights = rospy.Subscriber('/weights', Float64MultiArray, weights_callback)
+
+  sub_active  = rospy.Subscriber('/itasc_active', Int8, active_callback)
 
   # run
   rospy.spin()
