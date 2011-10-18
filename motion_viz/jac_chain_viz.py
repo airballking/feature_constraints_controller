@@ -239,7 +239,7 @@ if __name__ == "__main__":
   # messy interface, to be moved into a a structured message
   sub_chi     = rospy.Subscriber('/chi_f', Float64MultiArray, chi_callback)
   sub_chi_des = rospy.Subscriber('/chi_f_desired', Float64MultiArray, chi_des_callback)
-  sub_weights = rospy.Subscriber('/weigths', Float64MultiArray, weights_callback)
+  sub_weights = rospy.Subscriber('/weights', Float64MultiArray, weights_callback)
 
   # run
   rospy.spin()
