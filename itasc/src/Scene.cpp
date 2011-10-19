@@ -488,7 +488,7 @@ Matrix<double, 6, 6> inverse_twist_proj(KDL::Frame f)
   Matrix<double, 6, 6> Mi;
   Mi.block<3,3>(0,0) = Rt;
   Mi.block<3,3>(3,3) = Rt;
-  Mi.block<3,3>(0,3) = -Rt*Rt.transpose()*px*Rt;
+  Mi.block<3,3>(0,3) = -Rt*px;
   Mi.block<3,3>(3,0) = Matrix3d::Zero();
 
   return Mi;
