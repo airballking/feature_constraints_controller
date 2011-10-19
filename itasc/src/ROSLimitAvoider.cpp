@@ -43,7 +43,7 @@ using namespace Eigen;
 namespace iTaSC {
 ROSLimitAvoider::ROSLimitAvoider(const std::string& name) :
 	TaskContext(name, PreOperational), nq(0), d(0.7), h(0.8),
-    K_task(1.0), K_avoid(1.0) {
+    K_task(1.0), K_avoid(1.0), ros_prefix("/right") {
 
 	this->ports()->addPort("q", q_port);
 	this->ports()->addPort("jac", jac_port);
@@ -54,18 +54,6 @@ ROSLimitAvoider::ROSLimitAvoider(const std::string& name) :
 	this->ports()->addPort("qdot_mixed_ros", qdot_mixed_ros_port);
 	this->ports()->addPort("qdot_raw_ros", qdot_raw_ros_port);
 
-
-	ConnPolicy c = ConnPolicy::data(ConnPolicy::LOCK_FREE, true, false);
-	c.transport = 3;
-
-	c.name_id = string("/qdot_ros");
-    qdot_ros_port.createStream(c);
-
-    c.name_id = string("/qdot_mixed_ros");
-    qdot_mixed_ros_port.createStream(c);
-
-    c.name_id = string("/qdot_raw_ros");
-    qdot_raw_ros_port.createStream(c);
 
 
 	this->properties()->addProperty("d", d).doc(
@@ -83,6 +71,8 @@ ROSLimitAvoider::ROSLimitAvoider(const std::string& name) :
 			"mixing factor for task velocities");
 	this->properties()->addProperty("K_avoid", K_avoid).doc(
 			"mixing factor for limit avoidance velocities");
+	this->properties()->addProperty("ros_prefix", ros_prefix).doc(
+	        "prefix for the ROS topic names");
 
 	d=0.7;
     h=0.8;
@@ -99,6 +89,20 @@ bool ROSLimitAvoider::configureHook()
 	if(!readLimits())
 		return false;
 	nq = lim_min.size();
+
+
+	ConnPolicy c = ConnPolicy::data(ConnPolicy::LOCK_FREE, true, false);
+	c.transport = 3;
+
+	c.name_id = string(ros_prefix+"/qdot_ros");
+	qdot_ros_port.createStream(c);
+
+	c.name_id = string(ros_prefix+"/qdot_mixed_ros");
+	qdot_mixed_ros_port.createStream(c);
+
+	c.name_id = string(ros_prefix+"/qdot_raw_ros");
+	qdot_raw_ros_port.createStream(c);
+
 
 	q = JntArray(nq);
 	qdot = JntArray(nq);

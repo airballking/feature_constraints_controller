@@ -78,6 +78,7 @@ private:
 	int nq;
 	double d, h;
 	double K_task, K_avoid;
+	std::string ros_prefix;
 	std::string base_name, ee_name;
 };
 
