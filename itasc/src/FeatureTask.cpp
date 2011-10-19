@@ -396,7 +396,7 @@ void FeatureTask::compute_features(double *feature_values, KDL::Frame frame)
   Vector vy = frame.M.UnitY();
   Vector vz = frame.M.UnitZ();
 
-  double a0 = dot(vx, Vector(0,0,1)); // front edge aliged <=> a0 == 0
+  double a0 = dot(-vy, Vector(0,0,1)); // front edge aliged <=> a0 == 0
   double a1 = dot(vz, Vector(0,0,1)); // side edge aligned <=> a1 == 0
 
   // tool direction:

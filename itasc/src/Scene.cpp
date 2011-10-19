@@ -473,7 +473,7 @@ void Scene::prepareSystem() {
 
 Matrix<double, 6, 6> inverse_twist_proj(KDL::Frame f)
 {
-  // Rotation matrix of f
+  // (transposed) Rotation matrix of f
   Matrix3d Rt = Map<Matrix3d>(f.M.data);
 
   double x = f.p.x(), y = f.p.y(), z = f.p.z();

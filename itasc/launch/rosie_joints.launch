@@ -22,7 +22,7 @@
         args="0.05 -0.02 0.17 1.5708 -1.5708 0 /left_arm_hand_link /left_handle 100" />
 
   <node name="spatula_transform" pkg="tf" type="static_transform_publisher"
-        args="0 -0.05 0.2  0 0 -0.2 /left_handle /spatula 100"/>
+        args="0.10 -0.22 0.17  2.942 0.0 -1.571  /left_arm_hand_link /spatula 100"/>
 
   <node name="table_transform" pkg="tf" type="static_transform_publisher"
         args="0.1 0.0 -0.763  0 0 0 /pancake /table 100"/>
@@ -36,7 +36,7 @@
   <node name="rviz" type="rviz" pkg="rviz" args="-d $(find itasc)/baking.vcg"/>
 
   <!-- visualization stuff -->
-  <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/left_handle" />
+  <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/spatula" />
   <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
 
   <node name="jac_chain_viz" type="jac_chain_viz.py" pkg="motion_viz" cwd="node">
