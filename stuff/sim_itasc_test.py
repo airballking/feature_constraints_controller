@@ -3,7 +3,7 @@ import rospy
 
 from std_msgs.msg import Int8
 
-import thing_tools
+#import thing_tools
 
 import PyKDL as kdl
 import time
