@@ -16,21 +16,10 @@ from tf.msg import tfMessage
 from geometry_msgs.msg import TransformStamped, Vector3, Quaternion
 
 
-rospy.init_node('tf_tree')
-
 #tf_sender = tf.TransformBroadcaster()
+
+rospy.init_node('tf_tree')
 tf_pub = rospy.Publisher('/tf', tfMessage)
-
-
-def send_tree(tf_sender, frame, depth, step, frame_name):
-  branch_factor = 4
-  for i in range(branch_factor):
-    R = kdl.Rotation.RotZ(i/float(branch_factor))
-    p = R*kdl.Vector(step, 0, 0.1) # + frame.p
-    tf_sender.sendTransform(p, R.GetQuaternion(),
-                            rospy.Time.now(), frame_name, frame_name+str(i))
-    if depth > 0:
-      send_tree(tf_sender, F, depth-1, step/2.0, frame_name+str(i))
 
 
 
@@ -75,7 +64,6 @@ r                      = rospy.get_param('rate', 10)
 rate = rospy.Rate(r)
 
 while not rospy.is_shutdown():
-  #send_tree(tf_sender, kdl.Frame(), 3, 0.4, '/fr')
   msg = tfMessage()
   msg.transforms = get_tree(kdl.Frame(), depth, step, '/fr', bush_topo)
   tf_pub.publish(msg)
