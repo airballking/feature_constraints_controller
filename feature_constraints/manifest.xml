@@ -1,0 +1,22 @@
+<package>
+  <description brief="feature_constraints">
+    task functions for task specification
+
+  </description>
+  <author>Ingo Kresse (kresse@in.tum.de)</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/iTaSC</url>
+
+  <depend package="eigen"/>
+  <depend package="kdl"/>
+  <depend package="tf_conversions"/>
+  <depend package="constraint_msgs" />
+
+  <export> 
+    <cpp cflags="-I${prefix}/include" /> 
+  </export> 
+
+</package>
+
+

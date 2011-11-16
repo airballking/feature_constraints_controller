@@ -6,6 +6,11 @@ lib/orocos
 bin/
 .pyc
 ~
+feature_constraints/lib/
+.cproject
+.project
+.pydevproject
+cmake_install.cmake
 
 syntax: regexp
 msg\/_.*\.py
