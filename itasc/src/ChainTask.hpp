@@ -12,7 +12,7 @@
 #include <std_msgs/Int8.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
-#include <motion_viz/ConstraintCommand.h>
+#include <constraint_msgs/ConstraintCommand.h>
 
 #include "SubTask.hpp"
 
@@ -61,7 +61,7 @@ private:
   // ROS communication
   RTT::OutputPort<std_msgs::Float64MultiArray> ros_chi_f_port;
   RTT::OutputPort<std_msgs::Float64MultiArray> ros_chi_f_desired_port;
-  RTT::InputPort<motion_viz::ConstraintCommand> ros_constraint_command_port;
+  RTT::InputPort<constraint_msgs::ConstraintCommand> ros_constraint_command_port;
   RTT::InputPort<std_msgs::Int8> ros_constraint_mode_port;
 
   RTT::OutputPort<geometry_msgs::PoseStamped> ros_chain_pose_port;
@@ -80,7 +80,7 @@ private:
 
   geometry_msgs::Twist ros_task_twist;
 
-  motion_viz::ConstraintCommand ros_constraint_command;
+  constraint_msgs::ConstraintCommand ros_constraint_command;
   std_msgs::Float64MultiArray ros_chi_f_command;
   std_msgs::Float64MultiArray ros_weight_command;
 

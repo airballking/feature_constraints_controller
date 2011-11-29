@@ -1,0 +1,21 @@
+<package>
+  <description brief="rtt_constraint_msgs">
+    
+    RTT typekits for constraint messages.
+    
+  </description>
+  <author>Ingo Kresse kresse@in.tum.de</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <depend package="rtt_rosnode"/>
+  <depend package="constraint_msgs"/>
+  <depend package="rtt_geometry_msgs"/>
+  <depend package="rtt_std_msgs"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include"/>
+  </export>
+
+
+</package>
+

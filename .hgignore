@@ -14,10 +14,10 @@ cmake_install.cmake
 
 syntax: regexp
 msg\/_.*\.py
-rtt_ros_integration.*\/src
-rtt_ros_integration.*\/lib
-rtt_ros_integration.*\/include
-rtt_ros_integration.*rtt_ros_integration.*\.pc
+rtt_.*\/src
+rtt_.*\/lib
+rtt_.*\/include
+rtt_.*\/rtt_.*\.pc
 Deployer.ior
 orocos\.log
 \.tb_history

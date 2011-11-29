@@ -15,6 +15,7 @@ orocos_component(iTaSC_WDLSSolver WDLSVelocitySolver.cpp )
 #component_add_libs(iTaSC_WDLSSolver ${KDL_LIBS})
 
 orocos_component(feature_task FeatureTask.cpp)
+orocos_component(feature_task2 FeatureTask2.cpp)
 orocos_component(chain_task ChainTask.cpp)
 orocos_component(ros_robot ROSRobot.cpp)
 orocos_component(ros_object ROSObject.cpp)
