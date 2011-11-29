@@ -11,6 +11,28 @@ from std_msgs.msg import ColorRGBA
 from visualization_msgs.msg import Marker,MarkerArray
 from geometry_msgs.msg import Pose,Point,Quaternion,Vector3,Wrench
 
+
+def color_code(index, intervals=[0.0, 0.5, 1.0],
+                      colors=[[0.0, 1.0, 0.0, 1.0],
+                              [1.0, 1.0, 0.0, 1.0],
+                              [1.0, 0.0, 0.0, 1.0]]):
+
+  # handle corner cases
+  if index <= intervals[0] or isnan(index):
+    return ColorRGBA(*colors[0])
+
+  if index >= intervals[-1]:
+    return ColorRGBA(*colors[-1])
+
+  # pick interval
+  (i0, i1) = ((i-1,i+1) for i,t in enumerate(intervals) if t >= index).next()
+  (t0, t1) = intervals[i0:i1]
+  (c0, c1) = colors[i0:i1]
+
+  t = (index-t0)/(t1-t0)
+  return [(1-t)*x0 + t*x1 for (x0,x1) in zip(c0,c1)]
+
+
 def create(**args):
   m = Marker(**args)
   # make shure the marker is displayable
