@@ -46,6 +46,15 @@ void fromMsg(const constraint_msgs::Constraint& msg, Constraint& c)
   fromMsg(msg.world_feature, c.object_features[0]);
 }
 
+
+void fromMsg(const constraint_msgs::ConstraintConfig& msg, std::vector<Constraint>& cc)
+{
+  int num = msg.constraints.size();
+  cc.resize(num);
+  for(int i=0; i < num; i++)
+    fromMsg(msg.constraints[i], cc[i]);
+}
+
 Constraint fromMsg(const constraint_msgs::Constraint& msg)
 {
   return Constraint(msg.name, msg.function,
@@ -112,8 +121,8 @@ void toMsg(Controller& c, constraint_msgs::ConstraintState& c_msg)
   toMsg(c.frame, c_msg.pose);
   toMsg(c.chi, c_msg.chi);
   toMsg(c.chi_desired, c_msg.chi_desired);
-  toMsg(c.J, c_msg.jacobian);
   toMsg(c.weights, c_msg.weights);
+  toMsg(c.J, c_msg.jacobian);
   toMsg(c.singularValues, c_msg.singular_values);
 }
 

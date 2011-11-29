@@ -10,14 +10,28 @@
 
 #include <feature_constraints/FeatureConstraints.h>
 
+
+#define MAX_CONSTRAINTS 64
+
+
 // describes the instantaneous constraint command
 class Ranges
 {
 public:
-  Ranges(int size);
+  Ranges(int size=0);
   KDL::JntArray pos_lo;  //!< min values for the constraints
   KDL::JntArray pos_hi;  //!< max values for the constraints
   KDL::JntArray weight;  //!< weights for the constraints (0|1)
+};
+
+
+//! pseudo-inverse working matrices
+class PinvData
+{
+public:
+  Eigen::MatrixXd U, V;
+  Eigen::VectorXd Sp, tmp;
+  void resize(int size);
 };
 
 
@@ -52,18 +66,22 @@ public:
   KDL::Jacobian J;
   KDL::JntArray singularValues;
   KDL::JntArray tmp;
+  PinvData tmp_pinv;
 
   // does non-realtime preparation work
   // assumes that constraints is set
-  void prepare();
+  void prepare(int max_constraints=MAX_CONSTRAINTS);
 
   // calls deriveConstraints(), control() and analyzeH()
   void update(KDL::Frame frame);
 };
 
-//! Analyze interaction matrix.
-void analyzeH(KDL::Jacobian Ht, KDL::Jacobian& J, KDL::JntArray& singularValues, double eps=1e-15);
 
+//! Analyze interaction matrix.
+void analyzeH(PinvData& tmpdata, KDL::Jacobian Ht, KDL::Jacobian& J,
+		      KDL::JntArray& singularValues, double eps=1e-15);
+
+//! Do range-based control.
 void control(KDL::JntArray& ydot, KDL::JntArray& weights,
 	     KDL::JntArray& chi_desired, KDL::JntArray& chi,
 	     Ranges& command, KDL::JntArray gains);

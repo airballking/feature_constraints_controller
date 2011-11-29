@@ -9,6 +9,10 @@
 #include <map>
 
 // TODO: having strings inside features, screws its realtime safety for creation! is that bad?
+//       (_no_ copy-on-write implementation for the GNU std::string.  :-( )
+
+#define STRING_SIZE 256
+
 
 // A tool- or workspace feature
 class Feature
@@ -19,10 +23,10 @@ public:
   KDL::Vector pos;     //!< position of the feature
   KDL::Vector dir;     //!< direction of the feature
 
-  Feature() {}
+  Feature() {name.reserve(STRING_SIZE);}
   Feature(std::string name, KDL::Vector pos,
           KDL::Vector dir, KDL::Vector dir2=KDL::Vector())
-    : name(name), pos(pos), dir(dir) {}
+    : name(name), pos(pos), dir(dir) {name.reserve(STRING_SIZE);}
 };
 
 
@@ -41,11 +45,12 @@ public:
   FeatureFunc func;
   Feature tool_features[2], object_features[2];
 
-  Constraint() {}
+  Constraint() {name.reserve(STRING_SIZE);}
   Constraint(std::string name, FeatureFunc func,
              Feature tool_feature, Feature object_feature)
    : name(name), func(func)
   {
+	name.reserve(STRING_SIZE);
     tool_features[0] = tool_feature;
     object_features[0] = object_feature;
   }
@@ -54,6 +59,7 @@ public:
              Feature tool_feature, Feature object_feature)
    : name(name), func(feature_functions_[func_name])
   {
+	name.reserve(STRING_SIZE);
     tool_features[0] = tool_feature;
     object_features[0] = object_feature;
   }
@@ -100,7 +106,7 @@ double pointing_at(KDL::Frame frame, Feature* tool_features, Feature* object_fea
 //! compute the values of the constraints, given a frame
 void evaluateConstraints(KDL::JntArray &values, KDL::Frame frame, const std::vector<Constraint> &constraints);
 
-//! compute the numerial derivative of the constraints around frame
+//! compute the numerical derivative of the constraints around frame
 void deriveConstraints(KDL::Jacobian& Ht, KDL::JntArray& values, KDL::Frame& frame,
                        std::vector<Constraint> &constraints, double dd,  KDL::JntArray& tmp);
 

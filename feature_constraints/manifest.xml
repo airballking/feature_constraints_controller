@@ -14,7 +14,8 @@
   <depend package="constraint_msgs" />
 
   <export> 
-    <cpp cflags="-I${prefix}/include" /> 
+    <cpp cflags="-I${prefix}/include"
+         lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lfeature_constraints"/>
   </export> 
 
 </package>

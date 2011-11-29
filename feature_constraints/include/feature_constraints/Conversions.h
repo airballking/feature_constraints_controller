@@ -6,6 +6,7 @@
 #include <geometry_msgs/Vector3.h>
 #include <constraint_msgs/Feature.h>
 #include <constraint_msgs/Constraint.h>
+#include <constraint_msgs/ConstraintConfig.h>
 #include <constraint_msgs/ConstraintCommand.h>
 #include <constraint_msgs/ConstraintState.h>
 
@@ -18,6 +19,7 @@
 void fromMsg(const geometry_msgs::Vector3& msg, KDL::Vector vec);
 void fromMsg(const constraint_msgs::Feature& msg, Feature& feat);
 void fromMsg(const constraint_msgs::Constraint& msg, Constraint& c);
+void fromMsg(const constraint_msgs::ConstraintConfig& msg, std::vector<Constraint>& cc);
 void fromMsg(std::vector<double>& msg, KDL::JntArray& jnts);
 void fromMsg(constraint_msgs::ConstraintCommand& msg, Ranges& ranges);
 

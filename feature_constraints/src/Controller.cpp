@@ -5,8 +5,10 @@
 #include <kdl/utilities/svd_eigen_HH.hpp>
 #include <Eigen/Core>
 
+
 using namespace KDL;
 using namespace Eigen;
+
 
 Ranges::Ranges(int size) :
   pos_lo(size), pos_hi(size), weight(size)
@@ -14,7 +16,8 @@ Ranges::Ranges(int size) :
 
 }
 
-void Controller::prepare()
+
+void Controller::prepare(int max_constraints)
 {
   int n = constraints.size();
 
@@ -29,15 +32,18 @@ void Controller::prepare()
   singularValues.resize(n);
 
   tmp.resize(n);
+  tmp_pinv.resize(max_constraints);  // maximum number of constraints
 }
+
 
 void Controller::update(KDL::Frame frame)
 {
   deriveConstraints(Ht, chi, frame, constraints, 0.01, tmp);
   control(ydot, weights, chi_desired, chi, command, gains);
-  analyzeH(Ht, J, singularValues, 1e-7);
+  analyzeH(tmp_pinv, Ht, J, singularValues, 1e-7);
   this->frame = frame;
 }
+
 
 //! new range-controller.
 //! this controller accepts ranges of accepted positions and
@@ -98,22 +104,23 @@ void control(KDL::JntArray& ydot, KDL::JntArray& weights,
 }
 
 
-// WARNING: this is NOT at all realtime-safe.
-void analyzeH(KDL::Jacobian& Ht, KDL::Jacobian& J, KDL::JntArray& singularValues, double eps=1e-15)
+void PinvData::resize(int size)
 {
-  int m=Ht.data.cols(), n=Ht.data.rows();
-
-  // NOTE: this could be realtime safe if these matrices had max. sizes.
-  MatrixXd U(m,n), V(n,n);
-  VectorXd& S = singularValues.data;
-  VectorXd Sp(n), tmp(n);
-
-  svd_eigen_HH(Ht.data.transpose(), U, S, V, tmp);
-
-  for(int i=0; i <n; ++i)
-      Sp(i) = (fabs(S(i)) > eps) ? 1.0 / S(i) : 0.0;
-
-  J.data = V * Sp.asDiagonal() * U.transpose();
+  U.resize(size, 6);
+  V.resize(6,6);
+  Sp.resize(6);
+  tmp.resize(6);
 }
 
 
+void analyzeH(PinvData& tmp, KDL::Jacobian& Ht, KDL::Jacobian& J, KDL::JntArray& singularValues, double eps=1e-15)
+{
+  VectorXd& S = singularValues.data;
+
+  svd_eigen_HH(Ht.data.transpose(), tmp.U, S, tmp.V, tmp.tmp);
+
+  for(int i=0; i < 6; ++i)
+      tmp.Sp(i) = (fabs((double) S(i)) > eps) ? 1.0 / S(i) : 0.0;
+
+  J.data = tmp.V * tmp.Sp.asDiagonal() * tmp.U.transpose();
+}
