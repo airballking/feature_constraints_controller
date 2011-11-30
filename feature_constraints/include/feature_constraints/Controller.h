@@ -78,7 +78,7 @@ public:
 
 
 //! Analyze interaction matrix.
-void analyzeH(PinvData& tmpdata, KDL::Jacobian Ht, KDL::Jacobian& J,
+void analyzeH(PinvData& tmpdata, KDL::Jacobian& Ht, KDL::Jacobian& J,
 		      KDL::JntArray& singularValues, double eps=1e-15);
 
 //! Do range-based control.

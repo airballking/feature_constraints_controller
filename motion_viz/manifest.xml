@@ -6,6 +6,7 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <depend package="geometry_msgs"/>
+  <depend package="constraint_msgs"/>
   <depend package="visualization_msgs"/>
   <depend package="rospy"/>
   <depend package="kdl"/>

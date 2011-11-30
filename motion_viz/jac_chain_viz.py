@@ -16,7 +16,8 @@ import tf_conversions.posemath as posemath
 from std_msgs.msg import ColorRGBA, Float64MultiArray, Int8
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Pose,PoseStamped, Point, Quaternion, Vector3, Twist
-from motion_viz.msg import Jacobian, ConstraintCommand
+from motion_viz.msg import Jacobian
+from constraint_msgs.msg import ConstraintCommand
 
 
 import marker
