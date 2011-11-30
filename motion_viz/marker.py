@@ -19,10 +19,10 @@ def color_code(index, intervals=[0.0, 0.5, 1.0],
 
   # handle corner cases
   if index <= intervals[0] or isnan(index):
-    return ColorRGBA(*colors[0])
+    return colors[0]
 
   if index >= intervals[-1]:
-    return ColorRGBA(*colors[-1])
+    return colors[-1]
 
   # pick interval
   (i0, i1) = ((i-1,i+1) for i,t in enumerate(intervals) if t >= index).next()
