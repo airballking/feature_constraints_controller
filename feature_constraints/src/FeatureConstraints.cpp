@@ -4,6 +4,20 @@
 #include <tf_conversions/tf_kdl.h>
 
 
+////FROM DEBUGGING
+#include <kdl/frames_io.hpp>
+////FROM DEBUGGING
+#include <kdl/kinfam_io.hpp>
+
+
+
+// The constant EPS is used to set some
+// nan results to zero. This is useful e.g.
+// for inverting the interaction matrix
+// but its use this deep in the code
+// is questionable...
+#define EPS 1e-10
+
 using namespace std;
 using namespace KDL;
 
@@ -14,7 +28,10 @@ std::map<std::string, FeatureFunc> Constraint::feature_functions_;
 //! zero when perpendicular
 double perpendicular(KDL::Frame& frame, Feature* tool_features, Feature* object_features)
 {
-  return dot(object_features[0].dir, Frame(frame.M) * tool_features[0].dir);
+  Vector &d_o = object_features[0].dir;
+  Vector &t_o = tool_features[0].dir;
+
+  return dot(d_o, Frame(frame.M) * t_o) / (d_o.Norm() * t_o.Norm());
 }
 
 //! distance between features, projected onto the
@@ -25,7 +42,12 @@ double height(KDL::Frame& frame, Feature* tool_features, Feature* object_feature
   Vector  p_t = frame * tool_features[0].pos;
   Vector &d_o = object_features[0].dir;
 
-  return dot(d_o, p_t - p_o) / d_o.Norm();
+  double d_o_norm = d_o.Norm();
+
+  if(d_o_norm < EPS)
+    return 0.0;
+  else
+    return dot(d_o, p_t - p_o) / d_o_norm;
 }
 
 double distance(KDL::Frame& frame, Feature* tool_features, Feature* object_features)
@@ -33,7 +55,17 @@ double distance(KDL::Frame& frame, Feature* tool_features, Feature* object_featu
   Vector  p   = frame*tool_features[0].pos - object_features[0].pos;
   Vector &d_o = object_features[0].dir;
 
-  return (p - (dot(d_o, p) / d_o.Norm())*p).Norm();
+  double d_o_norm = d_o.Norm();
+
+  if(d_o_norm < EPS)
+    return 0.0;
+  else
+    {
+    Vector d_on = d_o / d_o_norm;
+////FROM DEBUGGING    cout << "p_align=" << (dot(d_on, p))*d_on << std::endl;
+////FROM DEBUGGING    cout << "p_perp= " << (p - (dot(d_on, p))*d_on) << std::endl;
+    return (p - (dot(d_on, p))*d_on).Norm();
+    }
 }
 
 double pointing_at(KDL::Frame& frame, Feature* tool_features, Feature* object_features)
@@ -42,19 +74,77 @@ double pointing_at(KDL::Frame& frame, Feature* tool_features, Feature* object_fe
   Vector &d_o = object_features[0].dir;
   Vector  d_t = Frame(frame.M) * tool_features[0].dir;
 
-  // projection of p perpendicular to d_o
-  // Vector d = dot(d_o, p) / d_o.Norm() * p;
+  // projection of p perpendicular to d_o ...
+  // ... and taking the perpendicular vector in that plane:
+  Vector p_h = d_o * p;  // cross product
 
-  // tangent vector of p  w.r.t. a cylinder around d_o
-  Vector t = p * d_o;  // cross product
+  // projection of d_t perpendicular to d_o
+  Vector d_on = d_o / d_o.Norm();
+  Vector d_h = d_t  -  d_on * dot(d_on, d_t);
+
+////FROM DEBUGGING  std::cout << "ALGO :: p_h = " << p_h/p_h.Norm() << std::endl;
+////FROM DEBUGGING  std::cout << "ALGO :: d_h = " << d_h/d_h.Norm() << std::endl;
+
+  double denom = p_h.Norm()*d_h.Norm();
   
-  return dot(t, d_t) / (t.Norm()*d_t.Norm());
+  if(denom < EPS)
+    return 0.0;
+  else
+    return dot(p_h, d_h) / denom;
 }
 
 
+double direction(KDL::Frame& frame, Feature* tool_features, Feature* object_features)
+{
+  Vector  p    = frame*tool_features[0].pos - object_features[0].pos;
+  Vector  d_o2 = object_features[1].dir;
+  Vector &d_o  = object_features[0].dir;
+
+  double d_o_norm = d_o.Norm();
+  double d_o2_norm = d_o2.Norm();
+
+  if(d_o_norm < EPS)
+    return 0.0;
+  else
+    return dot(d_o2 / d_o2_norm, (p - (dot(d_o, p) / d_o_norm)*p));
+}
+
+
+double angle(KDL::Frame& frame, Feature* tool_features, Feature* object_features)
+{
+  Vector  p    = frame*tool_features[0].pos - object_features[0].pos;
+  Vector  d_o2 = object_features[1].dir;
+  Vector &d_o  = object_features[0].dir;
+
+  double d_o_norm = d_o.Norm();
+  double d_o2_norm = d_o2.Norm();
+
+  // project p perpendicular to d_o
+  Vector d_on = d_o / d_o_norm;
+  Vector p_p  = p  -  d_on * dot(d_on, p);
+
+  Vector dir = d_o2 / d_o2_norm;
+
+  Vector x = dir * dot(dir, p_p);
+  Vector y = p_p - x;
+
+
+
+  if(d_o_norm < EPS)
+    return 0.0;
+  else
+    return atan2(y.Norm(), x.Norm());
+}
+
+
+double null(KDL::Frame& frame, Feature* tool_features, Feature* object_features)
+{
+  return 0.0;
+}
+
 void evaluateConstraints(KDL::JntArray& values, KDL::Frame& frame, std::vector<Constraint>& constraints)
 {
-  assert(values.rows() == constraints.size());
+  assert(values.rows() >= constraints.size());
 
   for(unsigned int i=0; i < constraints.size(); i++)
     values(i) = constraints[i](frame);
@@ -70,9 +160,10 @@ void evaluateConstraints(KDL::JntArray& values, KDL::Frame& frame, std::vector<C
  */
 void deriveConstraints(KDL::Jacobian& Ht, KDL::JntArray& values, KDL::Frame& frame, std::vector<Constraint> &constraints, double dd,  KDL::JntArray& tmp)
 {
-  assert(Ht.columns() == constraints.size());
-  assert(values.rows() == constraints.size());
-  assert(tmp.rows() == constraints.size());
+  assert(Ht.columns() >= constraints.size());
+  assert(values.rows() >= constraints.size());
+  assert(tmp.rows() >= constraints.size());
+  assert(dd != 0);
 
   unsigned int nc = constraints.size();
 
@@ -85,7 +176,7 @@ void deriveConstraints(KDL::Jacobian& Ht, KDL::JntArray& values, KDL::Frame& fra
     Frame f = addDelta(frame, t, dd);
     f.p = (f.M * frame.M.Inverse()) * f.p; // change ref point to object
 
-    evaluateConstraints(tmp, frame, constraints);
+    evaluateConstraints(tmp, f, constraints);
 
     for(unsigned int j=0; j < nc; j++)
       Ht(i,j) = (tmp(j) - values(j)) / dd;
@@ -99,4 +190,7 @@ void Constraint::init()
   feature_functions_["height"] = height;
   feature_functions_["distance"] = distance;
   feature_functions_["pointing_at"] = pointing_at;
+  feature_functions_["direction"] = direction;
+  feature_functions_["angle"] = angle;
+  feature_functions_["null"] = null;
 }
