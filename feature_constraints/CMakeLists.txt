@@ -21,11 +21,13 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
+file(MAKE_DIRECTORY bin/test)
+
 #common commands for building c++ executables and libraries
 rosbuild_add_library(${PROJECT_NAME} src/FeatureConstraints.cpp src/Controller.cpp src/Conversions.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
-rosbuild_add_executable(test_FeatureConstraints src/test_FeatureConstraints.cpp src/FeatureConstraints.cpp)
+rosbuild_add_gtest(test/test_FeatureConstraints src/test_FeatureConstraints.cpp src/FeatureConstraints.cpp)
 #rosbuild_add_executable(rpy_test src/rpy_test.cpp)
 #target_link_libraries(test_FeatureConstraints ${PROJECT_NAME})
