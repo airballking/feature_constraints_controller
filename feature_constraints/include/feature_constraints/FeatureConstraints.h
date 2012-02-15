@@ -10,6 +10,7 @@
 
 // TODO: having strings inside features, screws its realtime safety for creation! is that bad?
 //       (_no_ copy-on-write implementation for the GNU std::string.  :-( )
+//       we just reserve 256 bytes. For longer names, realtime may get a hickup. 
 
 #define STRING_SIZE 256
 
@@ -64,6 +65,17 @@ public:
     object_features[0] = object_feature;
   }
 
+  Constraint(std::string name, std::string func_name,
+             Feature tool_feature1, Feature object_feature1, Feature tool_feature2, Feature object_feature2)
+   : name(name), func(feature_functions_[func_name])
+  {
+	name.reserve(STRING_SIZE);
+    tool_features[0] = tool_feature1;
+    object_features[0] = object_feature1;
+    tool_features[1] = tool_feature2;
+    object_features[1] = object_feature2;
+  }
+
   double operator() (KDL::Frame frame)
   {
     return func(frame, tool_features, object_features);
@@ -101,6 +113,11 @@ double distance(KDL::Frame frame, Feature* tool_features, Feature* object_featur
 //! (seen perpendicular to the object direction)
 double pointing_at(KDL::Frame frame, Feature* tool_features, Feature* object_features);
 
+
+double direction(KDL::Frame frame, Feature* tool_features, Feature* object_features);
+
+
+double null(KDL::Frame frame, Feature* tool_features, Feature* object_features);
 /////
 
 //! compute the values of the constraints, given a frame
