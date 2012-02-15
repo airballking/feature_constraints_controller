@@ -38,7 +38,7 @@ void Controller::prepare(int max_constraints)
 
 void Controller::update(KDL::Frame frame)
 {
-  deriveConstraints(Ht, chi, frame, constraints, 0.01, tmp);
+  deriveConstraints(Ht, chi, frame, constraints, 0.001, tmp);
   control(ydot, weights, chi_desired, chi, command, gains);
   analyzeH(tmp_pinv, Ht, J, singularValues, 1e-7);
   this->frame = frame;
