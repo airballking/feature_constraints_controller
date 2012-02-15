@@ -5,6 +5,10 @@
 # * the jacobian
 # * the transform between the two objects
 
+
+# TODO: use state.header.frame_id and state.base_pose to place chain!
+#       (There are also the rosparam, governing ref_frame and ref_point.)
+
 from math import *
 
 import roslib
@@ -16,8 +20,7 @@ import tf_conversions.posemath as posemath
 from std_msgs.msg import ColorRGBA, Float64MultiArray, Int8
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Pose,PoseStamped, Point, Quaternion, Vector3, Twist
-from motion_viz.msg import Jacobian
-from constraint_msgs.msg import ConstraintCommand
+from constraint_msgs.msg import ConstraintState
 
 
 import marker
@@ -59,7 +62,7 @@ class VirtualChain:
     rospy.loginfo('ref_frame=%s, ref_point=%s, target_frame=%s'
                    % (self.ref_frame, self.ref_point, self.target_frame))
 
-    self.eps = 0.01
+    self.eps = 0.05
     self.rot_length = 0.06
     self.width = 0.02
 
@@ -88,7 +91,7 @@ class VirtualChain:
   def set_jac(self, jac):
     ''' takes a Jacobian message '''
     self.jac = []
-    for t in jac.columns:
+    for t in jac:
       twist = kdl.Twist(kdl.Vector(t.linear.x,  t.linear.y,  t.linear.z),
                         kdl.Vector(t.angular.x, t.angular.y, t.angular.z))
       self.jac.append(twist)
@@ -114,14 +117,16 @@ class VirtualChain:
       else:
         self.joint_types.append(0)
 
-
-    import numpy
-    from numpy.linalg import lstsq
-    # convert to matrix
-    A = numpy.mat(map(lambda d: [d[0], d[1], d[2]], directions)).T
-    b = numpy.mat([self.pose.p[0], self.pose.p[1], self.pose.p[2]]).T
-    x,_,_,_ = lstsq(A,b) # now solve Ax = b
-    self.lengths = x.T.tolist()[0]
+    if True: #len(directions) > 0:
+      import numpy
+      from numpy.linalg import lstsq
+      # convert to matrix
+      A = numpy.mat(map(lambda d: [d[0], d[1], d[2]], directions)).T
+      b = numpy.mat([self.pose.p[0], self.pose.p[1], self.pose.p[2]]).T
+      x,_,_,_ = lstsq(A,b) # now solve Ax = b
+      self.lengths = x.T.tolist()[0]
+    else:
+      self.lengths = []
 
 
   def markers(self):
@@ -192,17 +197,17 @@ chi = None
 active = True
 
 
-def pose_callback(msg):
-  ''' receive Pose of the chain end '''
-  global chain
-  chain.set_pose(msg.pose)
-
-
-def jac_callback(msg):
-  ''' receive jacobian '''
+def state_callback(msg):
+  ''' receive state '''
   global chain
   global active
-  chain.set_jac(msg)
+
+  errors = [c_des - c for c,c_des in zip(msg.chi, msg.chi_desired)]
+  chain.set_errors(errors)
+  chain.set_weights(msg.weights)
+
+  chain.set_jac(msg.jacobian)
+  chain.set_pose(msg.pose) # pose of the chain end
   for m in chain.markers():
     if not active:
       m.action = Marker.DELETE
@@ -212,25 +217,6 @@ def jac_callback(msg):
 def active_callback(msg):
   global active
   active = (msg.data != 0)
-
-
-def chi_callback(msg):
-  global chi
-  chi = msg.data
-
-
-def chi_des_callback(msg):
-  global chain
-  global chi
-
-  if chi != None:
-    errors = [c_des - c for c,c_des in zip(chi, msg.data)]
-    chain.set_errors(errors)
-
-
-def weights_callback(msg):
-  global chain
-  chain.set_weights(msg.data)
 
 
 if __name__ == "__main__":
@@ -243,13 +229,7 @@ if __name__ == "__main__":
   # set up connections
   listener = tf.TransformListener()
   pub = rospy.Publisher('/visualization_marker', Marker)
-  sub_jac  = rospy.Subscriber('/jacobian', Jacobian, jac_callback)
-  sub_pose = rospy.Subscriber('/pose', PoseStamped, pose_callback)
-
-  # messy interface, to be moved into a a structured message
-  sub_chi     = rospy.Subscriber('/chi_f', Float64MultiArray, chi_callback)
-  sub_chi_des = rospy.Subscriber('/chi_f_desired', Float64MultiArray, chi_des_callback)
-  sub_weights = rospy.Subscriber('/weights', Float64MultiArray, weights_callback)
+  sub = rospy.Subscriber('/state', ConstraintState, state_callback)
 
   sub_active  = rospy.Subscriber('/itasc_active', Int8, active_callback)
 
