@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import roslib ; roslib.load_manifest('motionControl')
 import rospy
 
@@ -243,4 +245,15 @@ def execute_legacy(task_angles, itasc, frames):
 
 
 def main():
-  rospy.init_node('itasc_tester')
+  rospy.init_node('tester')
+
+  import thing_tools.handleItasc
+  thing_tools.handleItasc._use_real_rosie = False
+  itasc = thing_tools.handleItasc.HandleItasc(side='')
+
+  sim = Tester(itasc)
+
+  sim.pancake_flipping()
+
+if __name__ == '__main__':
+  main()
