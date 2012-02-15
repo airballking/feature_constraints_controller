@@ -11,6 +11,7 @@ float64[] chi
 float64[] chi_desired
 float64[] weights
 
+geometry_msgs/Twist[] interaction_matrix
 geometry_msgs/Twist[] jacobian
 float64[] singular_values
 

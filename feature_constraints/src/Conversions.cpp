@@ -116,14 +116,17 @@ void toMsg(KDL::Jacobian& jac, std::vector<geometry_msgs::Twist>& jac_msg)
 }
 
 
-void toMsg(Controller& c, constraint_msgs::ConstraintState& c_msg)
+void toMsg(Controller& c, constraint_msgs::ConstraintState& msg)
 {
-  toMsg(c.frame, c_msg.pose);
-  toMsg(c.chi, c_msg.chi);
-  toMsg(c.chi_desired, c_msg.chi_desired);
-  toMsg(c.weights, c_msg.weights);
-  toMsg(c.J, c_msg.jacobian);
-  toMsg(c.singularValues, c_msg.singular_values);
+  toMsg(c.frame, msg.pose);
+  toMsg(c.chi, msg.chi);
+  toMsg(c.chi_desired, msg.chi_desired);
+  toMsg(c.weights, msg.weights);
+  toMsg(c.J, msg.jacobian);
+  toMsg(c.Ht, msg.interaction_matrix);
+  toMsg(c.singularValues, msg.singular_values);
+  for(unsigned int i=0; i < c.constraints.size(); i++)
+    msg.joint_names[i] = c.constraints[i].name;
 }
 
 
