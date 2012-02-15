@@ -1,6 +1,7 @@
 #include "FeatureTask2.hpp"
 #include <tf_conversions/tf_kdl.h>
 #include <kdl/frames_io.hpp>
+#include <kdl/kinfam_io.hpp>
 #include <ocl/Component.hpp>
 #include <rtt/ConnPolicy.hpp>
 
@@ -8,6 +9,7 @@
 
 #include <kdl/utilities/svd_eigen_HH.hpp>
 
+#include <iostream>
 
 /*
  * Using this macro, only one component may live
@@ -77,8 +79,41 @@ FeatureTask2::~FeatureTask2()
 
 bool FeatureTask2::configureHook()
 {
+  Constraint::init();
+
+  // tool features
+  Feature tool_front("front_edge", Vector(0,0,0), Vector(0,1,0));
+  Feature tool_side("side_edge", Vector(0,0,0), Vector(0,0,1));
+
+  // object feature
+  Feature up("up", Vector(0,0,0), Vector(0,0,1));
+  Feature away("away", Vector(0,0,0), Vector(1,0,0));
+
+  // TODO: implement 'angle' constraint
+  controller.constraints.push_back(
+    Constraint("angle", "angle", tool_front, up));
+  controller.constraints[0].object_features[1] = away;
+
+  controller.constraints.push_back(
+    Constraint("dist", "distance", tool_front, up));
+  controller.constraints.push_back(
+    Constraint("height", "height", tool_front, up));
+
+  controller.constraints.push_back(
+    Constraint("align_front", "perpendicular", tool_front, up));
+  controller.constraints.push_back(
+    Constraint("align_side",  "perpendicular", tool_side,  up));
+  controller.constraints.push_back(
+    Constraint("pointing_at", "pointing_at", tool_side, up));
+
+
   controller.prepare(nc);
 
+  Wy.resize(nc, nc);
+  std::cout << "Wy" << Wy << std::endl;
+  std::cout << "weights" << controller.weights.data << std::endl;
+  std::cout << "r" << controller.weights.data.rows() << std::endl;
+  std::cout << "c" << controller.weights.data.cols() << std::endl;
   Wy.diagonal() = controller.weights.data;
   Wy_port.write(Wy);
 
@@ -90,6 +125,7 @@ bool FeatureTask2::configureHook()
   command.pos_hi.resize(nc);
   command.weight.resize(nc);
 
+  state.interaction_matrix.resize(nc);
   state.jacobian.resize(nc);
   state.chi.resize(nc);
   state.chi_desired.resize(nc);

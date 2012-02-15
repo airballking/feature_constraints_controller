@@ -15,7 +15,7 @@ loadComponent("Scene","iTaSC::Scene")
 setActivity("Scene", 0.005, HighestPriority-1, ORO_SCHED_RT)
 loadComponent("PancakeMaker","iTaSC::ROSObject")
 setActivity("PancakeMaker", 0.005, HighestPriority-1, ORO_SCHED_RT)
-loadComponent("Chef", "FeatureTask")
+loadComponent("Chef", "FeatureTask2")
 setActivity("Chef",0.005,HighestPriority-1, ORO_SCHED_RT)
 loadComponent("Solver","iTaSC::WDLSVelocitySolver")
 
@@ -24,6 +24,7 @@ loadComponent("LimitAvoider","iTaSC::ROSLimitAvoider")
 setActivity("LimitAvoider",0.005,HighestPriority-1, ORO_SCHED_RT)
 LimitAvoider.base_name = "base_link"
 LimitAvoider.ee_name = "left_arm_7_link"
+LimitAvoider.ros_prefix = ""
 LimitAvoider.configure()
 
 
