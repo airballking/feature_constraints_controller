@@ -11,6 +11,10 @@
 
 #include <iostream>
 
+
+// TODO: Make it work for more constraints!
+
+
 /*
  * Using this macro, only one component may live
  * in one library. If you have put your component
@@ -49,7 +53,7 @@ FeatureTask2::FeatureTask2(const std::string& name) :
   ros_prefix("left")
 {
   properties()->addProperty("weights_property", controller.weights).doc("local weights of the constraints");
-  properties()->addProperty("gain", controller.gains).doc("feedback gains for the constraints");
+  properties()->addProperty("gains", controller.gains).doc("feedback gains for the constraints");
   properties()->addProperty("ros_prefix", ros_prefix).doc("prefix for the ROS topic names");
   properties()->addProperty("guard_time", guard_time).doc("number of cycles to wait before initialization");
 
@@ -89,7 +93,6 @@ bool FeatureTask2::configureHook()
   Feature up("up", Vector(0,0,0), Vector(0,0,1));
   Feature away("away", Vector(0,0,0), Vector(1,0,0));
 
-  // TODO: implement 'angle' constraint
   controller.constraints.push_back(
     Constraint("angle", "angle", tool_front, up));
   controller.constraints[0].object_features[1] = away;
@@ -107,7 +110,13 @@ bool FeatureTask2::configureHook()
     Constraint("pointing_at", "pointing_at", tool_side, up));
 
 
+  int nGains = controller.gains.rows();  // save number of gains before resize...
+
   controller.prepare(nc);
+
+  for(unsigned int i=nGains; i < nc; i++)  // ... and fill the rest with ones.
+    controller.gains(i) = 1.0;
+
 
   Wy.resize(nc, nc);
   std::cout << "Wy" << Wy << std::endl;
@@ -146,14 +155,14 @@ bool FeatureTask2::startHook(){
   }
 
   //Initialize ports
-  SetToZero(controller.ydot);  //TODO: this should happen inside controller...
+
   ydot_port.write(controller.ydot);
 
   T_o1_o2_port.read(pose);
 
   controller.update(pose);
 
-  ////Cf_port.write(Matrix<double, nc, nc>::Identity());
+  Cf_port.write(Matrix<double, 6, 6>::Identity());
 
   return true;
 }

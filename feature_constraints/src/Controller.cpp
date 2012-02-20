@@ -16,6 +16,13 @@ Ranges::Ranges(int size) :
 
 }
 
+void Ranges::resize(int size)
+{
+  pos_lo.resize(size);
+  pos_hi.resize(size);
+  weight.resize(size);
+}
+
 
 void Controller::prepare(int max_constraints)
 {
@@ -27,6 +34,9 @@ void Controller::prepare(int max_constraints)
   Ht.resize(n);
   ydot.resize(n);
   weights.resize(n);
+
+  gains.resize(n);
+  command.resize(n);
 
   J.resize(n);
   singularValues.resize(n);
@@ -58,6 +68,7 @@ void control(KDL::JntArray& ydot, KDL::JntArray& weights,
     if(command.weight(i) == 0.0)
     {
       ydot(i) = 0.0;
+      weights(i) = 0.0;
       continue;
     }
 
