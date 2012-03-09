@@ -8,7 +8,7 @@
 
   <node name="tool_tf" type="moveable_tf.py" pkg="motion_viz" args="">
     <param name="frame_name"  value="/tool"/>
-    <param name="parent_name" value="/left_arm_hand_link"/>
+    <param name="parent_name" value="/right_arm_hand_link"/>
     <remap from="/twist" to="/twist_tool"/>
   </node>
 
@@ -21,6 +21,7 @@
     <rosparam ns="mapping10"> [1,0,3,_,_,_] </rosparam>
     <rosparam ns="mapping8" > [_,_,_,1,0,3] </rosparam>
     <remap from="/twist" to="/twist_object"/>
+    <remap from="/joy" to="/joy_ps3"/>
   </node>
 
 
@@ -32,6 +33,7 @@
     <rosparam ns="mapping11"> [1,0,3,_,_,_] </rosparam>
     <rosparam ns="mapping9" > [_,_,_,1,0,3] </rosparam>
     <remap from="/twist" to="/twist_tool"/>
+    <remap from="/joy" to="/joy_ps3"/>
   </node>
 
   <!-- TODO: figure out the ps3 dead zone -->

@@ -15,7 +15,7 @@ from math import *
 import roslib; roslib.load_manifest('joy_to_twist')
 import rospy
 
-from joy.msg import Joy
+from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist,Vector3
 
 

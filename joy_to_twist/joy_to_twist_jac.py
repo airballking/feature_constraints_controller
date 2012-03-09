@@ -7,7 +7,7 @@ roslib.load_manifest('motion_viz')
 import rospy
 import PyKDL as kdl
 
-from joy.msg import Joy
+from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist,Vector3
 from motion_viz.msg import Jacobian
 
