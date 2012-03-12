@@ -156,12 +156,12 @@ def interpret(c_hl):
     c_hl.action = action_synonyms[c_hl.action]
 
   action_hints = {
-                   'point towards':   [('pitch', AT, 1.0, 0.1)],
+                   'point towards':   [('pitch', AT, 0.0, 0.1)],
                    'from left':       [('angle', AT, 1.57, 1.0)],
                    'push down onto':  [('height', AT, -0.06, 0)],
-                   'move under':      [('height', BELOW, 0.06, 0), ('distance', BELOW, -0.03, 0.005)],
+                   'move under':      [('height', BELOW, -0.04, 0), ('distance', BELOW, -0.03, 0.005)],
                    'move over':       [('height', ABOVE, 0.15, 0), ('distance', BELOW, -0.16, 0.005)],
-                   'move next to':    [('height', AT, -0.04, 0), ('distance', AT, 0.16, 0.01)],
+                   'move next to':    [('height', AT, 0.0, 0), ('distance', AT, 0.16, 0.01)],
                    'keep horizontal': [('roll', AT, -0.25, 0.05), ('yaw', AT, 0.0, 0.02)],
 #                   'keep vertical':   [('roll', AT, 0, 0), ('yaw', AT, 0, 0)],
 #                   'align':           [('roll', AT, 0, 0), ('yaw', AT, 0, 0)],

@@ -62,7 +62,7 @@ class VirtualChain:
     rospy.loginfo('ref_frame=%s, ref_point=%s, target_frame=%s'
                    % (self.ref_frame, self.ref_point, self.target_frame))
 
-    self.eps = 0.05
+    self.eps = 0.4
     self.rot_length = 0.06
     self.width = 0.02
 
@@ -110,7 +110,9 @@ class VirtualChain:
       lr = twist.rot.Norm()
       lv = twist.vel.Norm()
 
-      if lr < self.eps and lv >= self.eps:
+      #if lr < self.eps and lv >= self.eps:
+      # HACK FOR RECORDING VIDEO
+      if i == 1 or i == 2:
         # got a linear twist, get its direction
         directions.append(twist.vel / lv)
         self.joint_types.append(1)

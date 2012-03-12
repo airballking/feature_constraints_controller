@@ -253,6 +253,8 @@ def main():
 
   sim = Tester(itasc)
 
+  rospy.sleep(0.5)
+
   sim.pancake_flipping()
 
 if __name__ == '__main__':

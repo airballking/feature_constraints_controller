@@ -87,6 +87,7 @@ bool FeatureTask2::configureHook()
 
   // tool features
   Feature tool_front("front_edge", Vector(0,0,0), Vector(0,1,0));
+  Feature tool_front_rev("front_edge_rev", Vector(0,0,0), Vector(0,-1,0));
   Feature tool_side("side_edge", Vector(0,0,0), Vector(0,0,1));
 
   // object feature
@@ -103,7 +104,7 @@ bool FeatureTask2::configureHook()
     Constraint("height", "height", tool_front, up));
 
   controller.constraints.push_back(
-    Constraint("align_front", "perpendicular", tool_front, up));
+    Constraint("align_front", "perpendicular", tool_front_rev, up));
   controller.constraints.push_back(
     Constraint("align_side",  "perpendicular", tool_side,  up));
   controller.constraints.push_back(
