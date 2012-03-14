@@ -381,10 +381,8 @@ void FeatureTask::doControl()
 
 
 
-void FeatureTask::compute_features(double *feature_values, KDL::Frame frame)
+void compute_features_cyl(double *feature_values, KDL::Frame frame)
 {
-  // TODO: switch to different functions, depending on ros_select.data
-
   Vector p = frame.p;
 
   double x0 = atan2(p.y(), p.x());
@@ -415,6 +413,45 @@ void FeatureTask::compute_features(double *feature_values, KDL::Frame frame)
   feature_values[4] = a1;
   feature_values[5] = a2;
 }
+
+void compute_features_cart(double *feature_values, KDL::Frame frame)
+{
+  Vector p = frame.p;
+
+  // angle computation
+  Vector vx = frame.M.UnitX();
+  Vector vy = frame.M.UnitY();
+  Vector vz = frame.M.UnitZ();
+
+  double a0 = dot(-vy, Vector(0,0,1)); // front edge aliged <=> a0 == 0
+  double a1 = dot(vz, Vector(0,0,1)); // side edge aligned <=> a1 == 0
+
+  // tool direction:
+  // * look from above -> project -vz onto x-y-plane , yields vzp
+  // * take angle perpendicular to horizontal component of frame.p
+  // (tool direction towards center <=> a3 == 0)
+
+  Vector vzp = Vector(-vz.x(), -vz.y(), 0);
+  Vector pxy = Vector(p.y(), -p.x(), 0);
+  double a2 = dot(vzp, pxy) / (vzp.Norm() * pxy.Norm());
+
+  feature_values[0] = p.x();
+  feature_values[1] = p.y();
+  feature_values[2] = p.z();
+  feature_values[3] = a0;
+  feature_values[4] = a1;
+  feature_values[5] = a2;
+}
+
+
+void FeatureTask::compute_features(double *feature_values, KDL::Frame frame)
+{
+  if(ros_select.data == 0)
+    compute_features_cyl(feature_values, frame);
+  else if(ros_select.data == 1)
+    compute_features_cart(feature_values, frame);
+}
+
 
 
 // WARNING: this is NOT at all realtime-safe.
