@@ -2,16 +2,16 @@
 Header header
 string name
 
-geometry_msgs/Pose base_pose
-geometry_msgs/Pose pose
+geometry_msgs/Pose base_pose # pose of object w.r.t. header.frame_id
+geometry_msgs/Pose pose      # pose of tool w.r.t. base_pose
 
 string[] joint_names
 
-float64[] chi
-float64[] chi_desired
-float64[] weights
+float64[] chi                # current constraint values
+float64[] chi_desired        # desired constraint values
+float64[] weights            # actual weights of constraints
 
-geometry_msgs/Twist[] interaction_matrix
-geometry_msgs/Twist[] jacobian
-float64[] singular_values
+geometry_msgs/Twist[] interaction_matrix  # H
+geometry_msgs/Twist[] jacobian            # H^+
+float64[] singular_values                 # from the svd while computing H^+
 

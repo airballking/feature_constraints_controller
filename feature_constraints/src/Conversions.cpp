@@ -28,13 +28,13 @@ Vector fromMsg(const geometry_msgs::Vector3& msg)
 void fromMsg(const constraint_msgs::Feature& msg, Feature& feat)
 {
   feat.name = msg.name;
-  fromMsg(msg.pos, feat.pos);
-  fromMsg(msg.dir, feat.dir);
+  fromMsg(msg.position, feat.pos);
+  fromMsg(msg.direction, feat.dir);
 }
 
 Feature fromMsg(const constraint_msgs::Feature& msg)
 {
-  return Feature(msg.name, fromMsg(msg.pos), fromMsg(msg.dir));
+  return Feature(msg.name, fromMsg(msg.position), fromMsg(msg.direction));
 }
 
 
