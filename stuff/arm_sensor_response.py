@@ -59,6 +59,9 @@ class Statistics:
     var  = self.sumsq / self.n - mean*mean
     var  = max(var, 0)
     return (mean, sqrt(var))
+  def reset(self):
+    self.__init__()
+
 
 class TorqueAnalyzer:
   def __init__(self, robot_name='/lwr/left'):
@@ -82,6 +85,11 @@ class TorqueAnalyzer:
 
   def callback(self):
     """ Perform torque sensor measurement """
+
+    self.pos_stat.reset()
+    for i in range(7):
+      self.torque_stat[i].reset()
+      self.torque_raw_stat[i].reset()
 
     for i in range(self.max_iter):
       torques = read_from_port(self.torque_p)
@@ -114,7 +122,7 @@ class TorqueAnalyzer:
 # main
 
 analyzer = TorqueAnalyzer()
-trigger = JoystickTrigger(2, analyzer.callback)
+trigger = JoystickTrigger(14, analyzer.callback)
 
 while trigger.ok():
   time.sleep(1.0)
