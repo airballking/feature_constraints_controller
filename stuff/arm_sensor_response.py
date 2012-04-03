@@ -103,6 +103,7 @@ class TorqueAnalyzer:
         self.torque_stat[j].add_reading(torques[j]) 
         self.torque_raw_stat[j].add_reading(torques_raw[j]) 
 
+    print '# torque mean (x7), torque stddev (x7), torque_raw mean (x7) torque_raw stddev (x7), pos_sum stddev'
 
     # print the statistics
     for i in range(len(pos)):
