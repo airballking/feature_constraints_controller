@@ -11,6 +11,7 @@ feature_constraints/lib/
 .project
 .pydevproject
 cmake_install.cmake
+rviz/
 
 syntax: regexp
 msg\/_.*\.py
