@@ -64,7 +64,7 @@
   <node name="pancake_frame" type="tf2pose.py" pkg="motion_viz" args="pancake base_link /pancake_frame -stamped"/>
 
 
-  <!-- node launch-prefix="$(find itasc)/scripts/exec_in_dir.sh $(find itasc)/launch" name="itasc" type="cdeployer-gnulinux" pkg="ocl" args="-s rosie_joints.ops -l Error - " output="log" >
+  <node launch-prefix="$(find itasc)/scripts/exec_in_dir.sh $(find itasc)/launch" name="itasc" type="cdeployer-gnulinux" pkg="ocl" args="-s rosie_joints.ops -l Error -- " output="log" >
     <remap from="qdot_mixed_ros" to="/l_arm_vel/command"/>
-  </node -->
+  </node>
 </launch>
