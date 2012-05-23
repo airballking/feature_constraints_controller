@@ -26,7 +26,7 @@ class FeatureTask
   : public iTaSC::SubTask
 {
  public:
-  FeatureTask(string const& name);
+  FeatureTask(std::string const& name);
   ~FeatureTask();
   bool configureHook();
   bool startHook();

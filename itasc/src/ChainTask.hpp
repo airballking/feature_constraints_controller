@@ -24,7 +24,7 @@ class ChainTask
   : public iTaSC::SubTask
 {
  public:
-  ChainTask(string const& name);
+  ChainTask(std::string const& name);
   ~ChainTask();
   bool configureHook();
   bool startHook();
@@ -104,7 +104,7 @@ private:
   // configuration
   std::string chain_name;
   std::string ros_prefix;
-  std::vector< vector<std::string> > axis_names;
+  std::vector< std::vector<std::string> > axis_names;
   std::vector< std::string > object_names;
 
 

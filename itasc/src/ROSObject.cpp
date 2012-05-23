@@ -9,10 +9,12 @@
 ORO_CREATE_COMPONENT( iTaSC::ROSObject )
 ;
 
+using namespace std;
 using namespace KDL;
 using namespace RTT;
 using namespace OCL;
 using namespace Eigen;
+
 namespace iTaSC {
 ROSObject::ROSObject(const std::string& name) :
 	SubRobot(name, PreOperational), external_pose("Pose"), pose()

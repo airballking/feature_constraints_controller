@@ -35,6 +35,7 @@ typedef unsigned int uint;
 ORO_CREATE_COMPONENT( iTaSC::ROSLimitAvoider )
 ;
 
+using namespace std;
 using namespace KDL;
 using namespace RTT;
 using namespace OCL;

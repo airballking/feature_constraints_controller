@@ -34,6 +34,7 @@ typedef unsigned int uint;
 ORO_CREATE_COMPONENT( iTaSC::ROSRobot )
 ;
 
+using namespace std;
 using namespace KDL;
 using namespace RTT;
 using namespace OCL;
