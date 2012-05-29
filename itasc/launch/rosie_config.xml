@@ -11,15 +11,9 @@
         <simple name="Z" type="double"><description>Z Value</description><value>0.0</value></simple>
       </struct>
       <struct name="M" type="KDL.Rotation">
-        <simple name="X_x" type="double"><description>X_x</description><value>1</value></simple>
-        <simple name="X_y" type="double"><description>X_y</description><value>0</value></simple>
-        <simple name="X_z" type="double"><description>X_z</description><value>0</value></simple>
-        <simple name="Y_x" type="double"><description>Y_x</description><value>0</value></simple>
-        <simple name="Y_y" type="double"><description>Y_y</description><value>1</value></simple>
-        <simple name="Y_z" type="double"><description>Y_z</description><value>0</value></simple>
-        <simple name="Z_x" type="double"><description>Z_x</description><value>0</value></simple>
-        <simple name="Z_y" type="double"><description>Z_y</description><value>0</value></simple>
-        <simple name="Z_z" type="double"><description>Z_z</description><value>1</value></simple>
+        <simple name="R" type="double"><description>R</description><value>0</value></simple>
+        <simple name="P" type="double"><description>P</description><value>0</value></simple>
+        <simple name="Y" type="double"><description>Y</description><value>0</value></simple>
       </struct>
     </struct>
   </struct>
@@ -34,15 +28,9 @@
         <simple name="Z" type="double"><description>Z Value</description><value>0.0</value></simple>
       </struct>
       <struct name="M" type="KDL.Rotation">
-        <simple name="X_x" type="double"><description>X_x</description><value>1</value></simple>
-        <simple name="X_y" type="double"><description>X_y</description><value>0</value></simple>
-        <simple name="X_z" type="double"><description>X_z</description><value>0</value></simple>
-        <simple name="Y_x" type="double"><description>Y_x</description><value>0</value></simple>
-        <simple name="Y_y" type="double"><description>Y_y</description><value>1</value></simple>
-        <simple name="Y_z" type="double"><description>Y_z</description><value>0</value></simple>
-        <simple name="Z_x" type="double"><description>Z_x</description><value>0</value></simple>
-        <simple name="Z_y" type="double"><description>Z_y</description><value>0</value></simple>
-        <simple name="Z_z" type="double"><description>Z_z</description><value>1</value></simple>
+        <simple name="R" type="double"><description>R</description><value>0</value></simple>
+        <simple name="P" type="double"><description>P</description><value>0</value></simple>
+        <simple name="Y" type="double"><description>Y</description><value>0</value></simple>
       </struct>
     </struct>
   </struct>
