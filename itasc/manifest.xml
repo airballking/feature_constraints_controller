@@ -32,11 +32,14 @@
   <depend package="kdl_parser" />
   <depend package="motion_viz" />
 
+  <depend package="rospy" />
+
   <depend package="loopback_controller_manager"/>
   <depend package="ias_mechanism_controllers"/>
 
   <export> 
-    <cpp cflags="-I${prefix}/src" /> 
+    <cpp cflags="-I${prefix}/src" />
+    <python path="${prefix}/python" />
   </export> 
 
 </package>

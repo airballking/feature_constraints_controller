@@ -1,8 +1,6 @@
 #!/usr/bin/python
 
-import roslib
-roslib.load_manifest('motionControl')
-roslib.load_manifest('itasc')
+import roslib ; roslib.load_manifest('itasc')
 import rospy
 
 from std_msgs.msg import Int8
@@ -247,11 +245,10 @@ def execute_legacy(task_angles, itasc, frames):
 
 
 def main():
-  rospy.init_node('tester')
+  rospy.init_node('flipping_demo')
 
-  import thing_tools.handleItasc
-  thing_tools.handleItasc._use_real_rosie = False
-  itasc = thing_tools.handleItasc.HandleItasc(side='')
+  import itasc.itasc_interface
+  itasc = itasc.itasc_interface.Itasc(side='')
 
   sim = Tester(itasc)
 
