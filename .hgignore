@@ -1,6 +1,7 @@
 build/
 __init__*
 msg_gen
+srv_gen
 msg/lisp/
 lib/orocos
 bin/
