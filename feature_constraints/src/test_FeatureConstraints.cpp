@@ -143,11 +143,9 @@ void check_pointing_at(Frame frame, double l_tool, double l_object)
 void check_direction(Frame frame, double l_tool, double l_object)
 {
   Feature tool_front("front", Vector(0,0,0), Vector(l_tool,0,0));
-  Feature object_up("up", Vector(0,0,0), Vector(0,0,l_object));
-  Feature object_away("away", Vector(0,0,0), Vector(1.0,0,0)); // TODO: make dynamic
+  Feature object_up("up", Vector(0,0,0), Vector(0,0,l_object), Vector(1.0,0,0)); // contact_dir points away from the robot
 
   Constraint constr("direction", "direction", tool_front, object_up);
-
   
   double a     = constr(frame);
   double a_des = frame.p.x();
@@ -159,10 +157,9 @@ void check_direction(Frame frame, double l_tool, double l_object)
 void check_angle(Frame frame, double l_tool, double l_object)
 {
   Feature tool_front("front", Vector(0,0,0), Vector(l_tool,0,0));
-  Feature object_up("up", Vector(0,0,0), Vector(0,0,l_object));
-  Feature object_away("away", Vector(0,0,0), Vector(1.0,0,0)); // TODO: make dynamic
+  Feature object_up("up", Vector(0,0,0), Vector(0,0,l_object), Vector(1.0,0,0)); // contact_dir points away from the robot
 
-  Constraint constr("angle", "angle", tool_front, object_up, Feature(), object_away);
+  Constraint constr("angle", "angle", tool_front, object_up);
 
   double a     = constr(frame);
   double a_des = atan2(frame.p.y(), frame.p.x());

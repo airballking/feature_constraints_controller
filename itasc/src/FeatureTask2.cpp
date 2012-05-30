@@ -91,13 +91,10 @@ bool FeatureTask2::configureHook()
   Feature tool_side("side_edge", Vector(0,0,0), Vector(0,0,1));
 
   // object feature
-  Feature up("up", Vector(0,0,0), Vector(0,0,1));
-  Feature away("away", Vector(0,0,0), Vector(1,0,0));
+  Feature up("up", Vector(0,0,0), Vector(0,0,1), Vector(1,0,0)); // contact_dir points away from robot
 
   controller.constraints.push_back(
     Constraint("angle", "angle", tool_front, up));
-  controller.constraints[0].object_features[1] = away;
-
   controller.constraints.push_back(
     Constraint("dist", "distance", tool_front, up));
   controller.constraints.push_back(

@@ -30,11 +30,12 @@ void fromMsg(const constraint_msgs::Feature& msg, Feature& feat)
   feat.name = msg.name;
   fromMsg(msg.position, feat.pos);
   fromMsg(msg.direction, feat.dir);
+  fromMsg(msg.contact_direction, feat.contact_dir);
 }
 
 Feature fromMsg(const constraint_msgs::Feature& msg)
 {
-  return Feature(msg.name, fromMsg(msg.position), fromMsg(msg.direction));
+  return Feature(msg.name, fromMsg(msg.position), fromMsg(msg.direction), fromMsg(msg.contact_direction));
 }
 
 
@@ -42,8 +43,8 @@ void fromMsg(const constraint_msgs::Constraint& msg, Constraint& c)
 {
   c.name = msg.name;
   c.setFunction(msg.function);
-  fromMsg(msg.tool_feature, c.tool_features[0]);
-  fromMsg(msg.world_feature, c.object_features[0]);
+  fromMsg(msg.tool_feature, c.tool_feature);
+  fromMsg(msg.world_feature, c.object_feature);
 }
 
 
