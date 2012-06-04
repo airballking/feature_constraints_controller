@@ -137,7 +137,7 @@ bool FeatureTask2::configureHook()
   state.chi.resize(nc);
   state.chi_desired.resize(nc);
   state.weights.resize(nc);
-  state.joint_names.resize(nc);
+  state.constraint_names.resize(nc);
   state.singular_values.resize(nc);
 
   return true;

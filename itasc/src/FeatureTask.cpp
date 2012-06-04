@@ -112,13 +112,13 @@ void FeatureTask::ROS_init()
   ros_mode.data   = 0;
   ros_select.data = 0;
 
-  ros_constraint_state.joint_names.resize(nc);
+  ros_constraint_state.constraint_names.resize(nc);
   ros_constraint_state.chi.resize(nc);
   ros_constraint_state.chi_desired.resize(nc);
   ros_constraint_state.weights.resize(nc);
 
   for(unsigned int a=0; a < axis_names.size(); a++)
-    ros_constraint_state.joint_names[a] = axis_names[a];
+    ros_constraint_state.constraint_names[a] = axis_names[a];
 
   // debugging
   ROS_add_port("o1o2_pose", ros_prefix+"/o1o2_pose", ros_o1o2_pose_port);
