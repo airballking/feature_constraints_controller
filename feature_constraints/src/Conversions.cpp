@@ -127,7 +127,7 @@ void toMsg(Controller& c, constraint_msgs::ConstraintState& msg)
   toMsg(c.Ht, msg.interaction_matrix);
   toMsg(c.singularValues, msg.singular_values);
   for(unsigned int i=0; i < c.constraints.size(); i++)
-    msg.joint_names[i] = c.constraints[i].name;
+    msg.constraint_names[i] = c.constraints[i].name;
 }
 
 

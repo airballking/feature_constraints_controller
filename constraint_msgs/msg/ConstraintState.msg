@@ -5,7 +5,7 @@ string name
 geometry_msgs/Pose base_pose # pose of object w.r.t. header.frame_id
 geometry_msgs/Pose pose      # pose of tool w.r.t. base_pose
 
-string[] joint_names
+string[] constraint_names
 
 float64[] chi                # current constraint values
 float64[] chi_desired        # desired constraint values
