@@ -70,11 +70,11 @@ public:
   void setFunction(const std::string& functionName)
     { func = Constraint::feature_functions_[functionName]; }
 
-  static void init();
+  static void init(); // set the possible constraint functions
   static std::map<std::string, FeatureFunc> feature_functions_;
 };
 
-// some feature functions
+// some constraint functions
 
 //! zero when perpendicular (cos of the angle)
 double perpendicular(KDL::Frame frame, Feature tool_feature, Feature object_feature);

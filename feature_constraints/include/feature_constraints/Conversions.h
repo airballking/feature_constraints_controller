@@ -16,7 +16,7 @@
 
 // (hopefully) realtime-safe conversion functions
 
-void fromMsg(const geometry_msgs::Vector3& msg, KDL::Vector vec);
+void fromMsg(const geometry_msgs::Vector3& msg, KDL::Vector& vec);
 void fromMsg(const constraint_msgs::Feature& msg, Feature& feat);
 void fromMsg(const constraint_msgs::Constraint& msg, Constraint& c);
 void fromMsg(const constraint_msgs::ConstraintConfig& msg, std::vector<Constraint>& cc);

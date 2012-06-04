@@ -12,7 +12,7 @@ using namespace KDL;
 // Only copying occurs, no memory allocation. We trust on
 // strings to have copy-on-write semantics, however.
 
-void fromMsg(const geometry_msgs::Vector3& msg, Vector vec)
+void fromMsg(const geometry_msgs::Vector3& msg, Vector& vec)
 {
   vec[0] = msg.x;
   vec[1] = msg.y;

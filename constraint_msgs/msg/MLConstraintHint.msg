@@ -1,3 +1,4 @@
+#NOTE: currently unused
 #want to have arrays of this
 
 int8 AT=0
