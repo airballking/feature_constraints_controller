@@ -44,7 +44,7 @@ void test_setup(vector<Constraint>& constraints)
 
 
 //TODO: throw exception when constraint function is not found
-TEST(Constraints, derive)
+TEST(Constraints, differentiate)
 {
   vector<Constraint> constraints;
   test_setup(constraints);
@@ -56,7 +56,7 @@ TEST(Constraints, derive)
 
   Frame f(Vector(1,2.1, 0));
 
-  deriveConstraints(Ht, values, f, constraints, 0.001, tmp);
+  differentiateConstraints(Ht, values, f, constraints, 0.001, tmp);
 
   std::cout << "Ht:" << std::endl << Ht << endl;
   std::cout << "values:" << std::endl << values << endl;

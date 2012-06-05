@@ -48,19 +48,19 @@ void Controller::prepare(int max_constraints)
 
 void Controller::update(KDL::Frame frame)
 {
-  deriveConstraints(Ht, chi, frame, constraints, 0.001, tmp);
+  differentiateConstraints(Ht, chi, frame, constraints, 0.001, tmp);
   control(ydot, weights, chi_desired, chi, command, gains);
   analyzeH(tmp_pinv, Ht, J, singularValues, 1e-7);
   this->frame = frame;
 }
 
 
-//! new range-controller.
-//! this controller accepts ranges of accepted positions and
-//! lowers the weight to zero when inside that range. 
-void control(KDL::JntArray& ydot, KDL::JntArray& weights,
-	     KDL::JntArray& chi_desired, KDL::JntArray& chi,
-	     Ranges& command, KDL::JntArray gains)
+void control(KDL::JntArray& ydot,
+             KDL::JntArray& weights,
+	     KDL::JntArray& chi_desired,
+             const KDL::JntArray& chi,
+	     const Ranges& command,
+             const KDL::JntArray gains)
 {
   double s = 0.05;
   for(int i=0; i < 6; i++)

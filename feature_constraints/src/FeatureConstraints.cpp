@@ -21,7 +21,7 @@
 using namespace std;
 using namespace KDL;
 
-std::map<std::string, FeatureFunc> Constraint::feature_functions_;
+std::map<std::string, ConstraintFunc> Constraint::constraint_functions_;
 
 // some feature functions
 
@@ -29,9 +29,9 @@ std::map<std::string, FeatureFunc> Constraint::feature_functions_;
 double perpendicular(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
 {
   Vector &d_o = object_feature.dir;
-  Vector &t_o = tool_feature.dir;
+  Vector &d_t = tool_feature.dir;
 
-  return dot(d_o, Frame(frame.M) * t_o) / (d_o.Norm() * t_o.Norm());
+  return dot(d_o, Frame(frame.M) * d_t) / (d_o.Norm() * d_t.Norm());
 }
 
 //! distance between features, projected onto the
@@ -142,7 +142,8 @@ double null(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
   return 0.0;
 }
 
-void evaluateConstraints(KDL::JntArray& values, KDL::Frame& frame, std::vector<Constraint>& constraints)
+
+void evaluateConstraints(KDL::JntArray& values, const KDL::Frame& frame, const std::vector<Constraint>& constraints)
 {
   assert(values.rows() >= constraints.size());
 
@@ -150,15 +151,13 @@ void evaluateConstraints(KDL::JntArray& values, KDL::Frame& frame, std::vector<C
     values(i) = constraints[i](frame);
 }
 
-/*!
- * \param Ht transposed interaction matrix
- * \param values values of the constraints at frame (must have n rows)
- * \param frame the frame at which the constraints should be evaluated
- * \param dd how far frame should be moved in order to obtain Ht (must have n columns)
- * \param tmp temporary variable (must have n rows)
- * \param constraints the constraints to be evaluated
- */
-void deriveConstraints(KDL::Jacobian& Ht, KDL::JntArray& values, KDL::Frame& frame, std::vector<Constraint> &constraints, double dd,  KDL::JntArray& tmp)
+
+void differentiateConstraints(KDL::Jacobian& Ht,
+                              KDL::JntArray& values,
+                              const KDL::Frame& frame,
+                              const std::vector<Constraint> &constraints,
+                              double dd,
+                              KDL::JntArray& tmp)
 {
   assert(Ht.columns() >= constraints.size());
   assert(values.rows() >= constraints.size());
@@ -186,11 +185,12 @@ void deriveConstraints(KDL::Jacobian& Ht, KDL::JntArray& values, KDL::Frame& fra
 //TODO: get this executed automatically
 void Constraint::init()
 {
-  feature_functions_["perpendicular"] = perpendicular;
-  feature_functions_["height"] = height;
-  feature_functions_["distance"] = distance;
-  feature_functions_["pointing_at"] = pointing_at;
-  feature_functions_["direction"] = direction;
-  feature_functions_["angle"] = angle;
-  feature_functions_["null"] = null;
+  constraint_functions_["perpendicular"] = perpendicular;
+  constraint_functions_["height"] = height;
+  constraint_functions_["distance"] = distance;
+  constraint_functions_["pointing_at"] = pointing_at;
+  constraint_functions_["direction"] = direction;
+  constraint_functions_["angle"] = angle;
+  constraint_functions_["null"] = null;
 }
+

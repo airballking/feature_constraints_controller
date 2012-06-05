@@ -1,0 +1,88 @@
+TODO:
+
+Document what is inside which file
+
+interface of controller:
+
+  * config in: (features, constraints)
+  * realtime in: (ranges, frame)
+  * realtime out: (Ht, chi_desired, weights)
+
+
+---
+Web page documentation
+---
+
+====== Constraint based control ======
+
+The goal of this library is to translate instruction like:
+
+  "Align the front edge of the spatula blade with the oven"
+
+This package provides task functions and controllers that
+can implement such a behavior.
+
+=== Task Function (informal definition) ===
+
+A task function like 'angle between these two edges' is a differentiable
+function of the robots pose, posture or
+any sensor value that depends on the robots posture. This function is then
+differentiated and used to control the robot towards a desired value of the
+task function.
+
+The advantage of using task functions is that the null space of the 
+task function (i.e. all movements that do //not// affect the task) is
+explicitly represented and can be used to another task into this null space. 
+
+
+=== Geometric Features ===
+
+Instruction usually do not relate to a tool or object as a whole but rather at
+geometric features of them like:
+
+  * a point
+  * a line segment
+  * a plane segment
+
+In this library, a geometric feature consists of:
+
+  * a frame_id, defining the coordinate system in which this feature lives.
+  * a position
+  * a direction
+  * a contact_direction, defining from where it can be approached best.
+
+{{TODO: make a cool picture}}
+
+With these three parts a coordinate system can be defined. This allows us to
+specify arbitrary Task Functions (based on the robots EE pose).
+
+In a ROS-based robot, the frame_id defines, whether a Feature is attached to the
+robot or to the world. Given the robot's URDF description, the rest of the scene
+description can be derived completely from the frame_id's of the features.
+
+=== Constraints ===
+
+Constraints are triples consisting of a constraint functions and two features. The constraint function is a Task Function, mapping the two Features (and their positions in the world) to a real value. The predefined constraint function include:
+
+  * perpendicular
+  * aligned
+  * height
+  * distance
+
+=== Controller ===
+
+Often, instructions define inequalities on the constraint functions,
+like 'bigger than'. In order to retain this information, we control
+our constraint functions to be inside ranges, rather than choosing
+a single desired value.
+
+Thus, for each constraint we can send desired min/max values and a weight
+to switch that constraint on or off (0.0 == off, everything else: on).
+
+=== Code ===
+
+The code is in my public Mercurial repository:
+
+  hg clone http://toychest.in.tum.de/users/kresse/sandbox
+
+

@@ -36,11 +36,7 @@ public:
 };
 
 
-void control(KDL::JntArray& ydot, KDL::JntArray& weights,
-	     KDL::JntArray& chi_desired, KDL::JntArray& chi,
-	     Ranges& command, KDL::JntArray gains);
-
-///////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 
 // convenience class
@@ -54,7 +50,6 @@ public:
   KDL::JntArray gains;
 
   // output variables
-
   KDL::JntArray chi;
   KDL::JntArray chi_desired;
 
@@ -78,14 +73,45 @@ public:
 };
 
 
+//////////////////////////////////////////////////////////////////////////////
+
+
 //! Analyze interaction matrix.
-void analyzeH(PinvData& tmpdata, KDL::Jacobian& Ht, KDL::Jacobian& J,
-		      KDL::JntArray& singularValues, double eps=1e-15);
+/*! This function computes the pseudoinverse of the interaction matrix H
+    using the singular value decomposition. It returns the inverse
+    as well as the singular values.
+    The singular values reveal the rank of Ht, showing whether
+    constraints are conflicting.
+
+    This feature is currently unused and is not required for control.
+ */
+void analyzeH(PinvData& tmpdata,
+              const KDL::Jacobian& Ht,
+              KDL::Jacobian& J,
+              KDL::JntArray& singularValues,
+              double eps=1e-15);
+
 
 //! Do range-based control.
-void control(KDL::JntArray& ydot, KDL::JntArray& weights,
-	     KDL::JntArray& chi_desired, KDL::JntArray& chi,
-	     Ranges& command, KDL::JntArray gains);
+/*! This controller accepts ranges of accepted positions and
+    lowers the weight to zero when inside that range.
+
+    \param ydot    [out] desired velocities in constraint space
+    \param weights [out] constraint weights for the solver
+    \param chi_desired [out] desired values of the constraints
+(a border of the range when not fulfilled, equal to chi otherwise)
+    \param chi     [in] current value of the constraints
+    \param command [in] desired ranges of the commands
+    \param gains   [in] K_p for the P-controller that is active when
+                        a constraint is not fulfilled.
+ */
+void control(KDL::JntArray& ydot,
+             KDL::JntArray& weights,
+	     KDL::JntArray& chi_desired,
+             const KDL::JntArray& chi,
+	     const Ranges& command,
+             const KDL::JntArray gains);
 
 
 #endif //FEATURE_CONSTRAINTS_CONTROLLER_H
+
