@@ -39,8 +39,9 @@ public:
 //////////////////////////////////////////////////////////////////////////////
 
 
-// convenience class
-// collects all variables of interest for a feature-based task function.
+//! Convenience class
+/*! Collects all variables of interest for a feature-based task function.
+ */
 class Controller
 {
 public:
@@ -65,11 +66,12 @@ public:
   PinvData tmp_pinv;
 
   // does non-realtime preparation work
-  // assumes that constraints is set
-  void prepare(int max_constraints=MAX_CONSTRAINTS);
+  // assumes that either constraints is set
+  // or max_constraints is given
+  void prepare(int max_constraints=-1);
 
   // calls deriveConstraints(), control() and analyzeH()
-  void update(KDL::Frame frame);
+  void update(KDL::Frame& frame);
 };
 
 

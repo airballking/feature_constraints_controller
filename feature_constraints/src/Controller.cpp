@@ -26,7 +26,7 @@ void Ranges::resize(int size)
 
 void Controller::prepare(int max_constraints)
 {
-  int n = constraints.size();
+  int n = (max_constraints == -1) ? constraints.size() : max_constraints;
 
   chi.resize(n);
   chi_desired.resize(n);
@@ -42,11 +42,11 @@ void Controller::prepare(int max_constraints)
   singularValues.resize(n);
 
   tmp.resize(n);
-  tmp_pinv.resize(max_constraints);  // maximum number of constraints
+  tmp_pinv.resize(n);  // maximum number of constraints
 }
 
 
-void Controller::update(KDL::Frame frame)
+void Controller::update(KDL::Frame& frame)
 {
   differentiateConstraints(Ht, chi, frame, constraints, 0.001, tmp);
   control(ydot, weights, chi_desired, chi, command, gains);

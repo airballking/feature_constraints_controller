@@ -48,6 +48,7 @@ void fromMsg(const constraint_msgs::Constraint& msg, Constraint& c)
 }
 
 
+// TODO: this is _not_ realtime safe
 void fromMsg(const constraint_msgs::ConstraintConfig& msg, std::vector<Constraint>& cc)
 {
   int num = msg.constraints.size();
