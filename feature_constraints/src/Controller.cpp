@@ -124,7 +124,7 @@ void PinvData::resize(int size)
 }
 
 
-void analyzeH(PinvData& tmp, KDL::Jacobian& Ht, KDL::Jacobian& J, KDL::JntArray& singularValues, double eps)
+void analyzeH(PinvData& tmp, const KDL::Jacobian& Ht, KDL::Jacobian& J, KDL::JntArray& singularValues, double eps)
 {
   VectorXd& S = singularValues.data;
 

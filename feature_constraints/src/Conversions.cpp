@@ -63,7 +63,7 @@ Constraint fromMsg(const constraint_msgs::Constraint& msg)
 }
 
 
-void fromMsg(std::vector<double>& msg, KDL::JntArray& jnts)
+void fromMsg(const std::vector<double>& msg, KDL::JntArray& jnts)
 {
   for(unsigned int i=0; i < msg.size(); i++)
     jnts(i) = msg[i];
@@ -76,7 +76,7 @@ KDL::JntArray fromMsg(std::vector<double>& msg)
   return jnts;
 }
 
-void fromMsg(constraint_msgs::ConstraintCommand& msg, Ranges& ranges)
+void fromMsg(const constraint_msgs::ConstraintCommand& msg, Ranges& ranges)
 {
   fromMsg(msg.pos_lo, ranges.pos_lo);
   fromMsg(msg.pos_hi, ranges.pos_hi);
