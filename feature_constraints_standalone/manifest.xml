@@ -1,0 +1,30 @@
+<package>
+  <description brief="feature_constraints_standalone">
+
+     feature_constraints_standalone
+
+  </description>
+  <author>Georg Bartels</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/feature_constraints_standalone</url>
+
+  <depend package="rospy" />
+  <depend package="roscpp" />
+
+  <depend package="eigen"/>
+  <depend package="orocos_kdl"/>
+
+  <depend package="feature_constraints"/>
+  <depend package="kdl_parser" />
+  <depend package="constraint_msgs"/>
+
+  <depend package="loopback_controller_manager"/>
+  <depend package="ias_mechanism_controllers"/>
+
+  <depend package="sensor_msgs"/>
+  <depend package="std_msgs"/>
+
+</package>
+
+
