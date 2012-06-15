@@ -63,7 +63,7 @@ void control(KDL::JntArray& ydot,
              const KDL::JntArray gains)
 {
   double s = 0.05;
-  for(int i=0; i < 6; i++)
+  for(int i=0; i < chi.rows(); i++)
   {
     if(command.weight(i) == 0.0)
     {

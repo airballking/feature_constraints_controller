@@ -73,16 +73,12 @@ bool JointStateInterpreter::parseJointState(const sensor_msgs::JointState::Const
   assert(q.rows() == joint_names_.size());
 
   unsigned jnt = 0;
-  for(unsigned int i=0; i<msg->name.size(); i++)
+  for(unsigned int i=0; (i<msg->name.size()) && (jnt < joint_names_.size()); i++)
   {
     if(msg->name[i] == joint_names_[jnt])
     {
       q(jnt++) = msg->position[i];
     }
-
-    // terminate loop if all joints have been found
-    if(jnt == joint_names_.size())
-      break;
   }
 
   return (jnt == joint_names_.size());
