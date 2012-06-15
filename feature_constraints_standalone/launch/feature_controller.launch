@@ -1,0 +1,36 @@
+<launch>
+  <rosparam ns="/loopback_controllers/joints">
+    name: ['right_hand_thumb_joint', 'left_hand_thumb_joint',
+           'left_arm_0_joint', 'left_arm_1_joint',
+           'left_arm_2_joint', 'left_arm_3_joint',
+           'left_arm_4_joint', 'left_arm_5_joint',
+           'left_arm_6_joint',
+           'right_arm_0_joint', 'right_arm_1_joint',
+           'right_arm_2_joint', 'right_arm_3_joint',
+           'right_arm_4_joint', 'right_arm_5_joint',
+           'right_arm_6_joint']
+    position: [1.57, 1.57,
+               0.264149, -0.476302,
+              -0.576542, -1.639763,
+              -0.42, 1.76,
+               1.14,
+              -1.29531, -1.763543,
+               1.112588, 1.785978,
+              -0.18228, -2.055369,
+               0.299409]
+  </rosparam>
+
+<!-- right arm parking positions:
+  [-1.29531, -1.763543, 1.112588, 1.785978, -0.18228, -2.116602, 0.299409] -->
+<!-- left  arm parking positions:
+  [1.281771, 1.805198, -0.939971, -2.00445, 0.076204, 2.062063, -0.400502] -->
+
+  <include file="$(find ias_mechanism_controllers)/launch/rosie_loopback.launch"/>
+<!--
+  <node name="feature_controller" type="constraint_controller" pkg="feature_constraints_standalone" >
+    <remap from="qdot" to="/l_arm_vel/command"/>
+    <param name="~tool_frame" value="left_arm_7_link"/>
+    <param name="~base_frame" value="calib_left_arm_base_link"/>
+  </node>
+-->
+</launch>
