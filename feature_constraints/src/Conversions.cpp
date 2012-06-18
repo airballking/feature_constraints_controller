@@ -169,7 +169,18 @@ std::vector<geometry_msgs::Twist> toMsg(KDL::Jacobian jac)
 constraint_msgs::ConstraintState toMsg(Controller& c)
 {
   constraint_msgs::ConstraintState c_msg;
+  resize(c_msg, c.constraints.size());
   toMsg(c, c_msg);
   return c_msg;
 }
 
+void resize(constraint_msgs::ConstraintState &msg, unsigned int number_constraints)
+{
+  msg.chi.resize(number_constraints);
+  msg.chi_desired.resize(number_constraints);
+  msg.weights.resize(number_constraints);
+  msg.jacobian.resize(number_constraints);
+  msg.interaction_matrix.resize(number_constraints);
+  msg.singular_values.resize(number_constraints);
+  msg.constraint_names.resize(number_constraints);
+}

@@ -44,5 +44,6 @@ Constraint fromMsg(const constraint_msgs::Constraint& msg);
 KDL::JntArray fromMsg(std::vector<double>& msg);
 Ranges fromMsg(constraint_msgs::ConstraintCommand& msg);
 
+void resize(constraint_msgs::ConstraintState &msg, unsigned int number_constraints);
 
 #endif //FEATURE_CONSTRAINTS_CONVERSIONS_H
