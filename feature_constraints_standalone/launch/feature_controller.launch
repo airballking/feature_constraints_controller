@@ -26,11 +26,21 @@
   [1.281771, 1.805198, -0.939971, -2.00445, 0.076204, 2.062063, -0.400502] -->
 
   <include file="$(find ias_mechanism_controllers)/launch/rosie_loopback.launch"/>
-<!--
-  <node name="feature_controller" type="constraint_controller" pkg="feature_constraints_standalone" >
-    <remap from="qdot" to="/l_arm_vel/command"/>
+
+  <node name="feature_controller" launch-prefix="xterm -e gdb --args" type="constraint_controller" pkg="feature_constraints_standalone" >
+    <remap from="~qdot" to="/l_arm_vel/command"/>
     <param name="~tool_frame" value="left_arm_7_link"/>
-    <param name="~base_frame" value="calib_left_arm_base_link"/>
+    <param name="~base_frame" value="base_link"/>
   </node>
--->
+
+  <node name="constraint_config_sender" type="constraint_config.py" pkg="feature_constraints_standalone" >
+    <remap from="/constraint_config" to="feature_controller/constraint_config"/>
+  </node>
+
+  <node name="jac_chain_viz" type="jac_chain_viz.py" pkg="motion_viz" cwd="node">
+    <remap from="/state" to="/feature_controller/constraint_state"/>
+    <param name="ref_frame" value="/base_link"/>
+    <param name="ref_point" value="/base_link"/>
+    <param name="target_frame" value="/base_link"/>
+  </node>
 </launch>

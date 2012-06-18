@@ -19,7 +19,7 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
 
   // construct joint state interpreter
   joint_state_interpreter_ = new JointStateInterpreter(robot_kinematics_->getJointNames());
-  ROS_ERROR("Number of joints in vector...%d", robot_kinematics_->getJointNames().size());
+  ROS_INFO("Number of joints in the kinematic chain...%d", (int)robot_kinematics_->getJointNames().size());
 
   // subscribe to joint state topic
   joint_state_subscriber_ = n.subscribe<sensor_msgs::JointState>("/joint_states", 2, &FeatureConstraintsController::joint_state_callback, this);
@@ -31,6 +31,7 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   constraint_command_subscriber_ = n.subscribe<constraint_msgs::ConstraintCommand>("constraint_command", 1, &FeatureConstraintsController::constraint_command_callback, this);
   // advertise publisher
   qdot_publisher_ = n.advertise<std_msgs::Float64MultiArray>("qdot", 1);
+  state_publisher_ = n.advertise<constraint_msgs::ConstraintState>("constraint_state", 1);
 
   // resize internal robot representation
   unsigned int dof = robot_kinematics_->getNumberOfJoints();
@@ -82,7 +83,6 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
 
 void FeatureConstraintsController::constraint_command_callback(const constraint_msgs::ConstraintCommand::ConstPtr& msg)
 {
-  assert(msg->pos_lo.size() == feature_controller_.command.pos_lo.rows());
   if(msg->pos_lo.size() == feature_controller_.command.pos_lo.rows()){
     ready_ = true;
   }else{
@@ -128,6 +128,9 @@ void FeatureConstraintsController::update()
       }
       qdot_publisher_.publish(qdot_msg_);
     }
+
+    // publish constraint state for debugging purposes
+    state_publisher_.publish(toMsg(feature_controller_));
   }
 }
 

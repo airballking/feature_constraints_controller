@@ -55,9 +55,9 @@ private:
   // subscribers
   ros::Subscriber joint_state_subscriber_, feature_constraints_subscriber_, constraint_command_subscriber_;
 
-  // publisher
+  // publishers
   ros::Publisher qdot_publisher_;
-
+  ros::Publisher state_publisher_;
   // corresponding message for publishing
   std_msgs::Float64MultiArray qdot_msg_;
 
