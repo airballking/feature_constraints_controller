@@ -8,12 +8,12 @@ from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist,Vector3
 
 import mapping
-mapping.default_mapping = [1, 0, '_',   '_', '_', 3]
-
 
 rospy.init_node('joy_to_twist')
 
-button_mapping = mapping.MultiMapping()
+default_mapping = [1, 0, '_',   '_', '_', 3]
+button_mapping = mapping.MultiMapping(default_mapping)
+mapping.represents_twists = True
 
 def callback(msg):
   values = button_mapping(msg)

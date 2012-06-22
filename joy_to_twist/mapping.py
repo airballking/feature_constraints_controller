@@ -18,16 +18,14 @@ import rospy
 from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist,Vector3
 
-
-default_mapping = [1, 0, '_',   '_', '_', 3]
-
+represents_twists=False
 
 class Mapping:
   """ map a single set of joystick axes to twist axes """
   def __init__(self, param):
     """ param: a ROS param (the list of the six joystick axes) """
-    self.axis = [0]*6
-    self.sign = [0.0]*6
+    self.axis = [0]*len(param)
+    self.sign = [0.0]*len(param)
     for (i,a) in enumerate(param):
       if type(a) in (int,long,float):
         self.sign[i] = copysign(1.0, a)
@@ -38,14 +36,17 @@ class Mapping:
   def __repr__(self):
     ss = [['_','+', '-'][cmp(x,0)] for x in self.sign]
     aa = [[s, s+str(a)][s != '_'] for (s,a) in zip(ss, self.axis)]
-    lin = 'lin: [%s, %s, %s]' % (aa[0], aa[1], aa[2])
-    rot = 'rot: [%s, %s, %s]' % (aa[3], aa[4], aa[5])
-    return '['+lin+'  '+rot+']'
+    if represents_twists:
+      lin = 'lin: [%s, %s, %s]' % (aa[0], aa[1], aa[2])
+      rot = 'rot: [%s, %s, %s]' % (aa[3], aa[4], aa[5])
+      return '['+lin+', '+rot+']'
+    else:
+      return '['+', '.join(aa)+']'
 
   def __call__(self, msg):
     """ map joystick axes onto a 6-vector """
     if len(msg.axes) < max(self.axis):
-      return [0.0]*6
+      return [0.0]*len(self.axis)
     return [s*msg.axes[a] for (s,a) in zip(self.sign, self.axis)]
 
 
@@ -53,12 +54,12 @@ class MultiMapping:
   """ map a joystich button onto an axis mapping """
   # mapping:   button  |-->  ([sign]*6, [axis]*6)
 
-  def __init__(self):
+  def __init__(self, default_mapping=None):
     """ perform the mapping of joystick axes, with button modifiers """
     self.mappings = self.read_params()
 
     # default mapping
-    if len(self.mappings.keys()) == 0:
+    if default_mapping and len(self.mappings.keys()) == 0:
       self.mappings['_'] = Mapping(default_mapping)
 
 
@@ -93,6 +94,6 @@ class MultiMapping:
     # try default mapping
     if self.mappings.has_key('_'):
       return self.mappings['_'](msg)
-    # no key mapping applies, return zeros
-    return [0.0]*6
+    # no key mapping applies, return some zeros
+    return [0.0]
 

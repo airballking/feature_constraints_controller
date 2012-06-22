@@ -4,7 +4,7 @@
     <param name="deadzone" value="0.1"/>
   </node>
 
-  <node name="joy_to_float" pkg="joy_to_floats" type="joy_to_floats.py">
+  <node name="joy_to_float" pkg="joy_to_twist" type="joy_to_floats.py">
     <rosparam ns="mapping">
       [0, 1, 3, 4, _, _]
     </rosparam>

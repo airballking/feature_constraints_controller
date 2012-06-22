@@ -11,7 +11,7 @@ import mapping
 
 rospy.init_node('joy_to_floats')
 
-button_mapping = mapping.MultiMapping(default_mapping=[1,2,3])
+button_mapping = mapping.MultiMapping(default_mapping=[0, 1, 2, 3])
 
 def callback(msg):
   values = button_mapping(msg)
