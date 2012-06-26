@@ -12,6 +12,12 @@
   <depend package="rospy"/>
   <depend package="joy"/>
   <depend package="geometry_msgs"/>
+
+  <export>
+    <python path="${prefix}"/>
+  </export>
+
+
 </package>
 
 

@@ -4,20 +4,12 @@
     <param name="deadzone" value="0.1"/>
   </node>
 
-  <node name="joy_to_float" pkg="joy_to_twist" type="joy_to_floats.py">
+  <node name="joystick_commander" pkg="feature_constraints_standalone"
+        type="constraint_commander.py">
     <rosparam ns="mapping">
       [0, 1, 3, 4, _, _]
     </rosparam>
-    <remap from="/floats" to="/constraint_vel"/>
-  </node>
-
-  <node name="joystick_commander" pkg="feature_constraints_standalone"
-        type="constraint_commander.py">
-    <remap from="/velocity" to="/constraint_vel"/>
     <remap from="/command" to="/feature_controller/constraint_command"/>
-    <remap from="/position" to="/constraint_pos"/>
+    <remap from="/state" to="/feature_controller/constraint_state"/>
   </node>
-
-  <node name="initial_constraints_publisher" pkg="rostopic" type="rostopic" args="pub /constraint_pos std_msgs/Float64MultiArray '{data: [0.887459, 0.998564, 1.49226, -0.735284, -0.465815, 0.0523682]}'"/>
-
 </launch>
