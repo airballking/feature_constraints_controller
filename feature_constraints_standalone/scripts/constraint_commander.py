@@ -2,7 +2,7 @@
 
 from math import *
 
-import roslib;
+import roslib
 roslib.load_manifest('feature_constraints_standalone')
 roslib.load_manifest('joy_to_twist')
 
