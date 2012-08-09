@@ -57,13 +57,13 @@ void Controller::update(KDL::Frame& frame)
 
 void control(KDL::JntArray& ydot,
              KDL::JntArray& weights,
-	     KDL::JntArray& chi_desired,
+             KDL::JntArray& chi_desired,
              const KDL::JntArray& chi,
-	     const Ranges& command,
+             const Ranges& command,
              const KDL::JntArray gains)
 {
   double s = 0.05;
-  for(int i=0; i < chi.rows(); i++)
+  for(unsigned int i=0; i < chi.rows(); i++)
   {
     if(command.weight(i) == 0.0)
     {
