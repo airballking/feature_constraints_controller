@@ -1,4 +1,26 @@
 
+/*!
+ *  \file FeatureConstraints.h
+ *
+ *  \brief Features and Constraints
+ *
+ *  This file contains the feature and constraint classes, some
+ *  constraint functions and the evaluation and differentiation of
+ *  constraints.
+ */
+
+
+/*! \mainpage
+ *
+ *  This package contains code to define geometric \ref Feature "Features"
+ *  and combine them using \ref Constraint "Constraints". These constraints
+ *  are task functions, which can be numerically \ref differentiateConstraints
+ *  "differentiated" and thus used in a \ref Controller. The
+ *  \ref control "control law" that is implemented here can keep the
+ *  constraints inside desired \ref Ranges "ranges".
+ */
+
+
 #ifndef FEATURE_CONSTRAINTS_FEATURE_CONSTRAINTS_H
 #define FEATURE_CONSTRAINTS_FEATURE_CONSTRAINTS_H
 
@@ -32,9 +54,10 @@ public:
     : name(name), pos(pos), dir(dir), contact_dir(contact_dir) {name.reserve(STRING_SIZE);}
 };
 
+/*! \typedef ConstraintFunc
+    \brief Constraint function.
 
-//! Constraint function.
-/*! This task function takes two features and the
+    This task function takes two features and the
     transform between these features and computes a real value.
 
     \param frame          The transform from tool to object
@@ -44,6 +67,7 @@ public:
 typedef double (*ConstraintFunc) (KDL::Frame& frame, Feature tool_feature, Feature object_feature);
 
 
+//! A constraint between two features
 /*! A constraint consists of a feature on the object, a feature on the tool and
     a constraint function.
 */
@@ -93,35 +117,46 @@ public:
 
 
 //////////////////////////////////////////////////////////////////////////////
-////group: some constraint functions
 
-//! zero when perpendicular (cos of the angle)
+/*! @name Constraint Functions
+ */
+
+///@{
+
+/*! zero when perpendicular (cos of the angle)
+ */
 double perpendicular(KDL::Frame frame, Feature tool_feature, Feature object_feature);
 
 
-//! distance between features, projected onto the
-//! the direction of the object feature
+/*! distance between features, projected onto the
+    the direction of the object feature
+ */
 double height(KDL::Frame frame, Feature tool_feature, Feature object_feature);
 
 
-//! distance between features, perpendicular to
-//! the direction of the object feature
+/*! distance between features, perpendicular to
+    the direction of the object feature
+ */
 double distance(KDL::Frame frame, Feature tool_feature, Feature object_feature);
 
 
-//! angle between tool feature direction and
-//! connecting line between object and tool positions
-//! (seen perpendicular to the object direction)
+/*! angle between tool feature direction and
+    connecting line between object and tool positions
+    (seen perpendicular to the object direction)
+ */
 double pointing_at(KDL::Frame frame, Feature tool_feature, Feature object_feature);
 
 
-//! cosine of the angle of cylinder coordinates.
+/*! cosine of the angle of cylinder coordinates.
+ */
 double direction(KDL::Frame frame, Feature tool_feature, Feature object_feature);
 
 
-//! always returns 0
+/*! always returns 0
+ */
 double null(KDL::Frame frame, Feature tool_feature, Feature object_feature);
 
+///@}
 
 //////////////////////////////////////////////////////////////////////////////
 

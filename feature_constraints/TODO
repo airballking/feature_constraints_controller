@@ -1,14 +1,3 @@
-TODO:
-
-Document what is inside which file
-
-interface of controller:
-
-  * config in: (features, constraints)
-  * realtime in: (ranges, frame)
-  * realtime out: (Ht, chi_desired, weights)
-
-
 ---
 Web page documentation
 ---

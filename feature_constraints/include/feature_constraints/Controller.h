@@ -1,4 +1,9 @@
 
+/*! \file Controller.h
+ *
+ *  \brief Range-based controller and Integration
+ */
+
 #ifndef FEATURE_CONSTRAINTS_CONTROLLER_H
 #define FEATURE_CONSTRAINTS_CONTROLLER_H
 
@@ -14,7 +19,7 @@
 #define MAX_CONSTRAINTS 64
 
 
-// describes the instantaneous constraint command
+//! Describes the instantaneous constraint command
 class Ranges
 {
 public:
@@ -41,6 +46,11 @@ public:
 
 //! Convenience class
 /*! Collects all variables of interest for a feature-based task function.
+ *
+ *  This controller is configured by the feature-based constraints
+ *  that are stored in \ref constraints. At realtime, \ref command ranges and \ref frame
+ *  are updated and the interaction matrix \ref Ht, the output \ref ydot
+ *  (expressed in constraint coordinates) and \ref weights are computed.
  */
 class Controller
 {
@@ -51,12 +61,12 @@ public:
   KDL::JntArray gains;
 
   // output variables
-  KDL::JntArray chi;
-  KDL::JntArray chi_desired;
+  KDL::JntArray chi;         //!< actual values of the constraints
+  KDL::JntArray chi_desired; //!< desired values of the constraints i.e. 'controller setpoints'
 
-  KDL::Jacobian Ht;
-  KDL::Frame frame;  //! just a buffer variable. remembers the last input of update()
-  KDL::JntArray ydot;
+  KDL::Jacobian Ht;  //!< Interaction matrix
+  KDL::Frame frame;  //!< just a buffer variable. remembers the last input of update()
+  KDL::JntArray ydot;  //!< output velocities (in constraint coordinates)
   KDL::JntArray weights;
 
   // extra data

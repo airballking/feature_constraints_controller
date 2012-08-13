@@ -1,4 +1,7 @@
-// ROS message conversions
+/*! \file Conversions.h
+ *
+ *  \brief ROS message conversions
+ */
 
 #ifndef FEATURE_CONSTRAINTS_CONVERSIONS_H
 #define FEATURE_CONSTRAINTS_CONVERSIONS_H
@@ -14,7 +17,9 @@
 #include <feature_constraints/FeatureConstraints.h>
 
 
-// (hopefully) realtime-safe conversion functions
+//! @name (hopefully) realtime-safe conversion functions
+
+///@{
 
 void fromMsg(const geometry_msgs::Vector3& msg, KDL::Vector& vec);
 void fromMsg(const constraint_msgs::Feature& msg, Feature& feat);
@@ -29,8 +34,11 @@ void toMsg(const KDL::Twist& t, geometry_msgs::Twist& t_msg);
 void toMsg(KDL::Jacobian& jac, std::vector<geometry_msgs::Twist>& jac_msg);
 void toMsg(Controller& c, constraint_msgs::ConstraintState& c_msg);
 
+///@}
 
-// convenience functions
+//! \name convenience functions
+
+///@{
 
 geometry_msgs::Pose toMsg(KDL::Frame& frame);
 std::vector<double> toMsg(KDL::JntArray& joints);
@@ -45,5 +53,7 @@ KDL::JntArray fromMsg(std::vector<double>& msg);
 Ranges fromMsg(constraint_msgs::ConstraintCommand& msg);
 
 void resize(constraint_msgs::ConstraintState &msg, unsigned int number_constraints);
+
+///@}
 
 #endif //FEATURE_CONSTRAINTS_CONVERSIONS_H
