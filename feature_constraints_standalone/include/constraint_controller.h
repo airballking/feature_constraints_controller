@@ -13,54 +13,68 @@
 
 #include <Eigen/Core>
 
+
+//! A feature-grounded constraint controller
+/*! This class communicates to ROS. It receives constraint configurations and
+ *  -commands, tf frames (not yet!) and joint states. It feeds them to the
+ *  task-function based \ref feature_controller_, a WDLS solver and sends
+ *  joint velocities back to the robot.
+ */
 class FeatureConstraintsController
 {
 public:
   // non-realtime
-  bool init(ros::NodeHandle& n);
+  bool init(ros::NodeHandle& n);  //!< initialize controller, solver and ROS communication
 
-  //realtime
-  void update();  
+  // realtime
+  void update();
 
 private:
   // callback functions
+
+  //! Receives new joint angles.
   void joint_state_callback(const sensor_msgs::JointState::ConstPtr& msg);
+
+  //! Receives a new constraint configuration.
   void feature_constraints_callback(const constraint_msgs::ConstraintConfig::ConstPtr& msg);
+
+  //! Receives the desired ranges for the constraints.
   void constraint_command_callback(const constraint_msgs::ConstraintCommand::ConstPtr& msg);
 
-  // these transforms will be looked up from tf
+  //! These transforms will be looked up from tf
   KDL::Frame T_tool_in_ee_, T_object_in_world_, T_base_in_world_;
 
-  // internal representation of robot state
+  //! Internal representation of robot state
   KDL::JntArray q_, qdot_;
 
-  // internal representation of robot jacobian
+  //! Internal representation of robot jacobian
   KDL::Jacobian jacobian_robot_;
 
-  // used to calc kinematics of robot
+  //! Calculate kinematics of robot
   RobotKinematics *robot_kinematics_;
 
-  // used to parse JointState msgs that come from the robot
+  //! Parses JointState messages that come from the robot
   JointStateInterpreter *joint_state_interpreter_;
 
-  // matrices used for talking to the solver
+  //! Matrices used for talking to the solver
   Eigen::MatrixXd A_, Wq_, Wy_;
 
-  // solver from KUL to inverse matrics
+  //! WDLS solver from KUL to inverse matrix
   SolverWeighted solver_;
 
-  // object from Ingo  to translate feature constraints into interaction matrix
+  //! Controller component to translate feature constraints into interaction matrix and output velocities
   Controller feature_controller_;
 
-  // subscribers
+  //! Subscribers
   ros::Subscriber joint_state_subscriber_, feature_constraints_subscriber_, constraint_command_subscriber_;
 
-  // publishers
+  //! Publishers
   ros::Publisher qdot_publisher_;
   ros::Publisher state_publisher_;
-  // corresponding message for publishing
+  //! Corresponding message for publishing
   std_msgs::Float64MultiArray qdot_msg_;
 
-  // flag to remember if feature_controller and solver have been resized meaningfully
+  //! Flag to remember if feature_controller_ and solver_ have been resized meaningfully
   bool ready_;
 };
+

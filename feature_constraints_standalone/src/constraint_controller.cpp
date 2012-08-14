@@ -1,3 +1,30 @@
+
+/*! \mainpage
+ *  \section Standalone Feature Constraint Controller
+ *
+ *  This package demonstrates, how a feature-grounded constraint based
+ *  controller can be instantiated.
+ *
+ *  \image html doc_images/control-coordinates.png
+ *
+ *  It assumes that a tool which is fixed to a robot shall be moved w.r.t. a
+ *  static object in the world. The robot state is read from /joint_states,
+ *  all other transforms are (assumed to be) taken from /tf.
+ *
+ *  \image html doc_images/controller-structure.png
+ *
+ *  The first step in defining constraints is the definition of an appropriate
+ *  set of coordinates (constraint-coordinates). Then, during the movement, allowed
+ *  ranges for these constraints are specified.
+ *
+ *  A python script sets up cylinder coordinates and three orientation constraints
+ *  which can be controlled with a game controller
+ *  (when starting joystick_commands.launch).
+ *
+ *  The constraint coordinates are visualized using Markers.
+ */
+
+
 #include <constraint_controller.h>
 
 
@@ -52,6 +79,8 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   return true;
 }
 
+/*! This triggers an update.
+ */
 void FeatureConstraintsController::joint_state_callback(const sensor_msgs::JointState::ConstPtr& msg)
 {
   // parse message with joint state interpreter
@@ -62,6 +91,14 @@ void FeatureConstraintsController::joint_state_callback(const sensor_msgs::Joint
   }
 }
 
+
+/*! This updates the controller and solver.
+ *
+ *  The controller is halted until a new, fitting constraint command is received.
+ *
+ *  \todo Both components do memory allocation, so this is not realtime safe.
+ *  Reserving enough space at initialization time might be a solution...
+ */
 void FeatureConstraintsController::feature_constraints_callback(const constraint_msgs::ConstraintConfig::ConstPtr& msg)
 {
   // get new constraints into controller and re-prepare it
@@ -81,6 +118,11 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   ready_ = false;
 }
 
+
+/*! This updates the Controller 'set points'. A fitting message of this type
+ *  must be received after a configuration update in order to activate the
+ *  controller.
+ */
 void FeatureConstraintsController::constraint_command_callback(const constraint_msgs::ConstraintCommand::ConstPtr& msg)
 {
   if(msg->pos_lo.size() == feature_controller_.command.pos_lo.rows()){
@@ -98,7 +140,7 @@ void FeatureConstraintsController::update()
   KDL::Frame ff_kinematics;
   robot_kinematics_->getForwardKinematics(q_, ff_kinematics);
   robot_kinematics_->getJacobian(q_, jacobian_robot_);
-  // TODO: check order
+
   KDL::Frame T_tool_in_object = T_object_in_world_.Inverse() * T_base_in_world_ * ff_kinematics * T_tool_in_ee_;
 
   if(feature_controller_.constraints.size() > 0){  
@@ -110,12 +152,12 @@ void FeatureConstraintsController::update()
     A_ = feature_controller_.Ht.data.transpose() * jacobian_robot_.data;
     Wy_.diagonal() = feature_controller_.weights.data;
  
-    ROS_INFO_STREAM("A_"<<A_<<"\n");
-    ROS_INFO_STREAM("ydot_"<<feature_controller_.ydot.data<<"\n");
-    ROS_INFO_STREAM("Wq_"<<Wq_<<"\n");
-    ROS_INFO_STREAM("Wy_"<<Wy_<<"\n");
-    ROS_INFO_STREAM("qodt_"<<qdot_.data<<"\n");
-    ROS_INFO_STREAM("chi_"<<feature_controller_.chi.data<<"\n");
+    ROS_DEBUG_STREAM("A_"<<A_<<"\n");
+    ROS_DEBUG_STREAM("ydot_"<<feature_controller_.ydot.data<<"\n");
+    ROS_DEBUG_STREAM("Wq_"<<Wq_<<"\n");
+    ROS_DEBUG_STREAM("Wy_"<<Wy_<<"\n");
+    ROS_DEBUG_STREAM("qdot_"<<qdot_.data<<"\n");
+    ROS_DEBUG_STREAM("chi_"<<feature_controller_.chi.data<<"\n");
  
     solver_.solve(A_, feature_controller_.ydot.data, Wq_, Wy_, qdot_.data);
  

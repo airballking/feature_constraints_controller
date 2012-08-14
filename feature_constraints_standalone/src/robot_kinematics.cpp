@@ -69,17 +69,12 @@ JointStateInterpreter::JointStateInterpreter(std::vector<std::string> joint_name
 bool JointStateInterpreter::parseJointState(const sensor_msgs::JointState::ConstPtr& msg, KDL::JntArray& q)
 {
   assert(msg != NULL);
-
   assert(q.rows() == joint_names_.size());
 
-  unsigned jnt = 0;
-  for(unsigned int i=0; (i<msg->name.size()) && (jnt < joint_names_.size()); i++)
-  {
+  unsigned int i, jnt;
+  for(jnt=0, i=0; i < msg->name.size() && jnt < joint_names_.size(); i++)
     if(msg->name[i] == joint_names_[jnt])
-    {
       q(jnt++) = msg->position[i];
-    }
-  }
 
   return (jnt == joint_names_.size());
 }

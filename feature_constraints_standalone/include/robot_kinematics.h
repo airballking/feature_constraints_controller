@@ -13,6 +13,22 @@
 #include <kdl/chainfksolverpos_recursive.hpp>
 #include <kdl/chainjnttojacsolver.hpp>
 
+
+/*! \file robot_kinematics.h
+ *
+ *  This file contains two helper classes to compute the (position-
+ *  and velocity-) forward kinematics. The classes do make use use ROS
+ *  libraries, but are passive, i.e. they have no threads or callbacks.
+ *  This should make it easier to reuse them.
+ */
+
+//! Robot kinematics helper using ROS
+/*! - gets the kinematic chain from the URDF
+ *  - configured by ROS parameters 'tool_frame' and 'base_frame'.
+      (TODO: is this flexible enough?)
+ *  - computes the forward kinematics
+ *  - computes the Jacobian
+ */
 class RobotKinematics
 {
 public:
@@ -34,8 +50,15 @@ private:
 };
 
 
-// Assumption: The joint names must appear in the same order
-// in one message. ('holes' are allowed)
+//! A realtime-safe joint state reader.
+/*! Assumptions:
+ *    - The joint names must appear in one JointState message
+ *    - The order of the names must not change
+ *    - ('holes' are allowed)
+ *
+ *  If the joint states were distributed over several messages,
+ *  then a collection of JointStateInterpreters is required. 
+ */
 class JointStateInterpreter
 {
 public:
@@ -43,5 +66,5 @@ public:
   bool parseJointState(const sensor_msgs::JointState::ConstPtr& msg, KDL::JntArray& q);
 private:
   std::vector<std::string> joint_names_;
-
 };
+
