@@ -1,0 +1,12 @@
+<launch>
+  <node name="constraints" pkg="feature_constraints_standalone"
+        type="constraint_config.py"/>
+
+  <node name="feature_viz" pkg="stuff" type="feature_viz.py"/>
+
+  <node name="baker_hand_transform" pkg="tf" type="static_transform_publisher"
+        args="0.5 0.7 0.8  0 0 0 1 /baker /hand 100"/>
+
+  <node name="world_baker_transform" pkg="tf" type="static_transform_publisher"
+        args="0 0 0  0 0 0 1 /base_link /baker 100"/>
+</launch>
