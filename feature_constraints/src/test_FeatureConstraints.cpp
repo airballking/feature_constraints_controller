@@ -26,14 +26,14 @@ void test_setup(vector<Constraint>& constraints)
 
   Constraint c;
 
-  c.func = Constraint::feature_functions_["height"];
-  c.tool_features[0] = tool_front;
-  c.object_features[0] = up;
+  c.func = Constraint::constraint_functions_["height"];
+  c.tool_feature = tool_front;
+  c.object_feature = up;
 
   constraints.push_back(c);
 
   constraints.push_back(Constraint("dist",
-    Constraint::feature_functions_["distance"], tool_front, up));
+    Constraint::constraint_functions_["distance"], tool_front, up));
   constraints.push_back(Constraint("align_front", "perpendicular",
                                    tool_front, up));
   constraints.push_back(Constraint("align_side", "perpendicular",
@@ -195,7 +195,7 @@ TEST(Constraints, Constraint_Functions)
         check_height        ( frames[f], lengths[l_tool], lengths[l_obj] );
         check_perpendicular ( frames[f], lengths[l_tool], lengths[l_obj] );
         check_pointing_at   ( frames[f], lengths[l_tool], lengths[l_obj] );
-        //check_direction     ( frames[f], lengths[l_tool], lengths[l_obj] );
+        check_direction     ( frames[f], lengths[l_tool], lengths[l_obj] );
         check_angle         ( frames[f], lengths[l_tool], lengths[l_obj] );
       }
     }

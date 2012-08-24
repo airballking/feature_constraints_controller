@@ -103,10 +103,13 @@ double direction(KDL::Frame& frame, Feature tool_feature, Feature object_feature
   double d_o_norm = d_o.Norm();
   double d_o2_norm = d_o2.Norm();
 
-  if(d_o_norm < EPS)
+  Vector d_on = d_o / d_o_norm;
+  Vector d_o2n = d_o2 / d_o2_norm;
+
+  if(d_o_norm < EPS || d_o2_norm < EPS)
     return 0.0;
   else
-    return dot(d_o2 / d_o2_norm, (p - (dot(d_o, p) / d_o_norm)*p));
+    return dot(d_o2n, (p - dot(d_on, p)*d_on));
 }
 
 
