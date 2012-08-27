@@ -4,13 +4,6 @@
 #include <tf_conversions/tf_kdl.h>
 
 
-////FROM DEBUGGING
-#include <kdl/frames_io.hpp>
-////FROM DEBUGGING
-#include <kdl/kinfam_io.hpp>
-
-
-
 // The constant EPS is used to set some
 // nan results to zero. This is useful e.g.
 // for inverting the interaction matrix
@@ -62,8 +55,6 @@ double distance(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
   else
     {
     Vector d_on = d_o / d_o_norm;
-////FROM DEBUGGING    cout << "p_align=" << (dot(d_on, p))*d_on << std::endl;
-////FROM DEBUGGING    cout << "p_perp= " << (p - (dot(d_on, p))*d_on) << std::endl;
     return (p - (dot(d_on, p))*d_on).Norm();
     }
 }
@@ -81,9 +72,6 @@ double pointing_at(KDL::Frame& frame, Feature tool_feature, Feature object_featu
   // projection of d_t perpendicular to d_o
   Vector d_on = d_o / d_o.Norm();
   Vector d_h = d_t  -  d_on * dot(d_on, d_t);
-
-////FROM DEBUGGING  std::cout << "ALGO :: p_h = " << p_h/p_h.Norm() << std::endl;
-////FROM DEBUGGING  std::cout << "ALGO :: d_h = " << d_h/d_h.Norm() << std::endl;
 
   double denom = p_h.Norm()*d_h.Norm();
   

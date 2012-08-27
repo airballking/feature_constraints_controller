@@ -2,7 +2,6 @@
 #include <feature_constraints/FeatureConstraints.h>
 #include <feature_constraints/Controller.h>
 
-#include <kdl/utilities/svd_eigen_HH.hpp>
 #include <Eigen/Core>
 
 
@@ -114,24 +113,3 @@ void control(KDL::JntArray& ydot,
   }
 }
 
-
-void PinvData::resize(int size)
-{
-  U.resize(size, 6);
-  V.resize(6,6);
-  Sp.resize(6);
-  tmp.resize(6);
-}
-
-
-void analyzeH(PinvData& tmp, const KDL::Jacobian& Ht, KDL::Jacobian& J, KDL::JntArray& singularValues, double eps)
-{
-  VectorXd& S = singularValues.data;
-
-  svd_eigen_HH(Ht.data.transpose(), tmp.U, S, tmp.V, tmp.tmp);
-
-  for(int i=0; i < 6; ++i)
-      tmp.Sp(i) = (fabs((double) S(i)) > eps) ? 1.0 / S(i) : 0.0;
-
-  J.data = tmp.V * tmp.Sp.asDiagonal() * tmp.U.transpose();
-}

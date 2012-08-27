@@ -68,6 +68,8 @@ a single desired value.
 Thus, for each constraint we can send desired min/max values and a weight
 to switch that constraint on or off (0.0 == off, everything else: on).
 
+[graph of how we control this]
+
 === Code ===
 
 The code is in my public Mercurial repository:

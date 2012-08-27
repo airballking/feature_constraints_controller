@@ -14,6 +14,7 @@
 #include <vector>
 
 #include <feature_constraints/FeatureConstraints.h>
+#include <feature_constraints/Analysis.h>
 
 
 #define MAX_CONSTRAINTS 64
@@ -28,16 +29,6 @@ public:
   KDL::JntArray pos_lo;  //!< min values for the constraints
   KDL::JntArray pos_hi;  //!< max values for the constraints
   KDL::JntArray weight;  //!< weights for the constraints (0|1)
-};
-
-
-//! pseudo-inverse working matrices
-class PinvData
-{
-public:
-  Eigen::MatrixXd U, V;
-  Eigen::VectorXd Sp, tmp;
-  void resize(int size);
 };
 
 
@@ -86,22 +77,6 @@ public:
 
 
 //////////////////////////////////////////////////////////////////////////////
-
-
-//! Analyze interaction matrix.
-/*! This function computes the pseudoinverse of the interaction matrix H
-    using the singular value decomposition. It returns the inverse
-    as well as the singular values.
-    The singular values reveal the rank of Ht, showing whether
-    constraints are conflicting.
-
-    This feature is currently unused and is not required for control.
- */
-void analyzeH(PinvData& tmpdata,
-              const KDL::Jacobian& Ht,
-              KDL::Jacobian& J,
-              KDL::JntArray& singularValues,
-              double eps=1e-15);
 
 
 //! Do range-based control.
