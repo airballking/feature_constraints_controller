@@ -131,17 +131,21 @@ class Feature:
     self.dir = frame.M*self.rel_dir
 
   def v(self):
-    return LocatedVector(self.pos, self.dir)
+    return LocatedVector(self.pos, self.dir / 2)
 
   def compute(self):
     return self
 
   def show(self):
+    global _config_
     #TODO: distinguish between line, plane and point!
     # assuming line for now.
     if self.type == 0: # LINE
       return [marker_line(self.pos - self.dir/2, self.pos + self.dir/2,
                           color=yellow)]
+    elif self.type == 1: #PLANE
+      dir = (self.dir / self.dir.Norm()) * _config_['line_width']/2
+      return [marker_line(self.pos - dir, self.pos + dir, color=yellow, line_width=self.dir.Norm())]
     elif self.type == 2: #POINT
       return [marker_point(self.pos, color=yellow, line_width=0.1)]
 
@@ -183,7 +187,7 @@ class Proj_P:
   def compute(self):
     vec = self.vec.compute()
     ref = self.ref.compute()
-    self.result_dir = ref * (kdl.dot(ref.dir, vec.dir) / ref.dir.Norm()) - vec
+    self.result_dir = ref * (kdl.dot(ref.dir, vec.dir) / ref.dir.Norm()**2) - vec
     return LocatedVector(ref.pos, self.result_dir.dir)
 
   def show(self):
@@ -192,7 +196,7 @@ class Proj_P:
     res = self.compute()
     along = res.dir + vec.dir
 
-    markers  = vec.show() + res.show()
+    markers  = vec.show() + res.show() + ref.show()
     markers += [marker_line(vec.pos, vec.pos + along)]
 
     return markers
@@ -206,7 +210,7 @@ class Proj_A:
   def compute(self):
     vec = self.vec.compute()
     ref = self.ref.compute()
-    res = ref * (kdl.dot(ref.dir, vec.dir) / ref.dir.Norm())
+    res = ref * (kdl.dot(ref.dir, vec.dir) / ref.dir.Norm()**2)
     return LocatedVector(vec.pos, res.dir)
 
   def show(self):
@@ -215,7 +219,7 @@ class Proj_A:
     res = self.compute()
     perp = res.dir - vec.dir
     dist_marker = marker_line(ref.pos, ref.pos + perp)
-    return vec.show() + res.show() + [dist_marker]
+    return vec.show() + res.show() + ref.show() + [dist_marker]
 
 
 
