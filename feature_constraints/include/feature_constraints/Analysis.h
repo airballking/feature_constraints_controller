@@ -1,17 +1,8 @@
 #ifndef ANALYSIS_H
 #define ANALYSIS_H
 
+#include <Eigen/Geometry>
 #include <feature_constraints/FeatureConstraints.h>
-
-
-class Quat
-{
-public:
-  Quat() : x(0), y(0), z(0), w(1) {}
-  Quat(double x, double y, double z, double w)
-    : x(x), y(y), z(z), w(w) {}
-  double x,y,z,w;
-};
 
 
 //! pseudo-inverse working matrices
@@ -67,7 +58,7 @@ double discontinuity(const Constraint& constraint, const KDL::Frame& frame,
 KDL::Frame axis_sampler(int index);
 
 
-std::vector< std::pair<Quat, double> >
+std::vector< std::pair<Eigen::Quaterniond, double> >
   continuityPlotRPY(Constraint c, KDL::Frame offset,
                     int numSamples, double dd, double threshold);
 

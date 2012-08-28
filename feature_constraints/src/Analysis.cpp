@@ -135,11 +135,11 @@ KDL::Frame axis_sampler(int index)
  *
  *  Does RPY sampling for the rotations.
  */
-std::vector< std::pair<Quat, double> >
+std::vector< std::pair<Eigen::Quaterniond, double> >
   continuityPlotRPY(Constraint c, KDL::Frame offset,
                     int numSamples, double dd, double threshold)
 {
-  vector< pair<Quat, double> > discontinuities;
+  vector< pair<Eigen::Quaterniond, double> > discontinuities;
 
   for(int x=0; x < numSamples; x++)
   {
@@ -155,9 +155,9 @@ std::vector< std::pair<Quat, double> >
 
         if(s > threshold)
         {
-          Quat q;
-          r.GetQuaternion(q.x, q.y, q.z, q.w);
-          discontinuities.push_back(pair<Quat, double>(q, s));
+          Eigen::Quaterniond q;
+          r.GetQuaternion(q.x(), q.y(), q.z(), q.w());
+          discontinuities.push_back(pair<Eigen::Quaterniond, double>(q, s));
         }
       }
     }
