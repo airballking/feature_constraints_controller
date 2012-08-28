@@ -6,6 +6,7 @@
 #include <kdl/frames.hpp>
 #include <kdl/utilities/svd_eigen_HH.hpp>
 
+#include <stdio.h>
 
 using namespace KDL;
 using namespace Eigen;
@@ -83,8 +84,10 @@ int rank(const std::vector<Constraint> &constraints,
 }
 
 
-bool continuous(const Constraint& constraint, KDL::Frame& frame,
-                double dd, double threshold)
+/*! returns maximum norm of the derivative.
+ */
+double discontinuity(const Constraint& constraint, const KDL::Frame& frame,
+                     double dd)
 {
   std::vector<Constraint> constraints;
   constraints.push_back(constraint);
@@ -94,11 +97,12 @@ bool continuous(const Constraint& constraint, KDL::Frame& frame,
 
   differentiateConstraints(Ht, value, frame, constraints, dd, tmp);
 
+  double max = 0;
   for(int i=0; i < 6; i++)
-    if(Ht(i, 0) > threshold)
-      return false;
+    if(fabs(Ht(i, 0)) > max)
+      max = fabs(Ht(i,0));
 
-  return true;
+  return max*dd;
 }
 
 
@@ -124,5 +128,40 @@ KDL::Frame axis_sampler(int index)
     f = Frame(Rotation::RotZ(M_PI/2));
   
   return f * Frame(Rotation::RotX(M_PI/2 * x_rot));
+}
+
+
+/*! \brief prints poses that are discontinuous.
+ *
+ *  Does RPY sampling for the rotations.
+ */
+std::vector< std::pair<Quat, double> >
+  continuityPlotRPY(Constraint c, KDL::Frame offset,
+                    int numSamples, double dd, double threshold)
+{
+  vector< pair<Quat, double> > discontinuities;
+
+  for(int x=0; x < numSamples; x++)
+  {
+    for(int y=0; y < numSamples; y++)
+    {
+      for(int z=0; z < numSamples; z++)
+      {
+        Rotation r = Rotation::RPY(x*M_PI*2/numSamples,
+                                   y*M_PI*2/numSamples,
+                                   z*M_PI*2/numSamples);
+
+        double s = discontinuity(c, offset*Frame(r), dd);
+
+        if(s > threshold)
+        {
+          Quat q;
+          r.GetQuaternion(q.x, q.y, q.z, q.w);
+          discontinuities.push_back(pair<Quat, double>(q, s));
+        }
+      }
+    }
+  }
+  return discontinuities;
 }
 

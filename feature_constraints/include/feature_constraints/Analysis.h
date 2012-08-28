@@ -1,8 +1,18 @@
 #ifndef ANALYSIS_H
 #define ANALYSIS_H
 
-
 #include <feature_constraints/FeatureConstraints.h>
+
+
+class Quat
+{
+public:
+  Quat() : x(0), y(0), z(0), w(1) {}
+  Quat(double x, double y, double z, double w)
+    : x(x), y(y), z(z), w(w) {}
+  double x,y,z,w;
+};
+
 
 //! pseudo-inverse working matrices
 class PinvData
@@ -46,8 +56,8 @@ int rank(const std::vector<Constraint> &constraints,
 
 /*  \brief checks if the given constraint is continuous at frame.
  */
-bool continuous(const Constraint& constraint, KDL::Frame& frame,
-                double dd, double threshold);
+double discontinuity(const Constraint& constraint, const KDL::Frame& frame,
+                  double dd);
 
 
 
@@ -55,6 +65,11 @@ bool continuous(const Constraint& constraint, KDL::Frame& frame,
    with the original axes.
  */
 KDL::Frame axis_sampler(int index);
+
+
+std::vector< std::pair<Quat, double> >
+  continuityPlotRPY(Constraint c, KDL::Frame offset,
+                    int numSamples, double dd, double threshold);
 
 
 #endif // ANALYSIS_H

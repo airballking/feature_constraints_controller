@@ -21,3 +21,5 @@ rosbuild_add_library(${PROJECT_NAME} src/FeatureConstraints.cpp src/Controller.c
 
 rosbuild_add_gtest(test/test_FeatureConstraints src/test_FeatureConstraints.cpp src/FeatureConstraints.cpp)
 rosbuild_add_gtest(test/test_Analysis src/test_Analysis.cpp src/Analysis.cpp src/FeatureConstraints.cpp)
+
+rosbuild_add_executable(${PROJECT_NAME} src/FeatureConstraints.cpp src/Analysis_main.cpp src/Analysis.cpp)

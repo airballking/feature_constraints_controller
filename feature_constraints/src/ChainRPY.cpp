@@ -9,6 +9,8 @@
 #include <feature_constraints/ChainRPY.h>
 
 
+#include <stdio.h>
+
 using namespace KDL;
 
 KDL::JntArray cyl_irpy_chain(KDL::Frame frame)
@@ -30,9 +32,14 @@ KDL::JntArray cyl_irpy_chain(KDL::Frame frame)
   JntArray chi_f(6);
 
   Vector p = frame.p;
+
+  //printf("atan2: %f\n", atan2(p.y(),p.x()));
+
   chi_f(0)=atan2(p.y(),p.x());
   chi_f(1)=sqrt(p.x()*p.x()+p.y()*p.y());
   chi_f(2)=p.z();
+
+  //printf("chi_f(0): %f\n", chi_f(0));
 
   Frame baker_pose;
   JntArray chi_f_baker(3);
@@ -49,34 +56,34 @@ KDL::JntArray cyl_irpy_chain(KDL::Frame frame)
 }
 
 
-double chain0(KDL::Frame frame, Feature tool_feature, Feature object_feature)
+double chain0(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
 {
   return cyl_irpy_chain(frame)(0);
 }
 
 
-double chain1(KDL::Frame frame, Feature tool_feature, Feature object_feature)
+double chain1(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
 {
   return cyl_irpy_chain(frame)(1);
 }
 
 
-double chain2(KDL::Frame frame, Feature tool_feature, Feature object_feature)
+double chain2(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
 {
   return cyl_irpy_chain(frame)(2);
 }
 
-double chain3(KDL::Frame frame, Feature tool_feature, Feature object_feature)
+double chain3(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
 {
   return cyl_irpy_chain(frame)(3);
 }
 
-double chain4(KDL::Frame frame, Feature tool_feature, Feature object_feature)
+double chain4(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
 {
   return cyl_irpy_chain(frame)(4);
 }
 
-double chain5(KDL::Frame frame, Feature tool_feature, Feature object_feature)
+double chain5(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
 {
   return cyl_irpy_chain(frame)(5);
 }
