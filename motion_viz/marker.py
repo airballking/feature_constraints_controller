@@ -95,10 +95,12 @@ def arrow(frm, to, width, ns=''):
   return [marker]
 
 
-def sector(vector1, vector2, ns='', id=1):
-  """ create a sector between 'vector1', 'vector2' and the origin.
-      This marker is a triangle list. The interpolation used
-      is SLERP and the vectors may be of different lengths.
+def sector(vector1, vector2, base, ns='', id=1):
+  """ Create a sector between 'vector1', 'vector2' and 'base'.
+
+  This marker is a triangle list. The interpolation used
+  is SLERP and the vectors may be of different lengths.
+
   """
   marker = create(ns=ns, id=id, type=Marker.TRIANGLE_LIST)
 
@@ -109,10 +111,14 @@ def sector(vector1, vector2, ns='', id=1):
     marker.action = Marker.DELETE
     return marker
 
-  l_arc = acos(kdl.dot(vector1, vector2)) / (l_v1 * l_v2)
+  l_arc = acos(kdl.dot(vector1, vector2) / (l_v1 * l_v2))
+
+  if l_arc == 0:
+    marker.action = Marker.DELETE
+    return marker
 
   n_steps = int(l_arc / 0.1)
-  v_last = vector1
+  v_last = vector1 + base
   for i in range(1,n_steps+1):
     t = float(i) / n_steps
 
@@ -120,9 +126,10 @@ def sector(vector1, vector2, ns='', id=1):
     v = (1-t)*vector1 + t*vector2  # interpolate vectors
     l = (1-t)*l_v1 + t*l_v2        # interpolate lengths
     v = v * l / v.Norm()           # set vector length
+    v = v + base                   # add origin
 
     marker.points.append(Point(v_last.x(), v_last.y(), v_last.z()))
-    marker.points.append(Point(0.0, 0.0, 0.0))
+    marker.points.append(Point(base.x(), base.y(), base.z()))
     marker.points.append(Point(v.x(), v.y(), v.z()))
 
     v_last = v

@@ -74,9 +74,10 @@ def marker_point(point, **args):
 
 
 class LocatedVector:
-  def __init__(self, pos, dir):
+  def __init__(self, pos, dir, source=None):
     self.pos = pos
     self.dir = dir
+    self.source = source
 
   def __str__(self):
     p = self.pos
@@ -110,6 +111,11 @@ class LocatedVector:
     return LocatedVector(self.pos, self.dir * scalar)
 
   def compute(self):
+    # propagate compute() to the source, if present
+    if self.source != None:
+      source = self.source()
+      self.pos = source.pos
+      self.dir = source.dir
     return self
 
   def show(self):
@@ -131,15 +137,13 @@ class Feature:
     self.dir = frame.M*self.rel_dir
 
   def v(self):
-    return LocatedVector(self.pos, self.dir / 2)
+    return LocatedVector(self.pos, self.dir / 2, self.v)
 
   def compute(self):
     return self
 
   def show(self):
     global _config_
-    #TODO: distinguish between line, plane and point!
-    # assuming line for now.
     if self.type == 0: # LINE
       return [marker_line(self.pos - self.dir/2, self.pos + self.dir/2,
                           color=yellow)]
@@ -202,6 +206,36 @@ class Proj_P:
     return markers
 
 
+class Cos:
+  def __init__(self, vec1, vec2):
+    self.vec1 = vec1
+    self.vec2 = vec2
+
+  def compute(self):
+    vec1 = self.vec1.compute()
+    vec2 = self.vec2.compute()
+
+    return kdl.dot(vec1, vec2) / (vec1.Norm() * vec2.Norm())
+
+  def show(self):
+    global _config_
+    w = 3*_config_['line_width']
+
+    vec1 = self.vec1.compute()
+    vec2 = self.vec2.compute()
+    vec2.pos = vec1.pos
+
+    vec1_l = vec1.dir.Norm()
+    vec2_l = vec2.dir.Norm()
+
+    mrk = marker.sector(vec1.dir / vec1_l * w, vec2.dir / vec2_l * w, vec1.pos)
+    mrk.ns = _config_['ns']
+    mrk.id = _config_['marker_id']
+    _config_['marker_id'] += 1
+    mrk.color = red
+
+    return [mrk] + vec1.show() + vec2.show()
+
 class Proj_A:
   def __init__(self, vec, ref):
     self.vec = vec
@@ -226,7 +260,8 @@ class Proj_A:
 # a map from constraint name to a function (Feature x Feature -> Value)
 constraint_functions = {
   'distance':  lambda (f_t, f_w) : Len(Proj_P(D(f_t, f_w), f_w.v())),
-  'height':   lambda (f_t, f_w) : Len(Proj_A(D(f_t, f_w), f_w.v()))}
+  'height':    lambda (f_t, f_w) : Len(Proj_A(D(f_t, f_w), f_w.v())),
+  'perpendicular':  lambda (f_t, f_w) : Cos(f_t.v(), f_w.v())}
 
 class ConstraintDisplay:
   def __init__(self, base_frame_id):
