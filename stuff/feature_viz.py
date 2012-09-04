@@ -18,7 +18,7 @@ grey    = ColorRGBA(0.7, 0.7, 0.7, 0.5)
 red     = ColorRGBA(0.7, 0.1, 0.1, 1.0)
 yellow  = ColorRGBA(0.7, 0.7, 0.1, 1.0)
 
-_config_ = {'line_width': 0.05,
+_config_ = {'line_width': 0.035,
             'frame_id': '/base_link',
             'ns': 'features',
             'marker_color': grey,
@@ -151,7 +151,8 @@ class Feature:
       dir = (self.dir / self.dir.Norm()) * _config_['line_width']/2
       return [marker_line(self.pos - dir, self.pos + dir, color=yellow, line_width=self.dir.Norm())]
     elif self.type == 2: #POINT
-      return [marker_point(self.pos, color=yellow, line_width=0.1)]
+      w =  _config_['line_width'] * 2
+      return [marker_point(self.pos, color=yellow, line_width=w)]
 
 
 class Len:
@@ -165,8 +166,9 @@ class Len:
   def show(self):
     global _config_
     vec = self.vector.compute()
+    w = _config_['line_width']*1.5
     len_marker = marker_line(vec.pos, vec.pos + vec.dir,
-                             color=red, line_width=0.08)
+                             color=red, line_width=w)
     return self.vector.show() + [len_marker]
 
 
