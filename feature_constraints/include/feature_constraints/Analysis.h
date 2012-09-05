@@ -55,7 +55,7 @@ double discontinuity(const Constraint& constraint, const KDL::Frame& frame,
 /* \brief Enumerate all 24 rotations where the transformed axes are aligned
    with the original axes.
  */
-KDL::Frame axis_sampler(int index);
+KDL::Frame sampler_axis(int index);
 
 
 KDL::Frame sampler_near(const KDL::Frame& frame, int index, double step);

@@ -33,12 +33,12 @@ TEST(Analysis, axis_sampler_coverage)
 
   for(int i=0; i < 24; i++)
   {
-    Frame f = axis_sampler(i);
+    Frame f = sampler_axis(i);
 
     for(int aa=0; aa < 3; aa++)
     {
       Vector v(f.M(0, aa), f.M(1, aa), f.M(2, aa));
-   
+
       int a;
       for(a=0; a < 6; a++)
       {
@@ -64,7 +64,7 @@ TEST(Analysis, axis_sampler_uniqueness)
   vector<Frame> samples;
 
   for(int i=0; i < 24; i++)
-    samples.push_back(axis_sampler(i));
+    samples.push_back(sampler_axis(i));
 
   // Assume distinctness between all pairs
   for(int i=0; i < 24; i++)
