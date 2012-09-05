@@ -106,6 +106,24 @@ double discontinuity(const Constraint& constraint, const KDL::Frame& frame,
 }
 
 
+
+KDL::Frame sampler_near_grid(const KDL::Frame& frame, int index, double step);
+
+double discontinuity_near(const Constraint& constraint, const KDL::Frame& frame,
+                          double dd, double surrounding, double density)
+{
+  double dis=0;
+  int num_steps = 729 * (int) ceil(surrounding / density);
+ 
+  for(int iter=0; iter < num_steps; iter++)
+  {
+    Frame f = sampler_near_grid(frame, iter, density);
+    double d = discontinuity(constraint, f, dd);
+    dis = (d > dis) ? d : dis;
+  }
+  return dis;
+}
+
 /*! \brief Create all 24 axis-aligned rotations.
  *
  *  Create all frames that can be reached by repeatedly
@@ -114,7 +132,7 @@ double discontinuity(const Constraint& constraint, const KDL::Frame& frame,
  *  Algorithm: Align x-axis with any of (+x, -x, +y, -y, +z, -z) (upper 3 bits)
  *  and then rotate around x 4 times (lower 2 bits). (6*4=24 orientations).
  */
-KDL::Frame axis_sampler(int index)
+KDL::Frame sampler_axis(int index)
 {
   int x_axis = index >> 2;
   int x_rot  = index & 3;
@@ -130,6 +148,47 @@ KDL::Frame axis_sampler(int index)
   return f * Frame(Rotation::RotX(M_PI/2 * x_rot));
 }
 
+
+/** \brief Sample frames nearby along the axis directions.
+ * \param frame the frame around which to sample
+ * \param index running index of the sample. smaller indices are closer to frame
+ * \param step  step width
+ */
+KDL::Frame sampler_near(const KDL::Frame& frame, int index, double step)
+{
+  int direction = index % 12;
+  int distance = index / 12 + 1;
+
+  Twist tw;
+  tw(direction/2) = (direction % 2 == 0) ? -1 : 1;
+
+  printf("tw: %f %f %f %f %f %f\n", tw(0), tw(1), tw(2), tw(3), tw(4), tw(5));
+
+  return addDelta(frame, tw, step*distance);
+}
+
+
+/** \brief Sample frames nearby in a cubic grid.
+ * \param frame the frame around which to sample
+ * \param index running index of the sample. smaller indices are closer to frame
+ * \param step  step width
+ */
+KDL::Frame sampler_near_grid(const KDL::Frame& frame, int index, double step)
+{
+  int direction = index % 729;  // 729 = 3**6
+  int distance = (index / 729) + 1;
+
+  Twist tw;
+  for (unsigned int i=0; i < 6; i++)
+  {
+    tw(i) = (direction % 3) - 1;
+    direction = direction / 3;
+  }
+
+  //printf("tw: %f %f %f %f %f %f\n", tw(0), tw(1), tw(2), tw(3), tw(4), tw(5));
+
+  return addDelta(frame, tw, step*distance);
+}
 
 /*! \brief prints poses that are discontinuous.
  *

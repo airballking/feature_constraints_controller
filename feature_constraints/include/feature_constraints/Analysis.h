@@ -58,6 +58,12 @@ double discontinuity(const Constraint& constraint, const KDL::Frame& frame,
 KDL::Frame axis_sampler(int index);
 
 
+KDL::Frame sampler_near(const KDL::Frame& frame, int index, double step);
+
+double discontinuity_near(const Constraint& constraint, const KDL::Frame& frame,
+                          double dd, double surrounding, double density);
+
+
 std::vector< std::pair<Eigen::Quaterniond, double> >
   continuityPlotRPY(Constraint c, KDL::Frame offset,
                     int numSamples, double dd, double threshold);
