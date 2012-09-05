@@ -16,9 +16,9 @@ from std_msgs.msg import ColorRGBA
 
 grey    = ColorRGBA(0.7, 0.7, 0.7, 0.5)
 red     = ColorRGBA(0.7, 0.1, 0.1, 1.0)
-yellow  = ColorRGBA(0.7, 0.7, 0.1, 1.0)
+yellow  = ColorRGBA(0.7, 0.7, 0.1, 0.6)
 
-_config_ = {'line_width': 0.035,
+_config_ = {'line_width': 0.02,
             'frame_id': '/base_link',
             'ns': 'features',
             'marker_color': grey,
@@ -133,7 +133,9 @@ class Feature:
     self.frame_id = frame_id
 
   def transform(self, frame):
-    self.pos = frame.p + self.rel_pos
+    f_now = kdl.Frame(self.rel_pos)
+    f_new = frame*f_now
+    self.pos = kdl.Vector(f_new.p)
     self.dir = frame.M*self.rel_dir
 
   def v(self):
@@ -299,6 +301,11 @@ class ConstraintDisplay:
 
 def callback(msg):
   global _config_
+
+  constraint_display.tool_features = []
+  constraint_display.world_features = []
+  constraint_display.constraints = {}
+
   for c in msg.constraints:
     f_tool  = msg2feature(c.tool_feature)
     f_world = msg2feature(c.world_feature)

@@ -10,13 +10,13 @@ from geometry_msgs.msg import Vector3
 tool_center     = Feature('hand', 'center', Feature.POINT,
                    Vector3(0,0,0), Vector3(0,0,0), Vector3(0,0,0))
 tool_front     = Feature('hand', 'front_edge', Feature.LINE,
-                   Vector3(0,0,0), Vector3(0,1,0), Vector3(0,0,0))
+                   Vector3(0,0,0.075), Vector3(0,0.1,0), Vector3(0,0,0))
 tool_front_rev = Feature('hand', 'front_edge_rev', Feature.LINE,
-                   Vector3(0,0,0), Vector3(0,-1,0), Vector3(0,0,0))
+                   Vector3(0,0,0.075), Vector3(0,-0.1,0), Vector3(0,0,0))
 tool_side      = Feature('hand', 'side_edge', Feature.LINE,
-                   Vector3(0,0,0), Vector3(0,0,1), Vector3(0,0,0))
+                   Vector3(0,-0.05,0), Vector3(0,0,0.15), Vector3(0,0,0))
 up             = Feature('baker', 'side_edge', Feature.PLANE,
-                   Vector3(0,0,0), Vector3(0,0,1), Vector3(1,0,0))
+                   Vector3(0,0,0), Vector3(0,0,0.3), Vector3(1,0,0))
 
 c = []
 

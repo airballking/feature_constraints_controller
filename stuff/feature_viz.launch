@@ -5,8 +5,16 @@
   <node name="feature_viz" pkg="stuff" type="feature_viz.py" output="screen"/>
 
   <node name="baker_hand_transform" pkg="tf" type="static_transform_publisher"
-        args="0.5 0.7 0.8  0 0 0 1 /baker /hand 100"/>
+        args="0.1 0.2 0.2  1.7 -1.9 0 /baker /hand 100"/>
 
   <node name="world_baker_transform" pkg="tf" type="static_transform_publisher"
         args="0 0 0  0 0 0 1 /base_link /baker 100"/>
+
+  ,<!-- spatual visualization -->
+  <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/hand"/>
+  <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
+
+ <node name="table_transform" pkg="tf" type="static_transform_publisher"
+        args="0.1 0.0 -0.763  0 0 0 /baker /table 100"/>
+
 </launch>
