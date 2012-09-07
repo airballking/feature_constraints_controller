@@ -69,7 +69,7 @@ void print_discontinuity(bool legacy, int index)
     c = feature_pancake_constraints()[index];
 
   Frame frame(Vector(1,0,0));
-  vector<pair<Eigen::Quaterniond, double> > dis = continuityPlotRPY(c, frame, 64, 0.01, 0.3);
+  vector<pair<Eigen::Quaterniond, double> > dis = continuityPlotRPY(c, frame, 128, 0.01, 0.3);
 
   for(unsigned int i=0; i < dis.size(); i++)
   {
@@ -79,20 +79,28 @@ void print_discontinuity(bool legacy, int index)
 }
 
 
-void discontinuity_zero_dist()
+void discontinuity_at(bool legacy, KDL::Frame frame)
 {
-  vector<Constraint> constraints = legacy_pancake_constraints();
+  vector<Constraint> constraints;
 
-  Frame frame(Rotation::RotY(0.4), Vector(0,0,1)); // a frame just above the center
+  if(legacy)
+    constraints = legacy_pancake_constraints();
+  else
+    constraints = feature_pancake_constraints();
 
   double dd = 0.001;
 
   vector<double> result(constraints.size());
 
+
+  double qx,qy,qz,qw;
+  frame.M.GetQuaternion(qx, qy, qz, qw);
+  printf("%c %f %f %f   %f %f %f %f     ", (legacy) ? 'l' : 'f',
+    frame.p.x(), frame.p.y(), frame.p.z(), qx, qy, qz, qw);
+
   for(unsigned int i=0; i < constraints.size(); i++)
       result[i] = discontinuity_near(constraints[i], frame, dd, 0.01, 0.001);
 
-  printf("discontinuities:\n");
   for(unsigned int i=0; i < result.size(); i++)
     printf("%f ", result[i]);
   printf("\n");
@@ -101,6 +109,6 @@ void discontinuity_zero_dist()
 int main(int argc, char* argv[])
 {
   print_discontinuity(true, 5);
-  //discontinuity_zero_dist();
+  //discontinuity_at(false, Frame(Rotation::RotY(0.4), Vector(0,0,1)));
 }
 

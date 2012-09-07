@@ -14,9 +14,9 @@ file_name = sys.argv[1]
 f = open(file_name)
 
 s = 0.07
-alpha = 0.5
+alpha = 0.01
 
-mrk = marker.create(type=marker.Marker.CUBE_LIST)
+mrk = marker.create(type=marker.Marker.POINTS)
 mrk.color = ColorRGBA(0,0,0,alpha)
 mrk.scale = Vector3(s, s, s)
 
