@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 // In theory, having strings inside features, screws its realtime safety for
 // creation! (there is _no_ copy-on-write implementation for the GNU std::string)
@@ -113,6 +114,8 @@ public:
   static void init();
   //! A mapping from constraint function name to the constraint function itself.
   static std::map<std::string, ConstraintFunc> constraint_functions_;
+  //! All these function compute angles and should be treated 'mod 2pi'
+  static std::set<ConstraintFunc> angular_constraints_;
 };
 
 

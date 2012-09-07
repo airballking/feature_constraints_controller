@@ -15,6 +15,7 @@ using namespace std;
 using namespace KDL;
 
 std::map<std::string, ConstraintFunc> Constraint::constraint_functions_;
+std::set<ConstraintFunc> Constraint::angular_constraints_;
 
 // some feature functions
 
@@ -143,6 +144,24 @@ void evaluateConstraints(KDL::JntArray& values, const KDL::Frame& frame, const s
 }
 
 
+/** \brief Normalize angle difference to -180..180 deg.
+ */
+inline double normalized_angle_diff(double angle, double angle_ref)
+{
+  // NOTE: The double call to fmod is necessary to 
+  //       cleanly wrap to [0 .. 2pi] (and _not_ to [-2pi .. 0])
+  return fmod(fmod(angle - angle_ref + M_PI, 2*M_PI) + 2*M_PI, 2*M_PI) - M_PI;
+}
+
+
+/** \brief Normalize angle to -180..180 deg relative to angle_ref.
+ */
+inline double normalized_angle(double angle, double angle_ref)
+{
+  return normalized_angle_diff(angle, angle_ref) + angle_ref;
+}
+
+
 void differentiateConstraints(KDL::Jacobian& Ht,
                               KDL::JntArray& values,
                               const KDL::Frame& frame,
@@ -169,7 +188,11 @@ void differentiateConstraints(KDL::Jacobian& Ht,
     evaluateConstraints(tmp, f, constraints);
 
     for(unsigned int j=0; j < nc; j++)
-      Ht(i,j) = (tmp(j) - values(j)) / dd;
+      if(Constraint::angular_constraints_.find(constraints[j].func) ==
+         Constraint::angular_constraints_.end())
+        Ht(i,j) = (tmp(j) - values(j)) / dd;
+      else
+        Ht(i,j) = normalized_angle_diff(tmp(j), values(j)) / dd;
   }
 }
 
@@ -183,5 +206,7 @@ void Constraint::init()
   constraint_functions_["direction"] = direction;
   constraint_functions_["angle"] = angle;
   constraint_functions_["null"] = null;
+
+  angular_constraints_.insert(angle);
 }
 

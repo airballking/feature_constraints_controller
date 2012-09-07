@@ -5,21 +5,6 @@
 using namespace KDL;
 using namespace std;
 
-void print_discontinuity_roll()
-{
-  Feature f;  // dummy feature, not used for the legay constraints
-  Frame frame(Vector(1,0,0));
-
-  Constraint c("roll", chain3, f, f);
-
-  vector<pair<Eigen::Quaterniond, double> > dis = continuityPlotRPY(c, frame, 64, 0.01, 0.3);
-
-  for(unsigned int i=0; i < dis.size(); i++)
-  {
-    Eigen::Quaterniond q = dis[i].first;
-    printf("%f %f %f %f   %f\n", q.x(), q.y(), q.z(), q.w(), dis[i].second);
-  }
-}
 
 
 std::vector<Constraint> feature_pancake_constraints()
@@ -55,6 +40,13 @@ std::vector<Constraint> feature_pancake_constraints()
 
 std::vector<Constraint> legacy_pancake_constraints()
 {
+  Constraint::init();
+
+  Constraint::angular_constraints_.insert(chain0);
+  Constraint::angular_constraints_.insert(chain3);
+  Constraint::angular_constraints_.insert(chain4);
+  Constraint::angular_constraints_.insert(chain5);
+
   Feature f;  // dummy feature, not used for the legay constraints
   vector<Constraint> constraints;
   constraints.push_back(Constraint("angle",  chain0, f, f));
@@ -65,6 +57,27 @@ std::vector<Constraint> legacy_pancake_constraints()
   constraints.push_back(Constraint("yaw",    chain5, f, f));
   return constraints;
 }
+
+
+void print_discontinuity(bool legacy, int index)
+{
+  Constraint c;
+
+  if(legacy)
+    c = legacy_pancake_constraints()[index];
+  else
+    c = feature_pancake_constraints()[index];
+
+  Frame frame(Vector(1,0,0));
+  vector<pair<Eigen::Quaterniond, double> > dis = continuityPlotRPY(c, frame, 64, 0.01, 0.3);
+
+  for(unsigned int i=0; i < dis.size(); i++)
+  {
+    Eigen::Quaterniond q = dis[i].first;
+    printf("%f %f %f %f   %f\n", q.x(), q.y(), q.z(), q.w(), dis[i].second);
+  }
+}
+
 
 void discontinuity_zero_dist()
 {
@@ -87,6 +100,7 @@ void discontinuity_zero_dist()
 
 int main(int argc, char* argv[])
 {
-  discontinuity_zero_dist();
+  print_discontinuity(true, 5);
+  //discontinuity_zero_dist();
 }
 
