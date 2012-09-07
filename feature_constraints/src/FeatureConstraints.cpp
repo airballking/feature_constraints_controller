@@ -144,13 +144,19 @@ void evaluateConstraints(KDL::JntArray& values, const KDL::Frame& frame, const s
 }
 
 
+//! Normalize to [0..y)
+double inline fmod_pos(double x, double y)
+{
+  // NOTE: The double call to fmod is necessary to 
+  //       cleanly wrap to [0 .. y) (and _not_ to (-y .. 0] when x is negative)
+  return fmod(fmod(x, y) + y, y);
+}
+
 /** \brief Normalize angle difference to -180..180 deg.
  */
 inline double normalized_angle_diff(double angle, double angle_ref)
 {
-  // NOTE: The double call to fmod is necessary to 
-  //       cleanly wrap to [0 .. 2pi] (and _not_ to [-2pi .. 0])
-  return fmod(fmod(angle - angle_ref + M_PI, 2*M_PI) + 2*M_PI, 2*M_PI) - M_PI;
+  return fmod_pos(angle - angle_ref + M_PI, 2*M_PI) - M_PI;
 }
 
 
