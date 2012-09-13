@@ -193,13 +193,16 @@ void FeatureConstraintsController::update()
   robot_kinematics_->getForwardKinematics(q_, ff_kinematics);
   robot_kinematics_->getJacobian(q_, jacobian_robot_);
 
+  // transform robot jacobian (ref frame base, ref point base)
+  jacobian_robot_.changeRefPoint(-ff_kinematics.p);
+
   KDL::Frame T_tool_in_object = T_object_in_world_.Inverse() * T_base_in_world_ * ff_kinematics * T_tool_in_ee_;
 
   if(feature_controller_.constraints.size() > 0){  
     // evaluate constraints
     feature_controller_.update(T_tool_in_object);
- 
-    // transform interaction matrix
+
+    // transform interaction matrix (ref frame base, ref point base)
     feature_controller_.Ht.data = (feature_controller_.Ht.data.transpose()
                                    *inverse_twist_proj(T_object_in_world_)).transpose();
 
