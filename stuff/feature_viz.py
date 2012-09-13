@@ -286,9 +286,11 @@ class ConstraintDisplay:
 
   def show(self):
     markers = []
-    for f in self.tool_features:
+    for (i,f) in enumerate(self.tool_features):
+      _config_['ns'] = 'tool_feature_' + str(i)
       markers += f.show()
-    for f in self.world_features:
+    for (i,f) in enumerate(self.world_features):
+      _config_['ns'] = 'world_feature_' + str(i)
       markers += f.show()
     for name in self.constraints:
       _config_['ns'] = name

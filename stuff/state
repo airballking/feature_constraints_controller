@@ -1,0 +1,61 @@
+#!/usr/bin/python
+
+import sys
+import roslib
+roslib.load_manifest('constraint_msgs')
+roslib.load_manifest('motion_viz')
+import rospy
+import tf
+import tf_conversions.posemath as pm
+
+from sensor_msgs.msg import JointState
+from constraint_msgs.msg import ConstraintState
+
+data = {}
+
+joint_names = ['left_arm_0_joint', 'left_arm_1_joint', 'left_arm_2_joint', 'left_arm_3_joint', 'left_arm_4_joint', 'left_arm_5_joint', 'left_arm_6_joint']
+
+shutdown_signal = False
+
+def jointstate_cb(msg):
+  global data
+  if data.has_key('jointstate'):
+    return
+  pos = []
+  try:
+    for jn in joint_names:
+      index = msg.name.index(jn)
+      pos.append(msg.position[index])
+  except:
+    pass
+  data['jointstate'] = pos
+
+
+def constraint_cb(msg):
+  global data
+  if data.has_key('chi'):
+    return
+  data['chi_desired'] = msg.chi_desired
+  data['singular_values'] = msg.singular_values
+  data['chi'] = msg.chi
+
+rospy.init_node('get_robot_state')
+sub = rospy.Subscriber('/joint_states', JointState, jointstate_cb)
+sub = rospy.Subscriber('/feature_controller/constraint_state', ConstraintState, constraint_cb)
+
+listener = tf.TransformListener()
+while not rospy.is_shutdown():
+  try:
+    data['pancake_pose'] = listener.lookupTransform(
+                              '/base_link', '/pancake', rospy.Time(0))
+    break
+  except:
+    pass
+    
+
+while (not (data.has_key('jointstate') and data.has_key('chi'))
+       and not rospy.is_shutdown()):
+  rospy.sleep(0.1)
+
+for k in data.iterkeys():
+  print str(k) + ': ' + str(data[k])
