@@ -19,11 +19,18 @@ class TF2PoseBase:
     self.listener = tf.TransformListener()
 
   def wait_for_ready(self, time=10.0):
-    self.listener.waitForTransform(self.base_frame, self.target_frame, rospy.Time(), rospy.Duration(time))
+    try:
+      self.listener.waitForTransform(self.base_frame, self.target_frame, rospy.Time(), rospy.Duration(time))
+      return True
+    except:
+      return False
 
   def pose(self):
-    transform = self.listener.lookupTransform(self.base_frame, self.target_frame, rospy.Time(0))
-    return Pose(Point(*transform[0]), Quaternion(*transform[1]))
+    try:
+      transform = self.listener.lookupTransform(self.base_frame, self.target_frame, rospy.Time(0))
+      return Pose(Point(*transform[0]), Quaternion(*transform[1]))
+    except:
+      return None
 
   def pose_kdl(self):
     return pm.fromMsg(self.pose())
@@ -36,7 +43,10 @@ class TF2Pose(TF2PoseBase):
       self.pub = rospy.Publisher(topic, Pose)
 
   def spin(self):
-    self.pub.publish(self.pose())
+    pose = self.pose() 
+    if pose == None:
+      return
+    self.pub.publish(pose)
 
 
 class TF2PoseStamped(TF2PoseBase):
@@ -49,6 +59,8 @@ class TF2PoseStamped(TF2PoseBase):
     p.header.stamp = rospy.Time.now()
     p.header.frame_id = self.base_frame
     p.pose = self.pose()
+    if p.pose == None:
+      return
     self.pub.publish(p)
 
 
