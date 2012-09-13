@@ -26,6 +26,34 @@
 
 
 #include <constraint_controller.h>
+#include <tf_conversions/tf_kdl.h>
+
+using namespace Eigen;
+
+// transform an interaction matrix
+Matrix<double, 6, 6> inverse_twist_proj(KDL::Frame f)
+{
+  // (transposed) Rotation matrix of f
+  Matrix3d Rt = Map<Matrix3d>(f.M.data);
+
+  double x = f.p.x(), y = f.p.y(), z = f.p.z();
+
+  // Skew symmetric matrix of p, [p]_x for expressing a cross product
+  Matrix3d px;
+  px << 0, -z,  y,
+        z,  0, -x,
+       -y,  x,  0;
+
+  // the inverse twist projection matrix
+  Matrix<double, 6, 6> Mi;
+  Mi.block<3,3>(0,0) = Rt;
+  Mi.block<3,3>(3,3) = Rt;
+  Mi.block<3,3>(0,3) = -Rt*px;
+  Mi.block<3,3>(3,0) = Matrix3d::Zero();
+
+  return Mi;
+}
+
 
 
 bool FeatureConstraintsController::init(ros::NodeHandle &n)
@@ -56,6 +84,13 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
 
   // subscribe to constraint command topic
   constraint_command_subscriber_ = n.subscribe<constraint_msgs::ConstraintCommand>("constraint_command", 1, &FeatureConstraintsController::constraint_command_callback, this);
+
+  // subscribe to tool offset pose
+  tool_offset_subscriber_ = n.subscribe<geometry_msgs::Pose>("tool_offset", 1, &FeatureConstraintsController::tool_offset_callback, this);
+
+  // subscribe to world offset pose
+  object_offset_subscriber_ = n.subscribe<geometry_msgs::Pose>("object_offset", 1, &FeatureConstraintsController::object_offset_callback, this);
+
   // advertise publisher
   qdot_publisher_ = n.advertise<std_msgs::Float64MultiArray>("qdot", 1);
   state_publisher_ = n.advertise<constraint_msgs::ConstraintState>("constraint_state", 1);
@@ -72,6 +107,8 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   // resize size of weights for joints in solver
   // identity means that all joints will be considered with equal weights
   Wq_ = Eigen::MatrixXd::Identity(dof, dof);
+
+  n.param<std::string>("object_frame", state_msg_.header.frame_id, "/base_link");
 
   // set ready-flag to signal that we are not ready, yet
   ready_ = false;
@@ -91,6 +128,17 @@ void FeatureConstraintsController::joint_state_callback(const sensor_msgs::Joint
   }
 }
 
+void FeatureConstraintsController::tool_offset_callback(const geometry_msgs::Pose::ConstPtr& msg)
+{
+  tf::PoseMsgToKDL(*msg, T_tool_in_ee_);
+}
+
+void FeatureConstraintsController::object_offset_callback(const geometry_msgs::Pose::ConstPtr& msg)
+{
+  tf::PoseMsgToKDL(*msg, T_object_in_world_);
+}
+
+
 
 /*! This updates the controller and solver.
  *
@@ -101,19 +149,23 @@ void FeatureConstraintsController::joint_state_callback(const sensor_msgs::Joint
  */
 void FeatureConstraintsController::feature_constraints_callback(const constraint_msgs::ConstraintConfig::ConstPtr& msg)
 {
+  unsigned int num_constraints = msg->constraints.size();
+
   // get new constraints into controller and re-prepare it
   // i.e. adjust size of internal variables
   fromMsg(*msg, feature_controller_.constraints);
   feature_controller_.prepare();
-  for(unsigned int i=0; i<feature_controller_.gains.rows(); i++)
+  resize(state_msg_, num_constraints);
+
+  for(unsigned int i=0; i < num_constraints; i++)
   {
     feature_controller_.gains(i) = 1.0;
   }
   // resize weights for constraints according to the number of weights
   // (note: will be used by solver)
-  Wy_ = Eigen::MatrixXd::Zero(feature_controller_.constraints.size(), feature_controller_.constraints.size());
+  Wy_ = Eigen::MatrixXd::Zero(num_constraints, num_constraints);
   // resize solver
-  solver_.reinitialise(feature_controller_.constraints.size(), q_.rows());
+  solver_.reinitialise(num_constraints, q_.rows());
   // set ready-flag to indicate that we are ready to solve constraints
   ready_ = false;
 }
@@ -147,8 +199,11 @@ void FeatureConstraintsController::update()
     // evaluate constraints
     feature_controller_.update(T_tool_in_object);
  
+    // transform interaction matrix
+    feature_controller_.Ht.data = (feature_controller_.Ht.data.transpose()
+                                   *inverse_twist_proj(T_object_in_world_)).transpose();
+
     // call solver with values from constraint controller and Jacobian
- 
     A_ = feature_controller_.Ht.data.transpose() * jacobian_robot_.data;
     Wy_.diagonal() = feature_controller_.weights.data;
  
@@ -172,7 +227,9 @@ void FeatureConstraintsController::update()
     }
 
     // publish constraint state for debugging purposes
-    state_publisher_.publish(toMsg(feature_controller_));
+    // TODO: NOT REALTIME SAFE!
+    toMsg(feature_controller_, state_msg_);
+    state_publisher_.publish(state_msg_);
   }
 }
 

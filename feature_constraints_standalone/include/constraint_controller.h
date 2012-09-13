@@ -41,6 +41,12 @@ private:
   //! Receives the desired ranges for the constraints.
   void constraint_command_callback(const constraint_msgs::ConstraintCommand::ConstPtr& msg);
 
+  //! Receives the offset of the tool from the robots flange
+  void tool_offset_callback(const geometry_msgs::Pose::ConstPtr& msg);
+
+  //! Receives the offset of the object from the world's origin
+  void object_offset_callback(const geometry_msgs::Pose::ConstPtr& msg);
+
   //! These transforms will be looked up from tf
   KDL::Frame T_tool_in_ee_, T_object_in_world_, T_base_in_world_;
 
@@ -66,13 +72,20 @@ private:
   Controller feature_controller_;
 
   //! Subscribers
-  ros::Subscriber joint_state_subscriber_, feature_constraints_subscriber_, constraint_command_subscriber_;
+  ros::Subscriber joint_state_subscriber_;
+  ros::Subscriber feature_constraints_subscriber_;
+  ros::Subscriber constraint_command_subscriber_;
+  ros::Subscriber tool_offset_subscriber_;
+  ros::Subscriber object_offset_subscriber_;
+
 
   //! Publishers
   ros::Publisher qdot_publisher_;
   ros::Publisher state_publisher_;
   //! Corresponding message for publishing
   std_msgs::Float64MultiArray qdot_msg_;
+  constraint_msgs::ConstraintState state_msg_;
+
 
   //! Flag to remember if feature_controller_ and solver_ have been resized meaningfully
   bool ready_;
