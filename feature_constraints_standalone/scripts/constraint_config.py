@@ -19,7 +19,7 @@ tool_side      = Feature('hand', 'side_edge', Feature.LINE,
                    Vector3(0,-0.05,0), Vector3(0,0,0.15), Vector3(0,0,0))
 tool_forward   = Feature('hand', 'forward', Feature.LINE,
                    Vector3(0,0,0), Vector3(0,0,0.15), Vector3(0,0,0))
-up             = Feature('baker', 'side_edge', Feature.PLANE,
+up             = Feature('baker', 'plane', Feature.PLANE,
                    Vector3(0,0,0), Vector3(0,0,0.3), Vector3(1,0,0))
 
 c = []
