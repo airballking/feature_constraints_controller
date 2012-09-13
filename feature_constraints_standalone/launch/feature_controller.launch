@@ -31,16 +31,19 @@
     <remap from="~qdot" to="/l_arm_vel/command"/>
     <param name="~tool_frame" value="left_arm_7_link"/>
     <param name="~base_frame" value="base_link"/>
+    <param name="~object_frame" value="/pancake"/>
+    <remap from="~tool_offset" to="/tool_pose"/>
+    <remap from="~object_offset" to="/pancake_pose"/>
   </node>
 
-  <node name="constraint_config_sender" type="constraint_config.py" pkg="feature_constraints_standalone" >
+  <node name="constraint_config_sender" type="constraint_config_legacy.py" pkg="feature_constraints_standalone" >
     <remap from="/constraint_config" to="feature_controller/constraint_config"/>
   </node>
 
   <node name="jac_chain_viz" type="jac_chain_viz.py" pkg="motion_viz" cwd="node">
     <remap from="/state" to="/feature_controller/constraint_state"/>
-    <param name="ref_frame" value="/base_link"/>
-    <param name="ref_point" value="/base_link"/>
-    <param name="target_frame" value="/base_link"/>
+    <param name="ref_frame" value="/pancake"/>
+    <param name="ref_point" value="/pancake"/>
+    <param name="target_frame" value="/pancake"/>
   </node>
 </launch>
