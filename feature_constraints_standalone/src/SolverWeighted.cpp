@@ -9,6 +9,9 @@
 #include <ros/ros.h>
 #include <kdl/utilities/svd_eigen_HH.hpp>
 
+// NOTE: EPSILON is only used for warning the user,
+// the computation itself uses lambda!
+#define EPSILON 1e-6
 
 SolverWeighted::SolverWeighted()
 {
@@ -103,11 +106,12 @@ bool SolverWeighted::solve(const Eigen::MatrixXd &A,
 	S = S2.segment(0, num_constraints);
 
 	for (int j = 0; j < U.rows(); j++) {
-		if (U2(j, num_joints - 1) != 0) {
+		if (fabs(U2(j, num_joints - 1)) > EPSILON) {
             ROS_WARN("Element %d of the last column of U2 is not equal to zero, but = %f", j, U2(j, num_joints - 1));
 		}
 	}
-	if (S2(num_joints - 1) != 0) {
+	// FIXME: this check should be done for all entries of S2 from 7 to end.
+	if (fabs(S2(num_joints - 1)) > EPSILON) {
         ROS_WARN("Last value of S2 is not equal to zero, but = %f", S2(num_joints - 1));
 	}
 
