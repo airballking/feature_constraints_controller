@@ -36,7 +36,7 @@
     <remap from="~object_offset" to="/pancake_pose"/>
   </node>
 
-  <node name="constraint_config_sender" type="constraint_config_legacy.py" pkg="feature_constraints_standalone" >
+  <node name="constraint_config_sender" type="constraint_config.py" pkg="feature_constraints_standalone" >
     <remap from="/constraint_config" to="feature_controller/constraint_config"/>
   </node>
 
