@@ -10,3 +10,4 @@ double chain3(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
 double chain4(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
 double chain5(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
 
+void chain_rpy_init();

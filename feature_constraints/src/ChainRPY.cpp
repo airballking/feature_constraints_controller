@@ -88,3 +88,17 @@ double chain5(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
   return cyl_irpy_chain(frame)(5);
 }
 
+void chain_rpy_init()
+{
+  Constraint::angular_constraints_.insert(chain0);
+  Constraint::angular_constraints_.insert(chain3);
+  Constraint::angular_constraints_.insert(chain4);
+  Constraint::angular_constraints_.insert(chain5);
+
+  Constraint::constraint_functions_["chain0"] = chain0;
+  Constraint::constraint_functions_["chain1"] = chain1;
+  Constraint::constraint_functions_["chain2"] = chain2;
+  Constraint::constraint_functions_["chain3"] = chain3;
+  Constraint::constraint_functions_["chain4"] = chain4;
+  Constraint::constraint_functions_["chain5"] = chain5;
+}

@@ -203,6 +203,9 @@ void differentiateConstraints(KDL::Jacobian& Ht,
 }
 
 //TODO: get this executed automatically
+
+#include <feature_constraints/ChainRPY.h>
+
 void Constraint::init()
 {
   constraint_functions_["perpendicular"] = perpendicular;
@@ -214,5 +217,7 @@ void Constraint::init()
   constraint_functions_["null"] = null;
 
   angular_constraints_.insert(angle);
+
+  chain_rpy_init();
 }
 
