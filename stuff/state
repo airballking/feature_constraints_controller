@@ -59,3 +59,8 @@ while (not (data.has_key('jointstate') and data.has_key('chi'))
 
 for k in data.iterkeys():
   print str(k) + ': ' + str(data[k])
+
+str_c = ''
+for c in data['chi']:
+  str_c += " %.2f" % c
+print 'chi:'+str_c
