@@ -63,7 +63,7 @@ private:
   JointStateInterpreter *joint_state_interpreter_;
 
   //! Matrices used for talking to the solver
-  Eigen::MatrixXd A_, Wq_, Wy_;
+  Eigen::MatrixXd A_, Wq_, Wy_, H_;
 
   //! WDLS solver from KUL to inverse matrix
   SolverWeighted solver_;

@@ -203,11 +203,11 @@ void FeatureConstraintsController::update()
     feature_controller_.update(T_tool_in_object);
 
     // transform interaction matrix (ref frame base, ref point base)
-    feature_controller_.Ht.data = (feature_controller_.Ht.data.transpose()
-                                   *inverse_twist_proj(T_object_in_world_)).transpose();
+    H_ = feature_controller_.Ht.data.transpose();
+    H_ = H_*inverse_twist_proj(T_object_in_world_);
 
     // call solver with values from constraint controller and Jacobian
-    A_ = feature_controller_.Ht.data.transpose() * jacobian_robot_.data;
+    A_ = H_ * jacobian_robot_.data;
     Wy_.diagonal() = feature_controller_.weights.data;
  
     ROS_DEBUG_STREAM("A_"<<A_<<"\n");
@@ -228,11 +228,11 @@ void FeatureConstraintsController::update()
       }
       qdot_publisher_.publish(qdot_msg_);
     }
-
     // publish constraint state for debugging purposes
-    // TODO: NOT REALTIME SAFE!
+    ///feature_controller_.Ht.data = (feature_controller_.Ht.data.transpose() * inverse_twist_proj(KDL::Frame(-T_tool_in_object.p))).transpose();
     toMsg(feature_controller_, state_msg_);
     state_publisher_.publish(state_msg_);
+
   }
 }
 

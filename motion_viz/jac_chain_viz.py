@@ -62,6 +62,7 @@ class VirtualChain:
     rospy.loginfo('ref_frame=%s, ref_point=%s, target_frame=%s'
                    % (self.ref_frame, self.ref_point, self.target_frame))
 
+    self.independent_directions = rospy.get_param('~independent_directions', True)
     self.eps = 0.4
     self.rot_length = 0.06
     self.width = 0.02
@@ -95,6 +96,15 @@ class VirtualChain:
       twist = kdl.Twist(kdl.Vector(t.linear.x,  t.linear.y,  t.linear.z),
                         kdl.Vector(t.angular.x, t.angular.y, t.angular.z))
       self.jac.append(twist)
+
+
+  def set_H(self, H):
+    ''' takes a Jacobian message '''
+    self.H = []
+    for t in H:
+      twist = kdl.Twist(kdl.Vector(t.linear.x,  t.linear.y,  t.linear.z),
+                        kdl.Vector(t.angular.x, t.angular.y, t.angular.z))
+      self.H.append(twist)
 
 
   def _compute_lengths(self):
@@ -149,7 +159,7 @@ class VirtualChain:
 
       if lr < self.eps and lv < self.eps:
         # null twist, make a delete marker
-        mrks.append(marker.create(id=i, ns=self.name, action=Marker.DELETE))
+        mrks.append(marker.create(id=i, ns=self.name+str(i), action=Marker.DELETE))
         continue
 
       if lr < self.eps:
@@ -157,7 +167,7 @@ class VirtualChain:
         location = pos
         direction = twist.vel / lv * self.lengths[l_index]
 
-        m = marker.create(id=i, ns=self.name, type=Marker.CUBE)
+        m = marker.create(id=i, ns=self.name+str(i), type=Marker.CUBE)
         m = marker.align(m, location, location + direction, self.width)
 
         l_index += 1
@@ -165,9 +175,14 @@ class VirtualChain:
         pos += direction               # remember current end point
       else:
         # rotational twist
-        direction = twist.rot * self.rot_length / lr
-        location = twist.rot * twist.vel / kdl.dot(twist.rot, twist.rot)  +  pos
-        m = marker.create(id=i, ns=self.name, type=Marker.CYLINDER)
+        location = twist.rot * twist.vel / kdl.dot(twist.rot, twist.rot) + pos
+        if self.independent_directions:
+          direction = twist.rot * self.rot_length / lr
+        else:
+          # take axis from interaction matrix and transform to location
+          dir_H = self.H[i].rot - location*self.H[i].vel
+          direction = dir_H * self.rot_length / dir_H.Norm()
+        m = marker.create(id=i, ns=self.name+str(i), type=Marker.CYLINDER)
         m = marker.align(m, location - direction, location + direction, self.width)
 
       m.color = self._color(i)
@@ -208,6 +223,7 @@ def state_callback(msg):
   chain.set_errors(errors)
   chain.set_weights(msg.weights)
 
+  chain.set_H(msg.interaction_matrix)
   chain.set_jac(msg.jacobian)
   chain.set_pose(msg.pose) # pose of the chain end
   for m in chain.markers():
