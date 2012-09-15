@@ -59,7 +59,7 @@ int rank(const std::vector<Constraint> &constraints,
          double dd, double eps)
 {
   int size = constraints.size();
-  JntArray values(size), tmp(size), lambda(size);
+  JntArray values(size), tmp(size), lambda(6);
   Jacobian Ht(size), J(size);
   PinvData tmp_pinv(size);
 
