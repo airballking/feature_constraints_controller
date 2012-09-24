@@ -16,6 +16,9 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 set(ROS_BUILD_TYPE RelWithDebInfo) #set type to Debug to get debug info compiled
 rosbuild_init()
 
+find_package(Eigen REQUIRED)
+include_directories($(EIGEN_INCLUDE_DIRS))
+add_definitions($(EIGEN_DEFINITIONS))
 
 rosbuild_find_ros_package(rtt )
 rosbuild_find_ros_package(ocl )
