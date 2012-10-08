@@ -99,8 +99,11 @@ double discontinuity(const Constraint& constraint, const KDL::Frame& frame,
 
   double max = 0;
   for(int i=0; i < 6; i++)
-    if(fabs(Ht(i, 0)) > max)
-      max = fabs(Ht(i,0));
+  {
+    double d = fabs(Ht.data(i, 0));
+    if(d > max)
+      max = d;
+  }
 
   return max*dd;
 }

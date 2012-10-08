@@ -140,7 +140,7 @@ void evaluateConstraints(KDL::JntArray& values, const KDL::Frame& frame, const s
   assert(values.rows() >= constraints.size());
 
   for(unsigned int i=0; i < constraints.size(); i++)
-    values(i) = constraints[i](frame);
+    values.data(i) = constraints[i](frame);
 }
 
 
@@ -196,9 +196,9 @@ void differentiateConstraints(KDL::Jacobian& Ht,
     for(unsigned int j=0; j < nc; j++)
       if(Constraint::angular_constraints_.find(constraints[j].func) ==
          Constraint::angular_constraints_.end())
-        Ht(i,j) = (tmp(j) - values(j)) / dd;
+        Ht.data(i,j) = (tmp.data(j) - values.data(j)) / dd;
       else
-        Ht(i,j) = normalized_angle_diff(tmp(j), values(j)) / dd;
+        Ht.data(i,j) = normalized_angle_diff(tmp.data(j), values.data(j)) / dd;
   }
 }
 
