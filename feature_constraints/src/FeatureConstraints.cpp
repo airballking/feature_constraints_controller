@@ -184,23 +184,19 @@ void differentiateConstraints(KDL::Jacobian& Ht,
 
   evaluateConstraints(values, frame, constraints);
 
+  Frame f[6];
   double cd = cos(dd);
   double sd = sin(dd);
-  Frame f;
+  f[0] = Frame(Vector(dd,0,0));
+  f[1] = Frame(Vector(0,dd,0));
+  f[2] = Frame(Vector(0,0,dd));
+  f[3] = Frame(Rotation(1,0,0,  0,cd,-sd,  0,sd,cd));
+  f[4] = Frame(Rotation(cd,0,-sd,  0,1,0,  sd,0,cd));
+  f[5] = Frame(Rotation(cd,-sd,0,  sd,cd,0,  0,0,1));
 
   for(unsigned int i=0; i < 6; i++)
   {
-    switch(i)
-    {
-      case 0: f = Frame(Vector(dd,0,0)) * frame; break;
-      case 1: f = Frame(Vector(0,dd,0)) * frame; break;
-      case 2: f = Frame(Vector(0,0,dd)) * frame; break;
-      case 3: f = Frame(Rotation(1,0,0,  0,cd,-sd,  0,sd,cd)) * frame; break;
-      case 4: f = Frame(Rotation(cd,0,-sd,  0,1,0,  sd,0,cd)) * frame; break;
-      case 5: f = Frame(Rotation(cd,-sd,0,  sd,cd,0,  0,0,1)) * frame; break;
-    }
-
-    evaluateConstraints(tmp, f, constraints);
+    evaluateConstraints(tmp, f[i]*frame, constraints);
 
     for(unsigned int j=0; j < nc; j++)
       if(Constraint::angular_constraints_.find(constraints[j].func) ==
