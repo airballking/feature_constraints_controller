@@ -189,7 +189,7 @@ void differentiateConstraints(KDL::Jacobian& Ht,
     Twist t;
     t(i) = 1.0;
     Frame f = addDelta(frame, t, dd);
-    f.p = (f.M * frame.M.Inverse()) * f.p; // change ref point to object
+    f.p = f.M * (frame.M.Inverse() * f.p); // change ref point to object
 
     evaluateConstraints(tmp, f, constraints);
 
