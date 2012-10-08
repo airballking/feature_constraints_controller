@@ -65,7 +65,7 @@ public:
     \param tool_feature   A geometric feature which is attached to the tool
     \param tool_feature   A geometric feature which is attached to the object
 */
-typedef double (*ConstraintFunc) (KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+typedef double (*ConstraintFunc) (const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 //! A constraint between two features
@@ -128,36 +128,36 @@ public:
 
 /*! zero when perpendicular (cos of the angle)
  */
-double perpendicular(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double perpendicular(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 /*! distance between features, projected onto the
     the direction of the object feature
  */
-double height(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double height(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 /*! distance between features, perpendicular to
     the direction of the object feature
  */
-double distance(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double distance(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 /*! angle between tool feature direction and
     connecting line between object and tool positions
     (seen perpendicular to the object direction)
  */
-double pointing_at(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double pointing_at(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 /*! cosine of the angle of cylinder coordinates.
  */
-double direction(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double direction(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 /*! always returns 0
  */
-double null(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double null(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 ///@}
 

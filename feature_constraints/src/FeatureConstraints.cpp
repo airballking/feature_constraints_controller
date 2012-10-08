@@ -20,21 +20,21 @@ std::set<ConstraintFunc> Constraint::angular_constraints_;
 // some feature functions
 
 //! zero when perpendicular
-double perpendicular(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double perpendicular(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
-  Vector &d_o = object_feature.dir;
-  Vector &d_t = tool_feature.dir;
+  const Vector &d_o = object_feature.dir;
+  const Vector &d_t = tool_feature.dir;
 
   return dot(d_o, Frame(frame.M) * d_t) / (d_o.Norm() * d_t.Norm());
 }
 
 //! distance between features, projected onto the
 //! the direction of the object feature
-double height(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double height(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
-  Vector &p_o = object_feature.pos;
+  const Vector &p_o = object_feature.pos;
   Vector  p_t = frame * tool_feature.pos;
-  Vector &d_o = object_feature.dir;
+  const Vector &d_o = object_feature.dir;
 
   double d_o_norm = d_o.Norm();
 
@@ -44,10 +44,10 @@ double height(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
     return dot(d_o, p_t - p_o) / d_o_norm;
 }
 
-double distance(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double distance(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   Vector  p   = frame*tool_feature.pos - object_feature.pos;
-  Vector &d_o = object_feature.dir;
+  const Vector &d_o = object_feature.dir;
 
   double d_o_norm = d_o.Norm();
 
@@ -60,10 +60,10 @@ double distance(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
     }
 }
 
-double pointing_at(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double pointing_at(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   Vector  p   = frame*tool_feature.pos - object_feature.pos;
-  Vector &d_o = object_feature.dir;
+  const Vector &d_o = object_feature.dir;
   Vector  d_t = Frame(frame.M) * tool_feature.dir;
 
   // projection of p perpendicular to d_o ...
@@ -75,7 +75,7 @@ double pointing_at(KDL::Frame& frame, Feature tool_feature, Feature object_featu
   Vector d_h = d_t  -  d_on * dot(d_on, d_t);
 
   double denom = p_h.Norm()*d_h.Norm();
-  
+ 
   if(denom < EPS)
     return 0.0;
   else
@@ -83,11 +83,11 @@ double pointing_at(KDL::Frame& frame, Feature tool_feature, Feature object_featu
 }
 
 
-double direction(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double direction(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   Vector  p    = frame*tool_feature.pos - object_feature.pos;
   Vector  d_o2 = object_feature.contact_dir;
-  Vector &d_o  = object_feature.dir;
+  const Vector &d_o  = object_feature.dir;
 
   double d_o_norm = d_o.Norm();
   double d_o2_norm = d_o2.Norm();
@@ -102,11 +102,11 @@ double direction(KDL::Frame& frame, Feature tool_feature, Feature object_feature
 }
 
 
-double angle(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double angle(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   Vector  p    = frame*tool_feature.pos - object_feature.pos;
   Vector  d_o2 = object_feature.contact_dir;
-  Vector &d_o  = object_feature.dir;
+  const Vector &d_o  = object_feature.dir;
 
   double d_o_norm = d_o.Norm();
   double d_o2_norm = d_o2.Norm();
@@ -129,7 +129,7 @@ double angle(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
 }
 
 
-double null(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double null(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   return 0.0;
 }

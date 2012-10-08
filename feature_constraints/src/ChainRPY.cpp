@@ -13,7 +13,7 @@
 
 using namespace KDL;
 
-KDL::JntArray cyl_irpy_chain(KDL::Frame frame)
+KDL::JntArray cyl_irpy_chain(const KDL::Frame& frame)
 {
   static KDL::ChainFkSolverPos_recursive* fksolver_baker=0;
 
@@ -56,34 +56,34 @@ KDL::JntArray cyl_irpy_chain(KDL::Frame frame)
 }
 
 
-double chain0(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double chain0(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   return cyl_irpy_chain(frame)(0);
 }
 
 
-double chain1(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double chain1(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   return cyl_irpy_chain(frame)(1);
 }
 
 
-double chain2(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double chain2(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   return cyl_irpy_chain(frame)(2);
 }
 
-double chain3(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double chain3(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   return cyl_irpy_chain(frame)(3);
 }
 
-double chain4(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double chain4(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   return cyl_irpy_chain(frame)(4);
 }
 
-double chain5(KDL::Frame& frame, Feature tool_feature, Feature object_feature)
+double chain5(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature)
 {
   return cyl_irpy_chain(frame)(5);
 }
