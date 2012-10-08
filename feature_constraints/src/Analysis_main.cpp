@@ -108,7 +108,7 @@ void discontinuity_at(bool legacy, KDL::Frame frame)
 
 int main(int argc, char* argv[])
 {
-  print_discontinuity(true, 5);
+  print_discontinuity(false, 5);
   //discontinuity_at(false, Frame(Rotation::RotY(0.4), Vector(0,0,1)));
 }
 

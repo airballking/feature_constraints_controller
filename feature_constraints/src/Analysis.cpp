@@ -28,40 +28,48 @@ KDL::Frame random_frame(double trans_range=10.0, double rot_range=6.28)
                                 random_number(-trans_range, trans_range)));
 }
 
-PinvData::PinvData(int size)
+
+Analysis::Analysis(int size)
+  : constraints_(1)
 {
   resize(size);
 }
 
-void PinvData::resize(int size)
+
+void Analysis::resize(int size)
 {
-  U.resize(size, 6);
-  V.resize(6,6);
-  Sp.resize(6);
-  tmp.resize(6);
+  U_.resize(size, 6);
+  V_.resize(6,6);
+  Sp_.resize(6);
+  tmp_.resize(6);
+
+  tmpa1_.resize(size);
+  tmpa2_.resize(size);
+  values_.resize(size);
+  lambda_.resize(6);
+  Ht_.resize(size);
+  J_.resize(size);
 }
 
 
-void analyzeH(PinvData& tmp, const KDL::Jacobian& Ht, KDL::Jacobian& J, KDL::JntArray& singularValues, double eps)
+void Analysis::analyzeH(const KDL::Jacobian& Ht, KDL::Jacobian& J, KDL::JntArray& singularValues, double eps)
 {
   VectorXd& S = singularValues.data;
 
-  svd_eigen_HH(Ht.data.transpose(), tmp.U, S, tmp.V, tmp.tmp);
+  svd_eigen_HH(Ht.data.transpose(), U_, S, V_, tmp_);
 
   for(int i=0; i < 6; ++i)
-      tmp.Sp(i) = (fabs((double) S(i)) > eps) ? 1.0 / S(i) : 0.0;
+      Sp_(i) = (fabs((double) S(i)) > eps) ? 1.0 / S(i) : 0.0;
 
-  J.data = tmp.V * tmp.Sp.asDiagonal() * tmp.U.transpose();
+  J.data = V_ * Sp_.asDiagonal() * U_.transpose();
 }
 
 
-int rank(const std::vector<Constraint> &constraints,
-         double dd, double eps)
+int Analysis::rank(const std::vector<Constraint> &constraints,
+                   double dd, double eps)
 {
   int size = constraints.size();
-  JntArray values(size), tmp(size), lambda(6);
-  Jacobian Ht(size), J(size);
-  PinvData tmp_pinv(size);
+  //resize(size);
 
   int min_rank=size;
   int max_rank=0;
@@ -69,12 +77,12 @@ int rank(const std::vector<Constraint> &constraints,
   for(int iter=0; iter < 1000; iter++)
   {
     Frame f = random_frame();
-    differentiateConstraints(Ht, values, f, constraints, dd, tmp);
-    analyzeH(tmp_pinv, Ht, J, lambda, eps);
+    differentiateConstraints(Ht_, values_, f, constraints, dd, tmpa1_);
+    analyzeH(Ht_, J_, lambda_, eps);
 
     int rank=0;
     for(int i=0; i < size; i++)
-      if(lambda(i) > eps)
+      if(lambda_(i) > eps)
         rank++;
 
     min_rank = (rank < min_rank) ? rank : min_rank;
@@ -86,21 +94,18 @@ int rank(const std::vector<Constraint> &constraints,
 
 /*! returns maximum norm of the derivative.
  */
-double discontinuity(const Constraint& constraint, const KDL::Frame& frame,
-                     double dd)
+double Analysis::discontinuity(const Constraint& constraint,
+                               const KDL::Frame& frame,
+                               double dd)
 {
-  std::vector<Constraint> constraints;
-  constraints.push_back(constraint);
+  constraints_[0] = constraint;
 
-  JntArray value(1), tmp(1);
-  Jacobian Ht(1);
-
-  differentiateConstraints(Ht, value, frame, constraints, dd, tmp);
+  differentiateConstraints(Ht_, values_, frame, constraints_, dd, tmpa1_);
 
   double max = 0;
   for(int i=0; i < 6; i++)
   {
-    double d = fabs(Ht.data(i, 0));
+    double d = fabs(Ht_.data(i, 0));
     if(d > max)
       max = d;
   }
@@ -117,11 +122,13 @@ double discontinuity_near(const Constraint& constraint, const KDL::Frame& frame,
 {
   double dis=0;
   int num_steps = 729 * (int) ceil(surrounding / density);
+
+  Analysis analysis(1);
  
   for(int iter=0; iter < num_steps; iter++)
   {
     Frame f = sampler_near_grid(frame, iter, density);
-    double d = discontinuity(constraint, f, dd);
+    double d = analysis.discontinuity(constraint, f, dd);
     dis = (d > dis) ? d : dis;
   }
   return dis;
@@ -203,6 +210,8 @@ std::vector< std::pair<Eigen::Quaterniond, double> >
 {
   vector< pair<Eigen::Quaterniond, double> > discontinuities;
 
+  Analysis analysis(1);
+
   for(int x=0; x < numSamples; x++)
   {
     for(int y=0; y < numSamples; y++)
@@ -213,7 +222,7 @@ std::vector< std::pair<Eigen::Quaterniond, double> >
                                    y*M_PI*2/numSamples,
                                    z*M_PI*2/numSamples);
 
-        double s = discontinuity(c, offset*Frame(r), dd);
+        double s = analysis.discontinuity(c, offset*Frame(r), dd);
 
         if(s > threshold)
         {

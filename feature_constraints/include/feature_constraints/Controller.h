@@ -64,7 +64,7 @@ public:
   KDL::Jacobian J;
   KDL::JntArray singularValues;
   KDL::JntArray tmp;
-  PinvData tmp_pinv;
+  Analysis analysis;
 
   // does non-realtime preparation work
   // assumes that either constraints is set

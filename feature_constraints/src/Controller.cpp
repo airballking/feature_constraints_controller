@@ -41,7 +41,7 @@ void Controller::prepare(int max_constraints)
   singularValues.resize(n);
 
   tmp.resize(n);
-  tmp_pinv.resize(n);  // maximum number of constraints
+  analysis.resize(n);  // maximum number of constraints
 }
 
 
@@ -49,7 +49,7 @@ void Controller::update(KDL::Frame& frame)
 {
   differentiateConstraints(Ht, chi, frame, constraints, 0.001, tmp);
   control(ydot, weights, chi_desired, chi, command, gains);
-  analyzeH(tmp_pinv, Ht, J, singularValues, 1e-7);
+  analysis.analyzeH(Ht, J, singularValues, 1e-7);
   this->frame = frame;
 }
 
