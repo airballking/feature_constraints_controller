@@ -184,12 +184,21 @@ void differentiateConstraints(KDL::Jacobian& Ht,
 
   evaluateConstraints(values, frame, constraints);
 
+  double cd = cos(dd);
+  double sd = sin(dd);
+  Frame f;
+
   for(unsigned int i=0; i < 6; i++)
   {
-    Twist t;
-    t(i) = 1.0;
-    Frame f = addDelta(frame, t, dd);
-    f.p = f.M * (frame.M.Inverse() * f.p); // change ref point to object
+    switch(i)
+    {
+      case 0: f = Frame(Vector(dd,0,0)) * frame; break;
+      case 1: f = Frame(Vector(0,dd,0)) * frame; break;
+      case 2: f = Frame(Vector(0,0,dd)) * frame; break;
+      case 3: f = Frame(Rotation(1,0,0,  0,cd,-sd,  0,sd,cd)) * frame; break;
+      case 4: f = Frame(Rotation(cd,0,-sd,  0,1,0,  sd,0,cd)) * frame; break;
+      case 5: f = Frame(Rotation(cd,-sd,0,  sd,cd,0,  0,0,1)) * frame; break;
+    }
 
     evaluateConstraints(tmp, f, constraints);
 
