@@ -193,4 +193,31 @@ void differentiateConstraints(KDL::Jacobian& Ht,
                               double dd,
                               KDL::JntArray& tmp);
 
+
+/*! Differentiates numerically using a 3-point sampling:
+    (x_0 = x-dd, x_1 = x, x_2 = x+dd)
+    First derivative is (x_2 - x_0) / (2*dd)
+    (central differences).
+    The second derivative is (x_2 - 2*x_1 + x_0)/(d*d),
+    basically the change in slope.
+ 
+   \param Ht     [out] Transposed interaction matrix
+   \param H2t    [out] Transposed second derivatives
+   \param values [out] The values of the constraints at 'frame'. (must have n rows)
+   \param frame  [in]  The transform between tool and object where the constraints shall be evaluated
+   \param constraints [in] The constraints to be evaluated
+   \param dd     [in]  How far frame should be moved in order to obtain Ht.
+   \param tmp    [out] Temporary variable (must have n rows)
+   \param tmp2   [out] Another temporary variable (must have n rows)
+*/
+
+void differentiateConstraints_3point(KDL::Jacobian& Ht,
+                                     KDL::Jacobian& H2t,
+                                     KDL::JntArray& values,
+                                     const KDL::Frame& frame,
+                                     const std::vector<Constraint> &constraints,
+                                     double dd,
+                                     KDL::JntArray& tmp,
+                                     KDL::JntArray& tmp2);
+
 #endif //FEATURE_CONSTRAINTS_FEATURE_CONSTRAINTS_H

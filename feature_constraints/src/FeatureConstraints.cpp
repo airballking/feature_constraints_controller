@@ -207,6 +207,67 @@ void differentiateConstraints(KDL::Jacobian& Ht,
   }
 }
 
+
+void differentiateConstraints_3point(KDL::Jacobian& Ht,
+                                     KDL::Jacobian& H2t,
+                                     KDL::JntArray& values,
+                                     const KDL::Frame& frame,
+                                     const std::vector<Constraint> &constraints,
+                                     double dd,
+                                     KDL::JntArray& tmp,
+                                     KDL::JntArray& tmp2)
+{
+  assert(Ht.columns()  >= constraints.size());
+  assert(H2t.columns() >= constraints.size());
+  assert(values.rows() >= constraints.size());
+  assert(tmp.rows()    >= constraints.size());
+  assert(tmp2.rows()   >= constraints.size());
+  assert(dd != 0);
+
+  unsigned int nc = constraints.size();
+
+  Frame fp[6], fn[6];
+  double cd = cos(dd);
+  double sd = sin(dd);
+  fp[0] = Frame(Vector(dd,0,0));
+  fp[1] = Frame(Vector(0,dd,0));
+  fp[2] = Frame(Vector(0,0,dd));
+  fp[3] = Frame(Rotation(1,0,0,  0,cd,-sd,  0,sd,cd));
+  fp[4] = Frame(Rotation(cd,0,-sd,  0,1,0,  sd,0,cd));
+  fp[5] = Frame(Rotation(cd,-sd,0,  sd,cd,0,  0,0,1));
+  sd = -sd;
+  fn[0] = Frame(Vector(-dd,0,0));
+  fn[1] = Frame(Vector(0,-dd,0));
+  fn[2] = Frame(Vector(0,0,-dd));
+  fn[3] = Frame(Rotation(1,0,0,  0,cd,-sd,  0,sd,cd));
+  fn[4] = Frame(Rotation(cd,0,-sd,  0,1,0,  sd,0,cd));
+  fn[5] = Frame(Rotation(cd,-sd,0,  sd,cd,0,  0,0,1));
+
+  evaluateConstraints(values, frame, constraints);
+
+  for(unsigned int i=0; i < 6; i++)
+  {
+    evaluateConstraints(tmp,  fp[i]*frame, constraints);
+    evaluateConstraints(tmp2, fn[i]*frame, constraints);
+
+    for(unsigned int j=0; j < nc; j++)
+    {
+      if(Constraint::angular_constraints_.find(constraints[j].func) ==
+         Constraint::angular_constraints_.end())
+      {
+        Ht(i,j)  = (tmp(j) - tmp2(j)) / (2*dd);
+        H2t(i,j) = (tmp(i) - 2*values(i) + tmp2(i)) / (dd*dd);
+      }
+      else
+      {
+        Ht(i,j)  = normalized_angle_diff(tmp(j), tmp2(j)) / (2*dd);
+        H2t(i,j) = normalized_angle_diff(tmp(i), values(i)) + normalized_angle_diff(tmp2(i), values(i)) / (dd*dd);
+      }
+    }
+  }
+}
+
+
 //TODO: get this executed automatically
 
 #include <feature_constraints/ChainRPY.h>
