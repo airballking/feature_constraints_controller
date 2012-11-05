@@ -192,7 +192,7 @@ void differentiateConstraints(KDL::Jacobian& Ht,
   f[1] = Frame(Vector(0,dd,0));
   f[2] = Frame(Vector(0,0,dd));
   f[3] = Frame(Rotation(1,0,0,  0,cd,-sd,  0,sd,cd));
-  f[4] = Frame(Rotation(cd,0,-sd,  0,1,0,  sd,0,cd));
+  f[4] = Frame(Rotation(cd,0,sd,  0,1,0,  -sd,0,cd));
   f[5] = Frame(Rotation(cd,-sd,0,  sd,cd,0,  0,0,1));
 
   for(unsigned int i=0; i < 6; i++)
@@ -235,14 +235,14 @@ void differentiateConstraints_3point(KDL::Jacobian& Ht,
   fp[1] = Frame(Vector(0,dd,0));
   fp[2] = Frame(Vector(0,0,dd));
   fp[3] = Frame(Rotation(1,0,0,  0,cd,-sd,  0,sd,cd));
-  fp[4] = Frame(Rotation(cd,0,-sd,  0,1,0,  sd,0,cd));
+  fp[4] = Frame(Rotation(cd,0,sd,  0,1,0,  -sd,0,cd));
   fp[5] = Frame(Rotation(cd,-sd,0,  sd,cd,0,  0,0,1));
   sd = -sd;
   fn[0] = Frame(Vector(-dd,0,0));
   fn[1] = Frame(Vector(0,-dd,0));
   fn[2] = Frame(Vector(0,0,-dd));
   fn[3] = Frame(Rotation(1,0,0,  0,cd,-sd,  0,sd,cd));
-  fn[4] = Frame(Rotation(cd,0,-sd,  0,1,0,  sd,0,cd));
+  fn[4] = Frame(Rotation(cd,0,sd,  0,1,0,  -sd,0,cd));
   fn[5] = Frame(Rotation(cd,-sd,0,  sd,cd,0,  0,0,1));
 
   evaluateConstraints(values, frame, constraints);
