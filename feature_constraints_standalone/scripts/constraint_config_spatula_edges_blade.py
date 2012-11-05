@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Three dependent constraints (left side, front side, blade).
+# This configuration is meant for testing the singularity tester.
+
 import roslib
 roslib.load_manifest('constraint_msgs')
 import rospy

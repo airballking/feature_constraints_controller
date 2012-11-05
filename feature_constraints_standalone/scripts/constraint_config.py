@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Constraint configuration for pancake flipping.
+# A feature-based configuration, imitating the cylinder/orientation setup.
+
 import roslib
 roslib.load_manifest('constraint_msgs')
 import rospy

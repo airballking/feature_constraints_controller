@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Two dependent constraints.
+# This configuration is meant for testing the singularity tester.
+
 import roslib
 roslib.load_manifest('constraint_msgs')
 import rospy
