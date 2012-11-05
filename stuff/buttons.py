@@ -48,6 +48,8 @@ class RosComm:
 
     if rospy.client.has_param('~buttons'):
       self.button_names = rospy.client.get_param('~buttons')
+    else:
+      self.button_names = None
 
     self._pub = rospy.Publisher('/state', String)
 
