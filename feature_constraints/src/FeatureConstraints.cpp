@@ -180,6 +180,7 @@ void differentiateConstraints(KDL::Jacobian& Ht,
   assert(tmp.rows() >= constraints.size());
   assert(dd != 0);
 
+  double dd_r = 1.0 / dd;
   unsigned int nc = constraints.size();
 
   evaluateConstraints(values, frame, constraints);
@@ -201,9 +202,9 @@ void differentiateConstraints(KDL::Jacobian& Ht,
     for(unsigned int j=0; j < nc; j++)
       if(Constraint::angular_constraints_.find(constraints[j].func) ==
          Constraint::angular_constraints_.end())
-        Ht.data(i,j) = (tmp.data(j) - values.data(j)) / dd;
+        Ht.data(i,j) = (tmp.data(j) - values.data(j)) * dd_r;
       else
-        Ht.data(i,j) = normalized_angle_diff(tmp.data(j), values.data(j)) / dd;
+        Ht.data(i,j) = normalized_angle_diff(tmp.data(j), values.data(j)) * dd_r;
   }
 }
 
@@ -224,6 +225,7 @@ void differentiateConstraints_3point(KDL::Jacobian& Ht,
   assert(tmp2.rows()   >= constraints.size());
   assert(dd != 0);
 
+  double dd_r = 1.0 / dd;
   unsigned int nc = constraints.size();
 
   Frame fp[6], fn[6];
@@ -255,13 +257,13 @@ void differentiateConstraints_3point(KDL::Jacobian& Ht,
       if(Constraint::angular_constraints_.find(constraints[j].func) ==
          Constraint::angular_constraints_.end())
       {
-        Ht(i,j)  = (tmp(j) - tmp2(j)) / (2*dd);
-        H2t(i,j) = (tmp(i) - 2*values(i) + tmp2(i)) / (dd*dd);
+        Ht(i,j)  = (tmp(j) - tmp2(j)) * 0.5*dd;
+        H2t(i,j) = (tmp(i) - 2*values(i) + tmp2(i)) * dd_r*dd_r;
       }
       else
       {
-        Ht(i,j)  = normalized_angle_diff(tmp(j), tmp2(j)) / (2*dd);
-        H2t(i,j) = normalized_angle_diff(tmp(i), values(i)) + normalized_angle_diff(tmp2(i), values(i)) / (dd*dd);
+        Ht(i,j)  = normalized_angle_diff(tmp(j), tmp2(j)) * 0.5 * dd_r;
+        H2t(i,j) = normalized_angle_diff(tmp(i), values(i)) + normalized_angle_diff(tmp2(i), values(i)) * dd_r*dd_r;
       }
     }
   }
