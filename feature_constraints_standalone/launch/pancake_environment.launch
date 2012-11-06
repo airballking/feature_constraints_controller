@@ -18,6 +18,11 @@
   <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/spatula" />
   <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
 
+  <node name="feature_viz" pkg="stuff" type="feature_viz.py">
+    <remap from="/constraint_config" to="/feature_controller/constraint_config"/>
+    <param name="base_frame" value="/pancake"/>
+  </node>
+
   <!-- interface with controller ... -->
   <node name="tool_transform" pkg="tf" type="static_transform_publisher"
         args="0 0 0   0 0 0  /spatula /tool 100"/>

@@ -235,6 +235,7 @@ class Cos:
     mrk = marker.sector(vec1.dir / vec1_l * w, vec2.dir / vec2_l * w, vec1.pos)
     mrk.ns = _config_['ns']
     mrk.id = _config_['marker_id']
+    mrk.header.frame_id = _config_['frame_id']
     _config_['marker_id'] += 1
     mrk.color = red
 
@@ -329,7 +330,9 @@ def transform():
 
 
 rospy.init_node('feature_vis')
-base_frame_id = rospy.get_param('base_frame', 'baker')
+base_frame_id = rospy.get_param('~base_frame', 'baker')
+rospy.loginfo('base frame: ' + base_frame_id)
+_config_['frame_id'] = base_frame_id
 constraint_display = ConstraintDisplay(base_frame_id)
 
 sub = rospy.Subscriber('/constraint_config', ConstraintConfig, callback)
