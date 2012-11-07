@@ -41,10 +41,17 @@ def msg2feature(msg):
 
 
 def marker_base(**args):
+  """create a marker passing on its args, taking _config_ for default values.
+
+  line_scale is a scaling factor for _config_['line_width'],
+  line_width replaces line_width
+  """
   global _config_
 
   if args.has_key('line_width'):
     line_width = args.pop('line_width')
+  elif args.has_key('line_scale'):
+    line_width = args.pop('line_scale') * _config_['line_width']
   else:
     line_width = _config_['line_width']
 
@@ -131,7 +138,6 @@ class LocatedVector:
     return [marker_line(self.pos, self.pos + self.dir)]
 
 
-
 class Feature:
   """A geometric feature (plane, line or point) with position and direction.
 
@@ -176,13 +182,14 @@ class Feature:
         dir = (self.dir / self.dir.Norm()) * _config_['line_width']/2
         return [marker_line(self.pos - dir, self.pos + dir, color=yellow, line_width=self.dir.Norm())]
       elif self.type == 2: #POINT
-        w =  _config_['line_width'] * 2
-        return [marker_point(self.pos, color=yellow, line_width=w)]
+        return [marker_point(self.pos, color=yellow, line_scale=2)]
     else:
       return []
 
 
 class Len:
+  """Compute the length of a LocatedVector."""
+
   def __init__(self, vector):
     self.vector = vector
 
@@ -191,15 +198,15 @@ class Len:
     return vec.dir.Norm()
 
   def show(self, style=NORMAL):
-    global _config_
     vec = self.vector.compute()
-    w = _config_['line_width']*1.5
     len_marker = marker_line(vec.pos, vec.pos + vec.dir,
-                             color=red, line_width=w)
+                             color=red, line_scale=1.5)
     return self.vector.show(NORMAL) + [len_marker]
 
 
 class D:
+  """Compute the Distance between the positions of two LocatedVectors."""
+
   def __init__(self, start, end):
     self.start = start
     self.end = end
@@ -212,6 +219,8 @@ class D:
 
 
 class Proj_P:
+  """Project a LocatedVector 'vec' onto another LocatedVector 'ref'."""
+
   def __init__(self, vec, ref):
     self.vec = vec
     self.ref = ref
@@ -236,6 +245,7 @@ class Proj_P:
 
 
 class Cos:
+  """Compute the Cosine (normalized dot product) between two LocatedVectors."""
   def __init__(self, vec1, vec2):
     self.vec1 = vec1
     self.vec2 = vec2
@@ -266,7 +276,9 @@ class Cos:
 
     return [mrk] + self.vec1.show(AS_VECTOR) + vec2.show(AS_VECTOR) + self.vec2.show(AS_VECTOR)
 
+
 class Proj_A:
+  """Project a LocatedVector 'vec' perpendicular to another LocatedVector 'ref'."""
   def __init__(self, vec, ref):
     self.vec = vec
     self.ref = ref
@@ -293,7 +305,9 @@ constraint_functions = {
   'height':    lambda (f_t, f_w) : Len(Proj_A(D(f_t, f_w), f_w)),
   'perpendicular':  lambda (f_t, f_w) : Cos(f_t, f_w)}
 
+
 class ConstraintDisplay:
+  """Collect features and constraint functions for displaying."""
   def __init__(self, base_frame_id):
     #TODO: shall we index tool- and world features by their names?
     self.tool_features = []
