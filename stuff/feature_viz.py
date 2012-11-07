@@ -1,4 +1,24 @@
 #!/usr/bin/python
+"""A visualization of geometric features and constraint function over them.
+
+This programm attempts to formalize and visualized feature constraint
+functions. Geometric features (line segments, plane segments and points) are
+represented as LocatedVector objects, consisting of a position and orientation.
+Constraints are expressed over these features as e.g. distance between two
+features, perpendicular projection, and their composition.
+
+These functions include Len, Cos, D, Proj_P, Proj_A. Each of these functions
+is modeled as a class, having a method compute() and a method show(), the
+latter of which returns a ROS Marker array that visualizes this function and
+it's components. Compositions of these functions are defined in the map
+constraint_functions.
+
+The display is configured from a ConstraintConfig message, the locations are
+computed using a tf listener, using the frame_ids which are taken from the
+ConstraintConfig message.
+
+"""
+
 
 import roslib
 roslib.load_manifest('constraint_msgs')
@@ -41,10 +61,10 @@ def msg2feature(msg):
 
 
 def marker_base(**args):
-  """create a marker passing on its args, taking _config_ for default values.
+  """Create a marker passing on its args, taking _config_ for default values.
 
-  line_scale is a scaling factor for _config_['line_width'],
-  line_width replaces line_width
+  line_scale -- is a scaling factor for _config_['line_width'],
+  line_width -- replaces line_width from _config_
   """
   global _config_
 
@@ -83,9 +103,9 @@ def marker_point(point, **args):
   return m
 
 
-NORMAL=0
-AS_VECTOR=1
-FEATURE=2
+NORMAL=0    # the constraint shall be displayed normally, features are hidden
+AS_VECTOR=1 # the constraint (or feature) shall be displayed as a vector
+FEATURE=2   # the feature shall be displayed
 
 
 class LocatedVector:
