@@ -74,10 +74,9 @@ def marker_point(point, **args):
 
 
 class LocatedVector:
-  def __init__(self, pos, dir, source=None):
+  def __init__(self, pos, dir):
     self.pos = pos
     self.dir = dir
-    self.source = source
 
   def __str__(self):
     p = self.pos
@@ -111,11 +110,6 @@ class LocatedVector:
     return LocatedVector(self.pos, self.dir * scalar)
 
   def compute(self):
-    # propagate compute() to the source, if present
-    if self.source != None:
-      source = self.source()
-      self.pos = source.pos
-      self.dir = source.dir
     return self
 
   def show(self):
@@ -138,11 +132,8 @@ class Feature:
     self.pos = kdl.Vector(f_new.p)
     self.dir = frame.M*self.rel_dir
 
-  def v(self):
-    return LocatedVector(self.pos, self.dir / 2, self.v)
-
   def compute(self):
-    return self
+    return LocatedVector(self.pos, self.dir / 2)
 
   def show(self):
     global _config_
@@ -264,9 +255,9 @@ class Proj_A:
 
 # a map from constraint name to a function (Feature x Feature -> Value)
 constraint_functions = {
-  'distance':  lambda (f_t, f_w) : Len(Proj_P(D(f_t, f_w), f_w.v())),
-  'height':    lambda (f_t, f_w) : Len(Proj_A(D(f_t, f_w), f_w.v())),
-  'perpendicular':  lambda (f_t, f_w) : Cos(f_t.v(), f_w.v())}
+  'distance':  lambda (f_t, f_w) : Len(Proj_P(D(f_t, f_w), f_w)),
+  'height':    lambda (f_t, f_w) : Len(Proj_A(D(f_t, f_w), f_w)),
+  'perpendicular':  lambda (f_t, f_w) : Cos(f_t, f_w)}
 
 class ConstraintDisplay:
   def __init__(self, base_frame_id):
