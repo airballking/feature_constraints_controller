@@ -14,7 +14,7 @@ rosbuild_init()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG -fivopts -Ofast -funsafe-math-optimizations -finline-limit=1024 -g") # allow more inlining
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG -fivopts -funsafe-math-optimizations -g") # allow more inlining
 
 file(MAKE_DIRECTORY bin/test)
 
