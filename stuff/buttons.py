@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+""" Show a window with buttons.
+
+The button texts are taken from the ROS parameter ~buttons, which must be
+a list of strings. Whenever a button is pressed, it's text is sent to the
+topic /state which is of type std_msgs/String.
+
+"""
+
 import roslib
 roslib.load_manifest('stuff')
 from std_msgs.msg import String
@@ -10,7 +18,7 @@ from math import pi
 import wx
 
 class ButtonPanel(wx.Panel):
-  """ creates a panel with sliders """
+  """A panel with buttons."""
   def __init__(self, parent, id, button_names):
     wx.Panel.__init__(self, parent, id)
 
@@ -22,7 +30,7 @@ class ButtonPanel(wx.Panel):
 
     self.Bind(wx.EVT_BUTTON, self._button_update)
 
-    #Add labels and sliders
+    #Add buttons
     for i in range(len(self.button_names)):
       b = wx.Button(self, id=i,
             label = button_names[i])
@@ -31,15 +39,17 @@ class ButtonPanel(wx.Panel):
       self.sizer.Add(b, 1, wx.EXPAND)
 
   def set_button_cb(self, callback):
+    """Set the callback that will be called when a button is pressed."""
     self.button_callback = callback
 
   def _button_update(self, event):
+    """Internal callback which delegates to self.button_callback."""
     self.button_callback(self.button_names[event.Id])
 
 
 class RosComm:
   def __init__(self):
-    """ initialize ROS """
+    """Initialize ROS."""
 
     self.joint_names = None
 
@@ -58,16 +68,15 @@ class RosComm:
     self._shutdown_timer.Start(100)
 
   def _on_shutdown_timer(self, event):
-    """shut down the program when the node closes"""
+    """Shut down the program when the node closes."""
     if rospy.is_shutdown():
       wx.Exit()
 
   def send_event(self, button_text):
-    """ publish button text """
+    """Publish button text."""
     self._pub.publish(String(data=button_text))
 
 
-# main
 
 if __name__ == "__main__":
 
@@ -81,7 +90,7 @@ if __name__ == "__main__":
 
   frame = wx.Frame(None, -1, ros.name, size = (400, 310))
   panel = ButtonPanel(frame,-1, ros.button_names)
-  panel.set_button_cb(ros.send_event)
+  panel.set_button_cb(ros.send_event) # on a button press, ROS sends the text.
 
   frame.ClientSize = panel.BestSize
 

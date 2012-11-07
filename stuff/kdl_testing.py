@@ -1,5 +1,16 @@
 #!/usr/bin/python
 
+"""Compare two KDL chains with different tool transforms.
+
+This script takes two KDL chains that are supposedly equal except for
+a different fixed transform at the end-effector (a tool). It computes
+the difference between these tools, compensates for it so a randomized
+comparison can be done. The same compensation is done for the differential
+kinematics i.e. the Jacobians. This is just an unorganized test script,
+but it contains working code.
+
+"""
+
 import roslib ; roslib.load_manifest('motionControl')
 
 from PyKDL import *
