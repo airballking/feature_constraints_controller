@@ -14,10 +14,13 @@ from geometry_msgs.msg import Point, Vector3
 from std_msgs.msg import ColorRGBA
 
 
+# some convenience color definitions
 grey    = ColorRGBA(0.7, 0.7, 0.7, 0.5)
 red     = ColorRGBA(0.7, 0.1, 0.1, 1.0)
 yellow  = ColorRGBA(0.7, 0.7, 0.1, 0.6)
 
+
+# config stores some global parameters for the visualization.
 _config_ = {'line_width': 0.02,
             'frame_id': '/base_link',
             'ns': 'features',
@@ -73,7 +76,19 @@ def marker_point(point, **args):
   return m
 
 
+NORMAL=0
+AS_VECTOR=1
+FEATURE=2
+
+
 class LocatedVector:
+  """A vector with its point-of-origin
+
+  This class is the basic data type for the constraint function computation.
+  It defines some common vector operations for convenience and the methods
+  compute() and show(). Often, it's members 'pos' nad 'dir' are used directly.
+
+  """
   def __init__(self, pos, dir):
     self.pos = pos
     self.dir = dir
@@ -112,12 +127,20 @@ class LocatedVector:
   def compute(self):
     return self
 
-  def show(self):
+  def show(self, style=NORMAL):
     return [marker_line(self.pos, self.pos + self.dir)]
 
 
 
 class Feature:
+  """A geometric feature (plane, line or point) with position and direction.
+
+  This class also stores the position and direction 'relative' to
+  it's parent frame, so 'pos' and 'dir' it can re-computed when
+  the frame moves. For computation, the method compute() may
+  be called, to have all operations for a LocatedVector available.
+
+  """
   def __init__(self, type, pos, dir, frame_id):
     self.type = type
     self.rel_pos = pos
@@ -127,6 +150,12 @@ class Feature:
     self.frame_id = frame_id
 
   def transform(self, frame):
+    """(re-)compute the position and direction of the feature.
+
+    Given the 'frame', 'pos' and 'dir' are re-computed using the
+    stored 'rel_pos' and 'rel_dir' vectors.
+
+    """
     f_now = kdl.Frame(self.rel_pos)
     f_new = frame*f_now
     self.pos = kdl.Vector(f_new.p)
@@ -135,17 +164,22 @@ class Feature:
   def compute(self):
     return LocatedVector(self.pos, self.dir / 2)
 
-  def show(self):
-    global _config_
-    if self.type == 0: # LINE
-      return [marker_line(self.pos - self.dir/2, self.pos + self.dir/2,
-                          color=yellow)]
-    elif self.type == 1: #PLANE
-      dir = (self.dir / self.dir.Norm()) * _config_['line_width']/2
-      return [marker_line(self.pos - dir, self.pos + dir, color=yellow, line_width=self.dir.Norm())]
-    elif self.type == 2: #POINT
-      w =  _config_['line_width'] * 2
-      return [marker_point(self.pos, color=yellow, line_width=w)]
+  def show(self, style=NORMAL):
+    if style == AS_VECTOR:
+      return self.compute().show(AS_VECTOR)
+    elif style == FEATURE:
+      global _config_
+      if self.type == 0: # LINE
+        return [marker_line(self.pos - self.dir/2, self.pos + self.dir/2,
+                            color=yellow)]
+      elif self.type == 1: #PLANE
+        dir = (self.dir / self.dir.Norm()) * _config_['line_width']/2
+        return [marker_line(self.pos - dir, self.pos + dir, color=yellow, line_width=self.dir.Norm())]
+      elif self.type == 2: #POINT
+        w =  _config_['line_width'] * 2
+        return [marker_point(self.pos, color=yellow, line_width=w)]
+    else:
+      return []
 
 
 class Len:
@@ -156,13 +190,13 @@ class Len:
     vec = self.vector.compute()
     return vec.dir.Norm()
 
-  def show(self):
+  def show(self, style=NORMAL):
     global _config_
     vec = self.vector.compute()
     w = _config_['line_width']*1.5
     len_marker = marker_line(vec.pos, vec.pos + vec.dir,
                              color=red, line_width=w)
-    return self.vector.show() + [len_marker]
+    return self.vector.show(NORMAL) + [len_marker]
 
 
 class D:
@@ -173,8 +207,8 @@ class D:
   def compute(self):
     return LocatedVector(self.start.pos, self.end.pos - self.start.pos)
 
-  def show(self):
-    return self.compute().show()
+  def show(self, style):
+    return self.compute().show() + self.start.show(NORMAL) + self.end.show(NORMAL)
 
 
 class Proj_P:
@@ -189,13 +223,13 @@ class Proj_P:
     self.result_dir = ref * (kdl.dot(ref.dir, vec.dir) / ref.dir.Norm()**2) - vec
     return LocatedVector(ref.pos, self.result_dir.dir)
 
-  def show(self):
+  def show(self, style=NORMAL):
     vec = self.vec.compute()
     ref = self.ref.compute()
     res = self.compute()
     along = res.dir + vec.dir
 
-    markers  = vec.show() + res.show() + ref.show()
+    markers  = self.vec.show(AS_VECTOR) + res.show() + self.ref.show(AS_VECTOR)
     markers += [marker_line(vec.pos, vec.pos + along)]
 
     return markers
@@ -212,7 +246,7 @@ class Cos:
 
     return kdl.dot(vec1, vec2) / (vec1.Norm() * vec2.Norm())
 
-  def show(self):
+  def show(self, style=NORMAL):
     global _config_
     w = 3*_config_['line_width']
 
@@ -230,7 +264,7 @@ class Cos:
     _config_['marker_id'] += 1
     mrk.color = red
 
-    return [mrk] + vec1.show() + vec2.show()
+    return [mrk] + self.vec1.show(AS_VECTOR) + vec2.show(AS_VECTOR) + self.vec2.show(AS_VECTOR)
 
 class Proj_A:
   def __init__(self, vec, ref):
@@ -243,13 +277,13 @@ class Proj_A:
     res = ref * (kdl.dot(ref.dir, vec.dir) / ref.dir.Norm()**2)
     return LocatedVector(vec.pos, res.dir)
 
-  def show(self):
+  def show(self, style=NORMAL):
     vec = self.vec.compute()
     ref = self.ref.compute()
     res = self.compute()
     perp = res.dir - vec.dir
     dist_marker = marker_line(ref.pos, ref.pos + perp)
-    return vec.show() + res.show() + ref.show() + [dist_marker]
+    return self.vec.show(AS_VECTOR) + res.show(AS_VECTOR) + self.ref.show(AS_VECTOR) + [dist_marker]
 
 
 
@@ -281,13 +315,13 @@ class ConstraintDisplay:
     markers = []
     for (i,f) in enumerate(self.tool_features):
       _config_['ns'] = 'tool_feature_' + str(i)
-      markers += f.show()
+      markers += f.show(FEATURE)
     for (i,f) in enumerate(self.world_features):
       _config_['ns'] = 'world_feature_' + str(i)
-      markers += f.show()
+      markers += f.show(FEATURE)
     for name in self.constraints:
       _config_['ns'] = name
-      markers += self.constraints[name].show()
+      markers += self.constraints[name].show(NORMAL)
     _config_['ns'] = 'features'
     return markers
 
