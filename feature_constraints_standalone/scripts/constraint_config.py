@@ -22,7 +22,7 @@ tool_side      = Feature('spatula', 'side_edge', Feature.LINE,
                    Vector3(0,-0.05,0), Vector3(0,0,0.15), Vector3(0,0,0))
 tool_forward   = Feature('spatula', 'forward', Feature.LINE,
                    Vector3(0,0,0), Vector3(0,0,0.15), Vector3(0,0,0))
-up             = Feature('baker', 'plane', Feature.PLANE,
+up             = Feature('pancake', 'plane', Feature.PLANE,
                    Vector3(0,0,0), Vector3(0,0,0.3), Vector3(1,0,0))
 
 c = []

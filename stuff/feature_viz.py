@@ -270,6 +270,7 @@ constraint_functions = {
 
 class ConstraintDisplay:
   def __init__(self, base_frame_id):
+    #TODO: shall we index tool- and world features by their names?
     self.tool_features = []
     self.world_features = []
     self.constraints = {}
@@ -277,7 +278,7 @@ class ConstraintDisplay:
     self.listener = tf.TransformListener()
 
   def transform(self):
-    for f in self.tool_features + self.tool_features:
+    for f in self.tool_features + self.world_features:
       try:
         frame = self.listener.lookupTransform(self.base_frame_id,
                                               f.frame_id, rospy.Time(0))
@@ -312,7 +313,6 @@ def callback(msg):
   for c in msg.constraints:
     f_tool  = msg2feature(c.tool_feature)
     f_world = msg2feature(c.world_feature)
-    f_tool.transform(kdl.Frame(kdl.Vector(1,0.2,0.3)))
     if c.function in constraint_functions:
       constraint_display.tool_features.append(f_tool)
       constraint_display.world_features.append(f_world)
@@ -325,11 +325,10 @@ def callback(msg):
     marker.publish(m)
 
 
-def transform():
-  global listener, base_frame_id, constraint_display
-
-
 rospy.init_node('feature_vis')
+
+# base_frame is an arbitrary frame in which the markers are displayed
+# the marker locations are defined by the feature frame_id's!
 base_frame_id = rospy.get_param('~base_frame', 'baker')
 rospy.loginfo('base frame: ' + base_frame_id)
 _config_['frame_id'] = base_frame_id
