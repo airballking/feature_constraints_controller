@@ -378,7 +378,10 @@ def callback(msg):
       constraint = constraint_functions[c.function]((f_tool, f_world))
       constraint_display.constraints[c.name] = constraint
     else:
+      constraint_display.tool_features.append(f_tool)
+      constraint_display.world_features.append(f_world)
       print "constraint function '%s' not found!" % c.function
+
 
   for m in constraint_display.show():
     marker.publish(m)
