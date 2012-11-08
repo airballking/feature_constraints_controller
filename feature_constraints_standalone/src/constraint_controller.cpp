@@ -110,8 +110,9 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
 
   n.param<std::string>("object_frame", state_msg_.header.frame_id, "/base_link");
 
-  // set ready-flag to signal that we are not ready, yet
-  ready_ = false;
+  // set flags to signal that we are not ready, yet
+  configured_ = false;
+  started_ = false;
 
   return true;
 }
@@ -122,10 +123,10 @@ void FeatureConstraintsController::joint_state_callback(const sensor_msgs::Joint
 {
   // parse message with joint state interpreter
   if(joint_state_interpreter_->parseJointState(msg, q_))
-  {
     // assertion: parsing was successful
     update();
-  }
+  else
+    ROS_WARN("[Feature Controller] Could not parse joint state message.");
 }
 
 void FeatureConstraintsController::tool_offset_callback(const geometry_msgs::Pose::ConstPtr& msg)
@@ -166,8 +167,9 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   Wy_ = Eigen::MatrixXd::Zero(num_constraints, num_constraints);
   // resize solver
   solver_.reinitialise(num_constraints, q_.rows());
-  // set ready-flag to indicate that we are ready to solve constraints
-  ready_ = false;
+  // set flags to indicate that we are configured but not started, yet
+  configured_ = true;
+  started_ = false;
 }
 
 
@@ -177,10 +179,10 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
  */
 void FeatureConstraintsController::constraint_command_callback(const constraint_msgs::ConstraintCommand::ConstPtr& msg)
 {
-  if(msg->pos_lo.size() == feature_controller_.command.pos_lo.rows()){
-    ready_ = true;
+  if(configured_ && (msg->pos_lo.size() == feature_controller_.command.pos_lo.rows())){
+    started_ = true;
   }else{
-    ready_ = false;
+    started_ = false;
   }
 
   fromMsg(*msg, feature_controller_.command);
@@ -188,51 +190,60 @@ void FeatureConstraintsController::constraint_command_callback(const constraint_
 
 void FeatureConstraintsController::update()
 {
-  // assemble frame between tool and object
-  KDL::Frame ff_kinematics;
-  robot_kinematics_->getForwardKinematics(q_, ff_kinematics);
-  robot_kinematics_->getJacobian(q_, jacobian_robot_);
+  if(configured_)
+  {
+    // assemble frame between tool and object
+    KDL::Frame ff_kinematics;
+    robot_kinematics_->getForwardKinematics(q_, ff_kinematics);
+    robot_kinematics_->getJacobian(q_, jacobian_robot_);
 
-  // transform robot jacobian (ref frame base, ref point base)
-  jacobian_robot_.changeRefPoint(-ff_kinematics.p);
+    // transform robot jacobian (ref frame base, ref point base)
+    jacobian_robot_.changeRefPoint(-ff_kinematics.p);
 
-  KDL::Frame T_tool_in_object = T_object_in_world_.Inverse() * T_base_in_world_ * ff_kinematics * T_tool_in_ee_;
+    KDL::Frame T_tool_in_object = T_object_in_world_.Inverse() * T_base_in_world_ * ff_kinematics * T_tool_in_ee_;
 
-  if(feature_controller_.constraints.size() > 0){  
-    // evaluate constraints
-    feature_controller_.update(T_tool_in_object);
+    //ROS_INFO("[FeatureConstraintsController] Update Point 1");
 
-    // transform interaction matrix (ref frame base, ref point base)
-    H_ = feature_controller_.Ht.data.transpose();
-    H_ = H_*inverse_twist_proj(T_object_in_world_);
+    if(feature_controller_.constraints.size() > 0)
+    {  
+      // evaluate constraints
+      feature_controller_.update(T_tool_in_object);
+      //ROS_INFO("[FeatureConstraintsController] Update Point 2");
 
-    // call solver with values from constraint controller and Jacobian
-    A_ = H_ * jacobian_robot_.data;
-    Wy_.diagonal() = feature_controller_.weights.data;
+      // transform interaction matrix (ref frame base, ref point base)
+      H_ = feature_controller_.Ht.data.transpose();
+      H_ = H_*inverse_twist_proj(T_object_in_world_);
+      //ROS_INFO("[FeatureConstraintsController] Update Point 2");
+
+      // call solver with values from constraint controller and Jacobian
+      A_ = H_ * jacobian_robot_.data;
+      Wy_.diagonal() = feature_controller_.weights.data;
+      //  ROS_INFO("[FeatureConstraintsController] Update Point 3");
+
+      ROS_DEBUG_STREAM("A_"<<A_<<"\n");
+      ROS_DEBUG_STREAM("ydot_"<<feature_controller_.ydot.data<<"\n");
+      ROS_DEBUG_STREAM("Wq_"<<Wq_<<"\n");
+      ROS_DEBUG_STREAM("Wy_"<<Wy_<<"\n");
+      ROS_DEBUG_STREAM("qdot_"<<qdot_.data<<"\n");
+      ROS_DEBUG_STREAM("chi_"<<feature_controller_.chi.data<<"\n");
  
-    ROS_DEBUG_STREAM("A_"<<A_<<"\n");
-    ROS_DEBUG_STREAM("ydot_"<<feature_controller_.ydot.data<<"\n");
-    ROS_DEBUG_STREAM("Wq_"<<Wq_<<"\n");
-    ROS_DEBUG_STREAM("Wy_"<<Wy_<<"\n");
-    ROS_DEBUG_STREAM("qdot_"<<qdot_.data<<"\n");
-    ROS_DEBUG_STREAM("chi_"<<feature_controller_.chi.data<<"\n");
- 
-    solver_.solve(A_, feature_controller_.ydot.data, Wq_, Wy_, qdot_.data);
- 
-    if(ready_){
-      // publish desired joint velocities    
-      assert(qdot_.rows() == qdot_msg_.data.size());
-      for(unsigned int i=0; i<qdot_.rows(); i++)
+      solver_.solve(A_, feature_controller_.ydot.data, Wq_, Wy_, qdot_.data);
+      //ROS_INFO("[FeatureConstraintsController] Update Point 4");
+      if(started_)
       {
-        qdot_msg_.data[i] = qdot_(i);
+        // publish desired joint velocities    
+        assert(qdot_.rows() == qdot_msg_.data.size());
+        for(unsigned int i=0; i<qdot_.rows(); i++)
+        {
+          qdot_msg_.data[i] = qdot_(i);
+        }
+        qdot_publisher_.publish(qdot_msg_);
       }
-      qdot_publisher_.publish(qdot_msg_);
-    }
-    // publish constraint state for debugging purposes
-    ///feature_controller_.Ht.data = (feature_controller_.Ht.data.transpose() * inverse_twist_proj(KDL::Frame(-T_tool_in_object.p))).transpose();
-    toMsg(feature_controller_, state_msg_);
-    state_publisher_.publish(state_msg_);
-
+      // publish constraint state for debugging purposes
+      ///feature_controller_.Ht.data = (feature_controller_.Ht.data.transpose() * inverse_twist_proj(KDL::Frame(-T_tool_in_object.p))).transpose();
+      toMsg(feature_controller_, state_msg_);
+      state_publisher_.publish(state_msg_);
+    }  
   }
 }
 
