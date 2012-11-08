@@ -1,9 +1,9 @@
 #!/usr/bin/python
 """A visualization of geometric features and constraint function over them.
 
-This programm attempts to formalize and visualized feature constraint
+This programm attempts to formalize and visualize feature constraint
 functions. Geometric features (line segments, plane segments and points) are
-represented as LocatedVector objects, consisting of a position and orientation.
+represented as LocatedVector objects, consisting of a position and an orientation.
 Constraints are expressed over these features as e.g. distance between two
 features, perpendicular projection, and their composition.
 
@@ -39,12 +39,16 @@ grey    = ColorRGBA(0.7, 0.7, 0.7, 0.5)
 red     = ColorRGBA(0.7, 0.1, 0.1, 1.0)
 yellow  = ColorRGBA(0.7, 0.7, 0.1, 0.6)
 
+main_color = grey
+constraint_color = red
+feature_color = yellow
+
 
 # config stores some global parameters for the visualization.
 _config_ = {'line_width': 0.02,
             'frame_id': '/base_link',
             'ns': 'features',
-            'marker_color': grey,
+            'marker_color': main_color,
             'marker_id': 0}
 
 
@@ -166,6 +170,11 @@ class Feature:
   the frame moves. For computation, the method compute() may
   be called, to have all operations for a LocatedVector available.
 
+  It's method show() has two functions: It can either show the feature itself,
+  or it can show itself as a vector, depending on the constraint function
+  which calls the show() method. The display of the feature itself
+  is called from the ConstraintDisplay class directly.
+
   """
   def __init__(self, type, pos, dir, frame_id):
     self.type = type
@@ -197,12 +206,12 @@ class Feature:
       global _config_
       if self.type == 0: # LINE
         return [marker_line(self.pos - self.dir/2, self.pos + self.dir/2,
-                            color=yellow)]
+                            color=feature_color)]
       elif self.type == 1: #PLANE
         dir = (self.dir / self.dir.Norm()) * _config_['line_width']/2
-        return [marker_line(self.pos - dir, self.pos + dir, color=yellow, line_width=self.dir.Norm())]
+        return [marker_line(self.pos - dir, self.pos + dir, color=feature_color, line_width=self.dir.Norm())]
       elif self.type == 2: #POINT
-        return [marker_point(self.pos, color=yellow, line_scale=2)]
+        return [marker_point(self.pos, color=feature_color, line_scale=2)]
     else:
       return []
 
@@ -220,7 +229,7 @@ class Len:
   def show(self, style=NORMAL):
     vec = self.vector.compute()
     len_marker = marker_line(vec.pos, vec.pos + vec.dir,
-                             color=red, line_scale=1.5)
+                             color=constraint_color, line_scale=1.5)
     return self.vector.show(NORMAL) + [len_marker]
 
 
@@ -266,6 +275,7 @@ class Proj_P:
 
 class Cos:
   """Compute the Cosine (normalized dot product) between two LocatedVectors."""
+
   def __init__(self, vec1, vec2):
     self.vec1 = vec1
     self.vec2 = vec2
@@ -292,13 +302,14 @@ class Cos:
     mrk.id = _config_['marker_id']
     mrk.header.frame_id = _config_['frame_id']
     _config_['marker_id'] += 1
-    mrk.color = red
+    mrk.color = constraint_color
 
     return [mrk] + self.vec1.show(AS_VECTOR) + vec2.show(AS_VECTOR) + self.vec2.show(AS_VECTOR)
 
 
 class Proj_A:
   """Project a LocatedVector 'vec' perpendicular to another LocatedVector 'ref'."""
+
   def __init__(self, vec, ref):
     self.vec = vec
     self.ref = ref
@@ -328,16 +339,34 @@ constraint_functions = {
 
 class ConstraintDisplay:
   """Collect features and constraint functions for displaying."""
+
   def __init__(self, base_frame_id):
-    #TODO: shall we index tool- and world features by their names?
-    self.tool_features = []
-    self.world_features = []
+    self.tool_features = {}
+    self.world_features = {}
     self.constraints = {}
     self.base_frame_id = base_frame_id
     self.listener = tf.TransformListener()
 
+  def set_constraints(self, constraints):
+    """Set constraints from Constraint messages,"""
+    global constraint_functions
+    self.tool_features = {}
+    self.world_features = {}
+    self.constraints = {}
+    for c in constraints:
+      self.tool_features[c.tool_feature.name]   = msg2feature(c.tool_feature)
+      self.world_features[c.world_feature.name] = msg2feature(c.world_feature)
+    for c in constraints:
+      if c.function in constraint_functions:
+        f_tool  = self.tool_features[c.tool_feature.name]
+        f_world = self.world_features[c.world_feature.name]
+        constraint = constraint_functions[c.function]((f_tool, f_world))
+        self.constraints[c.name] = constraint
+      else:
+        print "constraint function '%s' not found!" % c.function
+
   def transform(self):
-    for f in self.tool_features + self.world_features:
+    for f in self.tool_features.values() + self.world_features.values():
       try:
         frame = self.listener.lookupTransform(self.base_frame_id,
                                               f.frame_id, rospy.Time(0))
@@ -347,12 +376,12 @@ class ConstraintDisplay:
 
   def show(self):
     markers = []
-    for (i,f) in enumerate(self.tool_features):
-      _config_['ns'] = 'tool_feature_' + str(i)
-      markers += f.show(FEATURE)
-    for (i,f) in enumerate(self.world_features):
-      _config_['ns'] = 'world_feature_' + str(i)
-      markers += f.show(FEATURE)
+    for name in self.tool_features:
+      _config_['ns'] = 'tool_feature_' + name
+      markers += self.tool_features[name].show(FEATURE)
+    for name in self.world_features:
+      _config_['ns'] = 'world_feature_' + name
+      markers += self.world_features[name].show(FEATURE)
     for name in self.constraints:
       _config_['ns'] = name
       markers += self.constraints[name].show(NORMAL)
@@ -361,48 +390,32 @@ class ConstraintDisplay:
 
 
 
-
 def callback(msg):
-  global _config_
-
-  constraint_display.tool_features = []
-  constraint_display.world_features = []
-  constraint_display.constraints = {}
-
-  for c in msg.constraints:
-    f_tool  = msg2feature(c.tool_feature)
-    f_world = msg2feature(c.world_feature)
-    if c.function in constraint_functions:
-      constraint_display.tool_features.append(f_tool)
-      constraint_display.world_features.append(f_world)
-      constraint = constraint_functions[c.function]((f_tool, f_world))
-      constraint_display.constraints[c.name] = constraint
-    else:
-      constraint_display.tool_features.append(f_tool)
-      constraint_display.world_features.append(f_world)
-      print "constraint function '%s' not found!" % c.function
-
-
+  constraint_display.set_constraints(msg.constraints)
   for m in constraint_display.show():
     marker.publish(m)
 
 
-rospy.init_node('feature_vis')
 
-# base_frame is an arbitrary frame in which the markers are displayed
-# the marker locations are defined by the feature frame_id's!
-base_frame_id = rospy.get_param('~base_frame', 'baker')
-rospy.loginfo('base frame: ' + base_frame_id)
-_config_['frame_id'] = base_frame_id
-constraint_display = ConstraintDisplay(base_frame_id)
+if __name__ == "__main__":
 
-sub = rospy.Subscriber('/constraint_config', ConstraintConfig, callback)
+  rospy.init_node('feature_vis')
 
-rate = rospy.Rate(10)
+  # base_frame is an arbitrary frame in which the markers are displayed
+  # the marker locations are defined by the feature frame_id's!
+  base_frame_id = rospy.get_param('~base_frame', 'baker')
+  rospy.loginfo('base frame: ' + base_frame_id)
+  _config_['frame_id'] = base_frame_id
+  constraint_display = ConstraintDisplay(base_frame_id)
 
-while not rospy.is_shutdown():
-  constraint_display.transform()
-  _config_['marker_id'] = 0
-  for m in constraint_display.show():
-    marker.publish(m)
-  rate.sleep()
+  sub = rospy.Subscriber('/constraint_config', ConstraintConfig, callback)
+
+  rate = rospy.Rate(10)
+
+  while not rospy.is_shutdown():
+    constraint_display.transform()
+    _config_['marker_id'] = 0
+    for m in constraint_display.show():
+      marker.publish(m)
+    rate.sleep()
+
