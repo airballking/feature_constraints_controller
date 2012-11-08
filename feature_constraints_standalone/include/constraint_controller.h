@@ -88,6 +88,7 @@ private:
 
 
   //! Flag to remember if feature_controller_ and solver_ have been resized meaningfully
-  bool ready_;
+  // flags to remember the state of the feature controller
+  bool configured_, started_;
 };
 
