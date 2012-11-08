@@ -1,0 +1,13 @@
+<launch>
+  <!-- load pr2 model into parameter space -->
+  <include file="$(find pr2_description)/robots/upload_pr2.launch" />
+  
+  <!-- start joint_states to tf transformer -->
+  <node pkg="robot_state_chain_publisher" type="state_chain_publisher" name="robot_state_publisher" output="log" />
+  
+  <!-- start up joint state publisher gui -->
+  <node name="joint_state_publisher_gui" type="joint_state_publisher" pkg="joint_state_publisher">
+    <param name="use_gui" value="true"/>
+ </node>
+
+</launch>

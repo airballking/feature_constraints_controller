@@ -1,0 +1,70 @@
+<launch>
+
+  <!-- Start nodes that handle visualization of spatula and table -->
+  <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/spatula" />
+  <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table" />
+
+  <!-- Publish relevant poses directly (decouple from realtime node) -->
+  <node name="spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/spatula /l_gripper_tool_frame /tool_pose -plain"/>
+  <node name="pancake_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/pancake /base_link /object_pose -plain"/>
+
+  <!-- Publish the relevant transforms -->
+  <node name="table_transform" pkg="tf" type="static_transform_publisher"
+        args="0.1 0.0 -0.763  0 0 0 /pancake /table 100"/>
+  <node name="spatula_transform" pkg="tf" type="static_transform_publisher"
+        args="0.19 0.0 -0.03  0.0 2.1 0.0  /l_gripper_tool_frame /spatula 100"/>
+
+  <!-- replace with a pose2tf node for reachability test,
+       so the test can set this! -->
+  <node name="pancake_transform" pkg="tf" type="static_transform_publisher"
+        args="1.250 0.0 0.763  0 0 0 /base_link /pancake 100"/>
+
+  <!-- desired startup configuration of the robot -->
+  <!-- the so-called 'bunny configuration' -->
+  <rosparam ns="/loopback_controllers/joints">
+    name: ['l_shoulder_pan_joint', 'r_shoulder_pan_joint',
+           'l_shoulder_lift_joint', 'r_shoulder_lift_joint',
+           'l_upper_arm_roll_joint', 'r_upper_arm_roll_joint',
+           'l_forearm_roll_joint', 'r_forearm_roll_joint',
+           'l_elbow_flex_joint', 'r_elbow_flex_joint',
+           'l_wrist_flex_joint', 'r_wrist_flex_joint',
+           'l_wrist_roll_joint', 'r_wrist_roll_joint',
+           'l_gripper_joint',
+           'torso_lift_joint']
+    position: [0.0, 0.0,
+               0.2, 0.2,
+               0.0, 0.0,
+              -3.14, -3.14,
+              -1.96, -1.96,
+              -1.74, -1.74,
+               0.0, 0.0,
+               0.012,
+               0.15]
+  </rosparam>
+
+  <!-- startup simulated pr2 -->
+  <include file="$(find ias_mechanism_controllers)/launch/pr2_loopback.launch"/>
+
+  <!-- startup feature controller -->
+  <node name="left_arm_feature_controller" launch-prefix="xterm -e gdb --args" type="constraint_controller" pkg="feature_constraints_standalone">
+    <param name="~tool_frame" value="l_gripper_tool_frame"/>
+    <param name="~base_frame" value="torso_lift_link"/>
+    <remap from="~qdot" to="/l_arm_vel/command"/>
+    <remap from="/left_arm_feature_controller/tool_offset" to="tool_pose"/>
+    <remap from="/left_arm_feature_controller/object_offset" to="object_pose"/>
+ </node>
+
+  <!-- startup the feature visualization -->
+  <node name="feature_viz" pkg="stuff" type="feature_viz.py" output="screen">
+    <param name="~base_frame" value="/pancake"/>
+    <remap from="constraint_config" to="/left_arm_feature_controller/constraint_config"/>
+  </node>
+
+  <!-- startup dummy executive -->
+  <node name="feature_controller_executive" type="feature_controller_executive" pkg="feature_constraints_tests">
+    <param name="~pancake" value="/pancake"/>
+    <param name="~spatula" value="/spatula"/>
+    <remap from="constraint_config" to="/left_arm_feature_controller/constraint_config"/>
+    <remap from="constraint_command" to="/left_arm_feature_controller/constraint_command"/>
+ </node>
+</launch>

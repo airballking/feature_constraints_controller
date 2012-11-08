@@ -1,0 +1,28 @@
+<package>
+  <description brief="feature_constraints_tests">
+
+     feature_constraints_tests
+
+  </description>
+  <author>Georg Bartels</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/feature_constraints_tests</url>
+
+  <!-- gotta use some programming language, you know? -->
+  <depend package="roscpp" />
+
+  <!-- Ingo's feature constraints stuff -->
+  <depend package="constraint_msgs" />
+  <depend package="feature_constraints_standalone" />
+  <depend package="std_msgs" />
+  
+  <!-- We will use the ias_mechanism_controllers to simulate our robot -->
+  <depend package="loopback_controller_manager" />
+  <depend package="ias_mechanism_controllers" />
+<!--  <depend package="robot_state_chain_publisher" /> -->
+
+
+</package>
+
+
