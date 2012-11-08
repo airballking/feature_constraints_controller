@@ -62,8 +62,15 @@ unsigned int RobotKinematics::getNumberOfJoints()
 }
 
 JointStateInterpreter::JointStateInterpreter(std::vector<std::string> joint_names)
-  : joint_names_(joint_names)
+  : joint_name_to_index_map_(), aux_iterator_(), joint_names_(joint_names)
 {
+  // building map to get from joint names to their index position in q-vector
+  joint_name_to_index_map_.clear();
+  for(unsigned int i=0; i<joint_names_.size(); i++)
+  {
+    joint_name_to_index_map_.insert(JointNameIndexPair(joint_names_[i], i));
+    ROS_INFO("Adding joint '%s' to joint-index-map at index %d.", joint_names_[i].c_str(), i);
+  }
 }
 
 bool JointStateInterpreter::parseJointState(const sensor_msgs::JointState::ConstPtr& msg, KDL::JntArray& q)
@@ -71,10 +78,28 @@ bool JointStateInterpreter::parseJointState(const sensor_msgs::JointState::Const
   assert(msg != NULL);
   assert(q.rows() == joint_names_.size());
 
-  unsigned int i, jnt;
-  for(jnt=0, i=0; i < msg->name.size() && jnt < joint_names_.size(); i++)
-    if(msg->name[i] == joint_names_[jnt])
-      q(jnt++) = msg->position[i];
+  // iterate over message and use joint names -> joint index map to check for
+  // each joint whether it is part of the current kinematic chain.
+  // if yes, update the corresponding entry in q.
+  unsigned int joint_counter = 0;
+  for(unsigned int i=0; i<msg->name.size(); i++)
+  {
+    unsigned int jnt = getJointIndex(msg->name[i]);
+    if(jnt < joint_names_.size())
+    {
+      // joint is one of the wanted ones
+      q(jnt) = msg->position[i];
+      joint_counter++;
+    }
+  }
+  return (joint_counter == joint_names_.size());
+}
 
-  return (jnt == joint_names_.size());
+unsigned int JointStateInterpreter::getJointIndex(const std::string joint_name)
+{
+  aux_iterator_ = joint_name_to_index_map_.find(joint_name);
+  if(aux_iterator_ != joint_name_to_index_map_.end())
+    return aux_iterator_->second; 
+  else
+    return joint_names_.size() + 1;
 }
