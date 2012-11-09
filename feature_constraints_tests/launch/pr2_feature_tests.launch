@@ -7,6 +7,8 @@
   <!-- Publish relevant poses directly (decouple from realtime node) -->
   <node name="spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/spatula /l_gripper_tool_frame /tool_pose -plain"/>
   <node name="pancake_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/pancake /base_link /object_pose -plain"/>
+  <node name="arm_base_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/torso_lift_link /base_link /arm_base_pose -plain"/>
+  <node name="robot_base_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/base_link /base_link /robot_base_pose -plain"/>
 
   <!-- Publish the relevant transforms -->
   <node name="table_transform" pkg="tf" type="static_transform_publisher"
@@ -17,7 +19,7 @@
   <!-- replace with a pose2tf node for reachability test,
        so the test can set this! -->
   <node name="pancake_transform" pkg="tf" type="static_transform_publisher"
-        args="1.250 0.0 0.763  0 0 0 /base_link /pancake 100"/>
+        args="0.750 0.0 0.763  0 0 0 /base_link /pancake 100"/>
 
   <!-- desired startup configuration of the robot -->
   <!-- the so-called 'bunny configuration' -->
@@ -46,13 +48,15 @@
   <include file="$(find ias_mechanism_controllers)/launch/pr2_loopback.launch"/>
 
   <!-- startup feature controller -->
-  <node name="left_arm_feature_controller" launch-prefix="xterm -e gdb --args" type="constraint_controller" pkg="feature_constraints_standalone">
+  <node name="left_arm_feature_controller" launch-prefix="xterm -e gdb -args" type="constraint_controller" pkg="feature_constraints_standalone">
     <param name="~tool_frame" value="l_gripper_tool_frame"/>
     <param name="~base_frame" value="torso_lift_link"/>
     <remap from="~qdot" to="/l_arm_vel/command"/>
     <remap from="/left_arm_feature_controller/tool_offset" to="tool_pose"/>
     <remap from="/left_arm_feature_controller/object_offset" to="object_pose"/>
- </node>
+    <remap from="/left_arm_feature_controller/arm_offset" to="arm_base_pose"/>
+    <remap from="/left_arm_feature_controller/base_pose" to="robot_base_pose"/>
+  </node>
 
   <!-- startup the feature visualization -->
   <node name="feature_viz" pkg="stuff" type="feature_viz.py" output="screen">
