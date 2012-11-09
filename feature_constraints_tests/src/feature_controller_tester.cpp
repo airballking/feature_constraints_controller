@@ -15,10 +15,11 @@ int main(int argc, char **argv)
 
   // construct messages
   constraint_msgs::ConstraintConfig constraint_config_msg;
-  constraint_msgs::Constraint pointing_constraint, distance_constraint, align_constraint, height_constraint;
+  constraint_msgs::Constraint pointing_constraint, distance_constraint, align_constraint, align_front_constraint, height_constraint;
   constraint_msgs::ConstraintCommand constraint_command_msg;
 
   constraint_msgs::Feature spatula_axis;
+  constraint_msgs::Feature spatula_front;
   constraint_msgs::Feature pancake_plane;
 
   // fill messages...
@@ -27,6 +28,12 @@ int main(int argc, char **argv)
   spatula_axis.frame_id = "spatula";
   spatula_axis.type = constraint_msgs::Feature::LINE;
   spatula_axis.direction.z = 0.125;
+
+  spatula_front.name="front spatula";
+  spatula_front.frame_id = "spatula";
+  spatula_front.type = constraint_msgs::Feature::LINE;
+  spatula_front.position.z = 0.075;
+  spatula_front.direction.y = 0.125;
 
   pancake_plane.name = "pancake plane";
   pancake_plane.frame_id = "pancake";
@@ -43,6 +50,8 @@ int main(int argc, char **argv)
   align_constraint.function = "perpendicular";
   height_constraint.name = "keep over";
   height_constraint.function = "height";
+  align_front_constraint.name = "align front";
+  align_front_constraint.function = "perpendicular";
   pointing_constraint.tool_feature = spatula_axis;
   pointing_constraint.world_feature = pancake_plane;
   distance_constraint.tool_feature = spatula_axis;
@@ -51,27 +60,34 @@ int main(int argc, char **argv)
   align_constraint.world_feature = pancake_plane;
   height_constraint.tool_feature = spatula_axis;
   height_constraint.world_feature = pancake_plane;
+  align_front_constraint.tool_feature = spatula_front;
+  align_front_constraint.world_feature = pancake_plane;
 
   constraint_config_msg.constraints.push_back(pointing_constraint);
   constraint_config_msg.constraints.push_back(distance_constraint);
   constraint_config_msg.constraints.push_back(align_constraint);
   constraint_config_msg.constraints.push_back(height_constraint);
+  constraint_config_msg.constraints.push_back(align_front_constraint);
 
   // pointing command
   constraint_command_msg.pos_lo.push_back(0.0);
   constraint_command_msg.pos_hi.push_back(0.0);
   constraint_command_msg.weight.push_back(1.0);  
   // distance command
-  constraint_command_msg.pos_lo.push_back(0.3);
+  constraint_command_msg.pos_lo.push_back(0.2);
   constraint_command_msg.pos_hi.push_back(2.0);
   constraint_command_msg.weight.push_back(1.0);  
   // align command
-  constraint_command_msg.pos_lo.push_back(-0.5);
-  constraint_command_msg.pos_hi.push_back(-0.3);
+  constraint_command_msg.pos_lo.push_back(-0.3);
+  constraint_command_msg.pos_hi.push_back(-0.1);
   constraint_command_msg.weight.push_back(1.0);  
   // height command
   constraint_command_msg.pos_lo.push_back(0.05);
   constraint_command_msg.pos_hi.push_back(0.2);
+  constraint_command_msg.weight.push_back(1.0);  
+  // align front command
+  constraint_command_msg.pos_lo.push_back(-0.05);
+  constraint_command_msg.pos_hi.push_back(0.05);
   constraint_command_msg.weight.push_back(1.0);  
 
   // publish messages
