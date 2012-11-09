@@ -14,6 +14,29 @@
 using namespace std;
 using namespace KDL;
 
+// aux printing functions for debugging
+void printVector(const KDL::Vector& vector)
+{
+  std::cout << "[" << vector.x() << ", " << vector.y() << ", " << vector.z() << "]";
+}
+
+void printFrame(const KDL::Frame& frame)
+{
+  std::cout << "origin=";
+  printVector(frame.p);
+  std::cout << "\n";
+
+  std::cout << "rot_x=";
+  printVector(frame.M.UnitX());
+  std::cout << "\n";
+  std::cout << "rot_y=";
+  printVector(frame.M.UnitY());
+  std::cout << "\n";
+  std::cout << "rot_z=";
+  printVector(frame.M.UnitZ());
+  std::cout << "\n";
+}
+
 std::map<std::string, ConstraintFunc> Constraint::constraint_functions_;
 std::set<ConstraintFunc> Constraint::angular_constraints_;
 
@@ -35,6 +58,24 @@ double height(const KDL::Frame& frame, const Feature& tool_feature, const Featur
   const Vector &p_o = object_feature.pos;
   Vector  p_t = frame * tool_feature.pos;
   const Vector &d_o = object_feature.dir;
+
+  /*
+  // DEBUG OUTPUT
+  std::cout << "[HEIGHT] frame:\n";
+  printFrame(frame);
+
+  std::cout << "[HEIGHT] p_o=";
+  printVector(p_o);
+  std::cout << "\n";
+
+  std::cout << "[HEIGHT] p_t=";
+  printVector(p_t);
+  std::cout << "\n";
+
+  std::cout << "[HEIGHT] d_o=";
+  printVector(d_o);
+  std::cout << "\n";
+  */
 
   double d_o_norm = d_o.Norm();
 

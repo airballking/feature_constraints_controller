@@ -125,6 +125,9 @@ public:
  */
 
 ///@{
+// aux debugging printing
+void printVector(const KDL::Vector& vector);
+void printFrame(const KDL::Frame& frame);
 
 /*! zero when perpendicular (cos of the angle)
  */
