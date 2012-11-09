@@ -91,6 +91,12 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   // subscribe to world offset pose
   object_offset_subscriber_ = n.subscribe<geometry_msgs::Pose>("object_offset", 1, &FeatureConstraintsController::object_offset_callback, this);
 
+  // subscribe to robot arm offset pose
+  arm_offset_subscriber_ = n.subscribe<geometry_msgs::Pose>("arm_offset", 1, &FeatureConstraintsController::robot_arm_offset_callback, this);
+
+  // subscribe to robot arm offset pose
+  base_pose_subscriber_ = n.subscribe<geometry_msgs::Pose>("base_pose", 1, &FeatureConstraintsController::robot_base_callback, this);
+
   // advertise publisher
   qdot_publisher_ = n.advertise<std_msgs::Float64MultiArray>("qdot", 1);
   state_publisher_ = n.advertise<constraint_msgs::ConstraintState>("constraint_state", 1);
@@ -139,8 +145,15 @@ void FeatureConstraintsController::object_offset_callback(const geometry_msgs::P
   tf::PoseMsgToKDL(*msg, T_object_in_world_);
 }
 
+void FeatureConstraintsController::robot_arm_offset_callback(const geometry_msgs::Pose::ConstPtr& msg)
+{
+  tf::PoseMsgToKDL(*msg, T_arm_in_base_);
+}
 
-
+void FeatureConstraintsController::robot_base_callback(const geometry_msgs::Pose::ConstPtr& msg)
+{
+  tf::PoseMsgToKDL(*msg, T_base_in_world_);
+}
 /*! This updates the controller and solver.
  *
  *  The controller is halted until a new, fitting constraint command is received.
@@ -180,17 +193,16 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
 void FeatureConstraintsController::constraint_command_callback(const constraint_msgs::ConstraintCommand::ConstPtr& msg)
 {
   if(configured_ && (msg->pos_lo.size() == feature_controller_.command.pos_lo.rows())){
+    fromMsg(*msg, feature_controller_.command);
     started_ = true;
   }else{
     started_ = false;
   }
-
-  fromMsg(*msg, feature_controller_.command);
 }
 
 void FeatureConstraintsController::update()
 {
-  if(configured_)
+  if(configured_ && started_)
   {
     // assemble frame between tool and object
     KDL::Frame ff_kinematics;
@@ -200,7 +212,7 @@ void FeatureConstraintsController::update()
     // transform robot jacobian (ref frame base, ref point base)
     jacobian_robot_.changeRefPoint(-ff_kinematics.p);
 
-    KDL::Frame T_tool_in_object = T_object_in_world_.Inverse() * T_base_in_world_ * ff_kinematics * T_tool_in_ee_;
+    KDL::Frame T_tool_in_object = T_object_in_world_.Inverse() * T_base_in_world_ * T_arm_in_base_ * ff_kinematics * T_tool_in_ee_;
 
     //ROS_INFO("[FeatureConstraintsController] Update Point 1");
 
@@ -229,16 +241,13 @@ void FeatureConstraintsController::update()
  
       solver_.solve(A_, feature_controller_.ydot.data, Wq_, Wy_, qdot_.data);
       //ROS_INFO("[FeatureConstraintsController] Update Point 4");
-      if(started_)
+      // publish desired joint velocities    
+      assert(qdot_.rows() == qdot_msg_.data.size());
+      for(unsigned int i=0; i<qdot_.rows(); i++)
       {
-        // publish desired joint velocities    
-        assert(qdot_.rows() == qdot_msg_.data.size());
-        for(unsigned int i=0; i<qdot_.rows(); i++)
-        {
-          qdot_msg_.data[i] = qdot_(i);
-        }
-        qdot_publisher_.publish(qdot_msg_);
+        qdot_msg_.data[i] = qdot_(i);
       }
+      qdot_publisher_.publish(qdot_msg_);
       // publish constraint state for debugging purposes
       ///feature_controller_.Ht.data = (feature_controller_.Ht.data.transpose() * inverse_twist_proj(KDL::Frame(-T_tool_in_object.p))).transpose();
       toMsg(feature_controller_, state_msg_);

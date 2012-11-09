@@ -47,8 +47,14 @@ private:
   //! Receives the offset of the object from the world's origin
   void object_offset_callback(const geometry_msgs::Pose::ConstPtr& msg);
 
+  //! Receives the offset of the arm_base from the robot base  
+  void robot_arm_offset_callback(const geometry_msgs::Pose::ConstPtr& msg);
+
+  // Receives the position of the robot base in the world frame
+  void robot_base_callback(const geometry_msgs::Pose::ConstPtr& msg);
+
   //! These transforms will be looked up from tf
-  KDL::Frame T_tool_in_ee_, T_object_in_world_, T_base_in_world_;
+  KDL::Frame T_tool_in_ee_, T_object_in_world_, T_base_in_world_, T_arm_in_base_;
 
   //! Internal representation of robot state
   KDL::JntArray q_, qdot_;
@@ -77,7 +83,8 @@ private:
   ros::Subscriber constraint_command_subscriber_;
   ros::Subscriber tool_offset_subscriber_;
   ros::Subscriber object_offset_subscriber_;
-
+  ros::Subscriber arm_offset_subscriber_;
+  ros::Subscriber base_pose_subscriber_;
 
   //! Publishers
   ros::Publisher qdot_publisher_;
