@@ -181,6 +181,6 @@ void resize(constraint_msgs::ConstraintState &msg, unsigned int number_constrain
   msg.weights.resize(number_constraints);
   msg.jacobian.resize(number_constraints);
   msg.interaction_matrix.resize(number_constraints);
-  msg.singular_values.resize(number_constraints);
+  msg.singular_values.resize(6);
   msg.constraint_names.resize(number_constraints);
 }

@@ -38,7 +38,6 @@ void Controller::prepare(int max_constraints)
   command.resize(n);
 
   J.resize(n);
-  // TODO(Georg): Ingo, why is this fixed to 6?
   singularValues.resize(6);
 
   tmp.resize(n);
