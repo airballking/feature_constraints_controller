@@ -30,7 +30,7 @@ KDL::Frame random_frame(double trans_range=10.0, double rot_range=6.28)
 
 
 Analysis::Analysis(int size)
-  : constraints_(1)
+  : constraints_(0)
 {
   resize(size);
 }
@@ -54,6 +54,10 @@ void Analysis::resize(int size)
 
 void Analysis::analyzeH(const KDL::Jacobian& Ht, KDL::Jacobian& J, KDL::JntArray& singularValues, double eps)
 {
+  assert(U_.rows() == Ht.columns());
+  assert(U_.rows() == J.columns());
+  assert(     6    == singularValues.rows());
+
   VectorXd& S = singularValues.data;
 
   svd_eigen_HH(Ht.data.transpose(), U_, S, V_, tmp_);
