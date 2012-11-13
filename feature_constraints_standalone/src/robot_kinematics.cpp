@@ -1,5 +1,19 @@
 #include <robot_kinematics.h>
 
+RobotKinematics::RobotKinematics()
+  : jnt_to_pose_solver_(0), jnt_to_jac_solver_(0)
+{
+
+}
+
+
+RobotKinematics::~RobotKinematics()
+{
+  delete jnt_to_pose_solver_;
+  delete jnt_to_jac_solver_;
+}
+
+
 bool RobotKinematics::init(ros::NodeHandle& n)
 {
   // get frame names from parameter server

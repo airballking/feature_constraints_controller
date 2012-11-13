@@ -34,6 +34,8 @@ class RobotKinematics
 {
 public:
   //non-realtime
+  RobotKinematics();
+  ~RobotKinematics();
   bool init(ros::NodeHandle& n);
   std::vector<std::string> getJointNames();
   

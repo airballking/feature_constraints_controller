@@ -56,6 +56,20 @@ Matrix<double, 6, 6> inverse_twist_proj(KDL::Frame f)
 
 
 
+FeatureConstraintsController::FeatureConstraintsController()
+   : robot_kinematics_(0), joint_state_interpreter_(0)
+{
+
+}
+
+
+FeatureConstraintsController::~FeatureConstraintsController()
+{
+  delete joint_state_interpreter_;
+  delete robot_kinematics_;
+}
+
+
 bool FeatureConstraintsController::init(ros::NodeHandle &n)
 {
   // set frames from tf to dummy value

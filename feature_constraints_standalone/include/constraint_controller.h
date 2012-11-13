@@ -23,6 +23,8 @@
 class FeatureConstraintsController
 {
 public:
+  FeatureConstraintsController();
+  ~FeatureConstraintsController();
   // non-realtime
   bool init(ros::NodeHandle& n);  //!< initialize controller, solver and ROS communication
 
