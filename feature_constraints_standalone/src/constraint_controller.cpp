@@ -251,6 +251,7 @@ void FeatureConstraintsController::update()
       // publish constraint state for debugging purposes
       ///feature_controller_.Ht.data = (feature_controller_.Ht.data.transpose() * inverse_twist_proj(KDL::Frame(-T_tool_in_object.p))).transpose();
       toMsg(feature_controller_, state_msg_);
+      state_msg_.header.stamp = ros::Time::now();
       state_publisher_.publish(state_msg_);
     }  
   }
