@@ -14,7 +14,6 @@
 #include <kdl/chainfksolverpos_recursive.hpp>
 #include <kdl/chainjnttojacsolver.hpp>
 
-
 /*! \file robot_kinematics.h
  *
  *  This file contains two helper classes to compute the (position-
@@ -38,18 +37,27 @@ public:
   ~RobotKinematics();
   bool init(ros::NodeHandle& n);
   std::vector<std::string> getJointNames();
-  
+  std::vector<double>& getSoftLowerJointLimits();  
+  std::vector<double>& getSoftUpperJointLimits();  
+  std::vector<double>& getHardLowerJointLimits();  
+  std::vector<double>& getHardUpperJointLimits();  
+
   // real-time
   void getJacobian(const KDL::JntArray& q, KDL::Jacobian& jac);
   void getForwardKinematics(const KDL::JntArray& q, KDL::Frame& frame);
   unsigned int getNumberOfJoints();
 
 private:
+  //non-realtime
+  bool extractJointLimitsFromUrdf();
+
   std::string tool_frame_id_;
   std::string base_frame_id_;
   KDL::Chain chain_;
   KDL::ChainFkSolverPos_recursive* jnt_to_pose_solver_;
   KDL::ChainJntToJacSolver* jnt_to_jac_solver_; 
+  std::vector<double> soft_lower_joint_limits_, soft_upper_joint_limits_, 
+    hard_lower_joint_limits_, hard_upper_joint_limits_;
 };
 
 

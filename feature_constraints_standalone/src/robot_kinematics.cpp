@@ -1,5 +1,7 @@
 #include <robot_kinematics.h>
 
+#include <urdf/model.h>
+
 RobotKinematics::RobotKinematics()
   : jnt_to_pose_solver_(0), jnt_to_jac_solver_(0)
 {
@@ -43,10 +45,78 @@ bool RobotKinematics::init(ros::NodeHandle& n)
 
   tree.getChain(base_frame_id_, tool_frame_id_, chain_);
 
+  // extract joint limits from urdf and init internal representation
+  if(!this->extractJointLimitsFromUrdf())
+  {
+    ROS_ERROR("Error extracting joint limits from URDF");
+    return false;
+  } 
+
   // init kdl solvers for forward kinematics and jacobian
   jnt_to_pose_solver_ = new KDL::ChainFkSolverPos_recursive(chain_);
   jnt_to_jac_solver_ = new KDL::ChainJntToJacSolver(chain_);
 
+  return true;
+}
+
+bool RobotKinematics::extractJointLimitsFromUrdf()
+{
+  // build urdf model from urdf description on parameter server
+  urdf::Model urdf_model;
+  if(!urdf_model.initParam("robot_description"))
+  {
+    ROS_ERROR("Failed to construct urdf model.");
+    return false;
+  }
+
+  // reset internal representations of joint limits
+  soft_lower_joint_limits_.clear();
+  soft_upper_joint_limits_.clear();
+  hard_lower_joint_limits_.clear();
+  hard_upper_joint_limits_.clear();
+
+  // iterate over all segments, find joints and remember their limits
+  // NOTE: this is done exactly the way we build the vector of joint names,
+  //       therefore, the order of joints is identical. this is important!
+  // TODO(Georg): Refactor getJointNames to also use an internal std::vector
+  //              that is build together with the joint limits.
+  for(unsigned int i=0; i<chain_.getNrOfSegments(); i++)
+  {
+    KDL::Joint jnt = chain_.getSegment(i).getJoint();
+    if(jnt.getType() != KDL::Joint::None)
+    {
+      std::string joint_name = jnt.getName();
+      const boost::shared_ptr<urdf::JointSafety> soft_safety_limits =
+        urdf_model.getJoint(joint_name)->safety;
+      const boost::shared_ptr<urdf::JointLimits> hard_joint_limits =
+        urdf_model.getJoint(joint_name)->limits;
+      if(soft_safety_limits)
+      {
+//        ROS_INFO("Joint '%s' has soft joint limits [%f,%f]", joint_name.c_str(),
+//          soft_safety_limits->soft_lower_limit, soft_safety_limits->soft_upper_limit);
+        soft_lower_joint_limits_.push_back(soft_safety_limits->soft_lower_limit);
+        soft_upper_joint_limits_.push_back(soft_safety_limits->soft_upper_limit);
+      }
+      else
+      {
+        ROS_WARN("Joint '%s' does not have soft joint limits specified.", joint_name.c_str());
+      }
+      if(hard_joint_limits)
+      {
+//        ROS_INFO("Joint '%s' has hard joint limits [%f,%f]", joint_name.c_str(),
+//          hard_joint_limits->lower, hard_joint_limits->upper);
+        hard_lower_joint_limits_.push_back(hard_joint_limits->lower);
+        hard_upper_joint_limits_.push_back(hard_joint_limits->upper);
+      }
+      else
+      {
+        ROS_ERROR("Joint '%s' does not have hard joint limits specified.", joint_name.c_str());
+        return false;
+      }
+    }
+  }
+
+  // all went fine
   return true;
 }
 
@@ -77,6 +147,25 @@ void RobotKinematics::getForwardKinematics(const KDL::JntArray& q, KDL::Frame& f
 unsigned int RobotKinematics::getNumberOfJoints()
 {
   return chain_.getNrOfJoints();
+}
+
+std::vector<double>& RobotKinematics::getSoftLowerJointLimits()
+{
+  return soft_lower_joint_limits_;
+}
+
+std::vector<double>& RobotKinematics::getSoftUpperJointLimits()
+{
+  return soft_upper_joint_limits_;
+}
+
+std::vector<double>& RobotKinematics::getHardLowerJointLimits()
+{
+  return hard_lower_joint_limits_;
+}
+std::vector<double>& RobotKinematics::getHardUpperJointLimits()
+{
+  return hard_upper_joint_limits_;
 }
 
 JointStateInterpreter::JointStateInterpreter(std::vector<std::string> joint_names)
