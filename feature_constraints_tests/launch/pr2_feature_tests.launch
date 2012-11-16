@@ -19,7 +19,7 @@
   <!-- replace with a pose2tf node for reachability test,
        so the test can set this! -->
   <node name="pancake_transform" pkg="tf" type="static_transform_publisher"
-        args="0.750 0.0 0.763  0 0 0 /base_link /pancake 100"/>
+        args="0.8 0.0 0.763  0 0 0 /base_link /pancake 100"/>
 
   <!-- desired startup configuration of the robot -->
   <!-- the so-called 'bunny configuration' -->
@@ -71,4 +71,17 @@
     <remap from="constraint_config" to="/left_arm_feature_controller/constraint_config"/>
     <remap from="constraint_command" to="/left_arm_feature_controller/constraint_command"/>
  </node>
+
+ <!-- Start rxplot to see what is going on -->
+<!--
+ <node name="live_plotter" type="rxplot" pkg="rxtools" 
+   args="-p 25
+         -P
+         -l 'point main axis at pancake','distance from pancake','spatula pointing downwards','min','max','keep over','align front edge'
+         /left_arm_feature_controller/constraint_state/chi[0]
+         /left_arm_feature_controller/constraint_state/chi[1]
+         /left_arm_feature_controller/constraint_state/chi[2],/left_arm_feature_controller/constraint_command/pos_lo[2]:pos_hi[2]
+         /left_arm_feature_controller/constraint_state/chi[3]
+         /left_arm_feature_controller/constraint_state/chi[4]"/>
+-->
 </launch>
