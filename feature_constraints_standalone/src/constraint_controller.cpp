@@ -121,7 +121,15 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   q_.resize(dof);
   qdot_.resize(dof);
   jacobian_robot_.resize(dof);
-  setupJointLimitAvoidanceController();
+
+  // resize internal joint limit avoidance structures and controller 
+  joint_limit_avoidance_controller_.prepare(robot_kinematics_->getJointNames(),
+    robot_kinematics_->getSoftLowerJointLimits(), robot_kinematics_->getSoftUpperJointLimits());
+  A_joint_ = Eigen::MatrixXd::Identity(dof, dof);
+  Wy_joint_ = Eigen::MatrixXd::Zero(dof, dof);
+
+  // resize size of message that reports the state of the joint limit avoidance
+  resize(joint_avoidance_state_msg_, dof);
 
   // resize msg that will be used to publish desired joint velocities
   qdot_msg_.data.resize(dof);
@@ -255,8 +263,9 @@ void FeatureConstraintsController::update()
       Wy_feature_.diagonal() = feature_controller_.weights.data;
       //  ROS_INFO("[FeatureConstraintsController] Update Point 3");
 
-      // TODO: do joint avoidance here!
-      control(qdot_joint_, weights_joint_, q_desired_joint_, q_, joint_limit_command_, gains_joint_); 
+      // calculate next output from joint limit avoidance controller
+      joint_limit_avoidance_controller_.update(q_);
+//      control(qdot_joint_, weights_joint_, q_desired_joint_, q_, joint_limit_command_, gains_joint_); 
 
       // some old debug output
       ROS_DEBUG_STREAM("A_feature_"<<A_feature_<<"\n");
@@ -270,121 +279,23 @@ void FeatureConstraintsController::update()
       //ROS_INFO("[FeatureConstraintsController] Update Point 4");
 
       // publish state of joint limit avoidance
-      // TODO: so need to refactor this into a conversion function, once we have an extra joint limit avoidance controller
-      assert(q_.rows() == joint_avoidance_state_msg_.q.size());
-      assert(joint_limit_command_.pos_lo.rows() == joint_avoidance_state_msg_.q_lower_limits.size());
-      assert(joint_limit_command_.pos_hi.rows() == joint_avoidance_state_msg_.q_upper_limits.size());
-      assert(q_desired_joint_.rows() == joint_avoidance_state_msg_.q_desired.size());
-      assert(weights_joint_.rows() == joint_avoidance_state_msg_.weights.size());
-      assert(qdot_joint_.rows() == joint_avoidance_state_msg_.q_dot_desired.size());
-      for(unsigned int i=0; i<q_.rows(); i++)
-      { 
-        joint_avoidance_state_msg_.q[i] = q_(i);
-      }
-      for(unsigned int i=0; i<joint_limit_command_.pos_lo.rows(); i++)
-      { 
-        joint_avoidance_state_msg_.q_lower_limits[i] = joint_limit_command_.pos_lo(i);
-      }
-      for(unsigned int i=0; i<joint_limit_command_.pos_hi.rows(); i++)
-      { 
-        joint_avoidance_state_msg_.q_upper_limits[i] = joint_limit_command_.pos_hi(i);
-      }
-      for(unsigned int i=0; i<q_desired_joint_.rows(); i++)
-      { 
-        joint_avoidance_state_msg_.q_desired[i] = q_desired_joint_(i);
-      }
-      for(unsigned int i=0; i<weights_joint_.rows(); i++)
-      { 
-        joint_avoidance_state_msg_.weights[i] = weights_joint_(i);
-      }
-      for(unsigned int i=0; i<qdot_joint_.rows(); i++)
-      { 
-        joint_avoidance_state_msg_.q_dot_desired[i] = qdot_joint_(i);
-      }
+      toMsg(joint_limit_avoidance_controller_, joint_avoidance_state_msg_);
+      joint_avoidance_state_msg_.header.stamp = ros::Time::now();
+      limit_avoidance_state_publisher_.publish(joint_avoidance_state_msg_);
+
       // publish desired joint velocities    
       assert(qdot_.rows() == qdot_msg_.data.size());
       for(unsigned int i=0; i<qdot_.rows(); i++)
       {
         qdot_msg_.data[i] = qdot_(i);
       }
-      joint_avoidance_state_msg_.header.stamp = ros::Time::now();
-      limit_avoidance_state_publisher_.publish(joint_avoidance_state_msg_);
-
-      qdot_publisher_.publish(qdot_msg_);
+            qdot_publisher_.publish(qdot_msg_);
       // publish constraint state for debugging purposes
       ///feature_controller_.Ht.data = (feature_controller_.Ht.data.transpose() * inverse_twist_proj(KDL::Frame(-T_tool_in_object.p))).transpose();
       toMsg(feature_controller_, state_msg_);
       state_msg_.header.stamp = ros::Time::now();
       state_publisher_.publish(state_msg_);
     }  
-  }
-}
-
-// sets up the structures for internal joint limit avoidance
-// TODO: Refactoring in either a) an own joint limit avoidance class
-//       or b) (even better) into the constraint-msg interface are
-//       desirable for the future. Right now, I --Georg-- just wanna
-//       see this working
-void FeatureConstraintsController::setupJointLimitAvoidanceController()
-{
-  // get necessary input from the robot kinematics
-  unsigned int dof = robot_kinematics_->getNumberOfJoints();
-  std::vector<double> lower_limits = robot_kinematics_->getSoftLowerJointLimits();
-  std::vector<double> upper_limits = robot_kinematics_->getSoftUpperJointLimits();
-  std::vector<std::string> joint_names = robot_kinematics_->getJointNames();
-
-  // check sanity of input
-  assert(dof == lower_limits.size());
-  assert(dof == upper_limits.size());
-  assert(dof == joint_names.size());
-  assert(dof > 0);
-
-  // resize internal structures
-  joint_limit_command_.resize(dof);
-  A_joint_ = Eigen::MatrixXd::Identity(dof, dof);
-  Wy_joint_ = Eigen::MatrixXd::Zero(dof, dof);
-  qdot_joint_.resize(dof);
-  q_desired_joint_.resize(dof);
-  weights_joint_.resize(dof);
-  gains_joint_.resize(dof);
-
-  // set gains for joint limit avoidance
-  for(unsigned int i=0; i<gains_joint_.rows(); i++)
-  {
-    gains_joint_(i) = 1.0;
-  }
-
-  // adjust the command according to input from robot kinematics
-  for(unsigned int i=0; ((i<lower_limits.size())&& (i<upper_limits.size())); i++)
-  {
-    if((lower_limits[i]==upper_limits[i])&&(lower_limits[i]==0.0))
-    {
-      // this is a joint without joint limits!
-      ROS_WARN("Joint '%s' is interpreted to be without limits!", joint_names[i].c_str());
-      joint_limit_command_.weight(i) = 0.0;
-    }
-    else
-    {
-      // joint has limits
-      joint_limit_command_.weight(i) = 1.0;
-      joint_limit_command_.pos_lo(i) = lower_limits[i];
-      joint_limit_command_.pos_hi(i) = upper_limits[i];
-    }
-  }
-
-  // resize msgs that will be used to publish state of joint limit avoidance
-  joint_avoidance_state_msg_.joint_names.resize(dof);
-  joint_avoidance_state_msg_.q.resize(dof);
-  joint_avoidance_state_msg_.q_lower_limits.resize(dof);
-  joint_avoidance_state_msg_.q_upper_limits.resize(dof);
-  joint_avoidance_state_msg_.q_desired.resize(dof);
-  joint_avoidance_state_msg_.weights.resize(dof);
-  joint_avoidance_state_msg_.q_dot_desired.resize(dof);
-
-  // already fill in the names of the joints in the state message
-  for(unsigned int i=0; i<joint_avoidance_state_msg_.joint_names.size(); i++)
-  {
-    joint_avoidance_state_msg_.joint_names[i] = joint_names[i];
   }
 }
 

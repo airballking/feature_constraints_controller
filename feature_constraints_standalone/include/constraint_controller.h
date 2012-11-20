@@ -11,6 +11,7 @@
 #include <SolverWeighted.hpp>
 #include <feature_constraints/Controller.h>
 #include <feature_constraints/Conversions.h>
+#include <feature_constraints/JointLimitAvoidanceController.h>
 
 #include <Eigen/Core>
 
@@ -56,9 +57,6 @@ private:
   // Receives the position of the robot base in the world frame
   void robot_base_callback(const geometry_msgs::Pose::ConstPtr& msg);
 
-  // Builds up the internal command for joint limit avoidance
-  void setupJointLimitAvoidanceController();
-
   //! These transforms will be looked up from tf
   KDL::Frame T_tool_in_ee_, T_object_in_world_, T_base_in_world_, T_arm_in_base_;
 
@@ -66,9 +64,7 @@ private:
   KDL::JntArray q_, qdot_;
 
   //! Internal representations for joint limit avoidance
-  Ranges joint_limit_command_;
   Eigen::MatrixXd A_joint_, Wy_joint_;
-  KDL::JntArray qdot_joint_, q_desired_joint_, weights_joint_, gains_joint_;
 
   //! Internal representation of robot jacobian
   KDL::Jacobian jacobian_robot_;
@@ -90,6 +86,9 @@ private:
 
   //! Controller component to translate feature constraints into interaction matrix and output velocities
   Controller feature_controller_;
+
+  //! Controller component that avoids joint limits
+  JointLimitAvoidanceController joint_limit_avoidance_controller_;
 
   //! Subscribers
   ros::Subscriber joint_state_subscriber_;
