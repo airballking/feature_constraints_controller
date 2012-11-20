@@ -12,10 +12,11 @@
 #include <constraint_msgs/ConstraintConfig.h>
 #include <constraint_msgs/ConstraintCommand.h>
 #include <constraint_msgs/ConstraintState.h>
+#include <constraint_msgs/JointAvoidanceState.h>
 
 #include <feature_constraints/Controller.h>
 #include <feature_constraints/FeatureConstraints.h>
-
+#include <feature_constraints/JointLimitAvoidanceController.h>
 
 //! @name (hopefully) realtime-safe conversion functions
 
@@ -33,6 +34,7 @@ void toMsg(KDL::JntArray& joints, std::vector<double>& msg);
 void toMsg(const KDL::Twist& t, geometry_msgs::Twist& t_msg);
 void toMsg(KDL::Jacobian& jac, std::vector<geometry_msgs::Twist>& jac_msg);
 void toMsg(Controller& c, constraint_msgs::ConstraintState& c_msg);
+void toMsg(JointLimitAvoidanceController& c, constraint_msgs::JointAvoidanceState& c_msg);
 
 ///@}
 
@@ -54,6 +56,7 @@ Ranges fromMsg(constraint_msgs::ConstraintCommand& msg);
 
 void resize(constraint_msgs::ConstraintState &msg, unsigned int number_constraints);
 
+void resize(constraint_msgs::JointAvoidanceState &msg, unsigned int number_joints);
 ///@}
 
 #endif //FEATURE_CONSTRAINTS_CONVERSIONS_H

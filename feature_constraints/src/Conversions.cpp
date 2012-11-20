@@ -131,6 +131,21 @@ void toMsg(Controller& c, constraint_msgs::ConstraintState& msg)
     msg.constraint_names[i] = c.constraints[i].name;
 }
 
+void toMsg(JointLimitAvoidanceController& c, constraint_msgs::JointAvoidanceState& c_msg)
+{
+  assert(c.joint_names_.size() == c_msg.joint_names.size());
+  for(unsigned int i=0; i<c.joint_names_.size(); i++)
+  {
+    c_msg.joint_names[i] = c.joint_names_[i];
+  }
+
+  toMsg(c.q_, c_msg.q);
+  toMsg(c.command_.pos_lo, c_msg.q_lower_limits);
+  toMsg(c.command_.pos_hi, c_msg.q_upper_limits);
+  toMsg(c.q_desired_, c_msg.q_desired);
+  toMsg(c.weights_, c_msg.weights);
+  toMsg(c.q_dot_desired_, c_msg.q_dot_desired);
+}
 
 // convenience functions
 
@@ -183,4 +198,15 @@ void resize(constraint_msgs::ConstraintState &msg, unsigned int number_constrain
   msg.interaction_matrix.resize(number_constraints);
   msg.singular_values.resize(6);
   msg.constraint_names.resize(number_constraints);
+}
+
+void resize(constraint_msgs::JointAvoidanceState &msg, unsigned int number_joints)
+{
+  msg.joint_names.resize(number_joints);
+  msg.q.resize(number_joints);
+  msg.q_lower_limits.resize(number_joints);
+  msg.q_upper_limits.resize(number_joints);
+  msg.q_desired.resize(number_joints);
+  msg.weights.resize(number_joints);
+  msg.q_dot_desired.resize(number_joints);
 }
