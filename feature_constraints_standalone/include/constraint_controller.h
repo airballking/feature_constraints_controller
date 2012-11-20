@@ -4,6 +4,7 @@
 
 #include <constraint_msgs/ConstraintConfig.h>
 #include <constraint_msgs/ConstraintCommand.h>
+#include <constraint_msgs/JointAvoidanceState.h>
 
 #include <robot_kinematics.h>
 
@@ -55,11 +56,19 @@ private:
   // Receives the position of the robot base in the world frame
   void robot_base_callback(const geometry_msgs::Pose::ConstPtr& msg);
 
+  // Builds up the internal command for joint limit avoidance
+  void setupJointLimitAvoidanceController();
+
   //! These transforms will be looked up from tf
   KDL::Frame T_tool_in_ee_, T_object_in_world_, T_base_in_world_, T_arm_in_base_;
 
   //! Internal representation of robot state
   KDL::JntArray q_, qdot_;
+
+  //! Internal representations for joint limit avoidance
+  Ranges joint_limit_command_;
+  Eigen::MatrixXd A_joint_, Wy_joint_;
+  KDL::JntArray qdot_joint_, q_desired_joint_, weights_joint_, gains_joint_;
 
   //! Internal representation of robot jacobian
   KDL::Jacobian jacobian_robot_;
@@ -91,10 +100,11 @@ private:
   //! Publishers
   ros::Publisher qdot_publisher_;
   ros::Publisher state_publisher_;
+  ros::Publisher limit_avoidance_state_publisher_;
   //! Corresponding message for publishing
   std_msgs::Float64MultiArray qdot_msg_;
   constraint_msgs::ConstraintState state_msg_;
-
+  constraint_msgs::JointAvoidanceState joint_avoidance_state_msg_;
 
   //! Flag to remember if feature_controller_ and solver_ have been resized meaningfully
   // flags to remember the state of the feature controller
