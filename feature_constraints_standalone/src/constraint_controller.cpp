@@ -115,6 +115,7 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   qdot_publisher_ = n.advertise<std_msgs::Float64MultiArray>("qdot", 1);
   state_publisher_ = n.advertise<constraint_msgs::ConstraintState>("constraint_state", 1);
   limit_avoidance_state_publisher_ = n.advertise<constraint_msgs::JointAvoidanceState>("joint_limit_avoidance_state", 1);
+
   // resize internal robot representation
   unsigned int dof = robot_kinematics_->getNumberOfJoints();
   q_.resize(dof);
@@ -128,7 +129,6 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   // resize size of weights for joints in solver
   // identity means that all joints will be considered with equal weights
   Wq_ = Eigen::MatrixXd::Identity(dof, dof);
-
   n.param<std::string>("object_frame", state_msg_.header.frame_id, "/base_link");
 
   // set flags to signal that we are not ready, yet
@@ -192,11 +192,11 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   }
   // resize weights for constraints according to the number of weights
   // (note: will be used by solver)
-  Wy_ = Eigen::MatrixXd::Zero(num_constraints, num_constraints);
+  Wy_feature_ = Eigen::MatrixXd::Zero(num_constraints, num_constraints);
 
   // resize constraint matrix and interaction matrix
-  A_ = Eigen::MatrixXd::Zero(num_constraints, q_.rows());
-  H_ = Eigen::MatrixXd::Zero(num_constraints, 6);
+  A_feature_ = Eigen::MatrixXd::Zero(num_constraints, q_.rows());
+  H_feature_ = Eigen::MatrixXd::Zero(num_constraints, 6);
 
   // resize solver
   solver_.reinitialise(num_constraints, q_.rows());
@@ -246,27 +246,27 @@ void FeatureConstraintsController::update()
       // TODO: Discuss why we are transposing H_transpose here. --> Not intuitive.
       //       Update: It just dawned on me that we did this so that we could use
       //       KDL::Jacobian as an internal representation. @Ingo: Right?
-      H_ = feature_controller_.Ht.data.transpose();
-      H_ = H_*inverse_twist_proj(T_object_in_world_);
+      H_feature_ = feature_controller_.Ht.data.transpose();
+      H_feature_ = H_feature_*inverse_twist_proj(T_object_in_world_);
       //ROS_INFO("[FeatureConstraintsController] Update Point 2");
 
       // call solver with values from constraint controller and Jacobian
-      A_ = H_ * jacobian_robot_.data;
-      Wy_.diagonal() = feature_controller_.weights.data;
+      A_feature_ = H_feature_ * jacobian_robot_.data;
+      Wy_feature_.diagonal() = feature_controller_.weights.data;
       //  ROS_INFO("[FeatureConstraintsController] Update Point 3");
 
       // TODO: do joint avoidance here!
       control(qdot_joint_, weights_joint_, q_desired_joint_, q_, joint_limit_command_, gains_joint_); 
 
       // some old debug output
-      ROS_DEBUG_STREAM("A_"<<A_<<"\n");
+      ROS_DEBUG_STREAM("A_feature_"<<A_feature_<<"\n");
       ROS_DEBUG_STREAM("ydot_"<<feature_controller_.ydot.data<<"\n");
       ROS_DEBUG_STREAM("Wq_"<<Wq_<<"\n");
-      ROS_DEBUG_STREAM("Wy_"<<Wy_<<"\n");
+      ROS_DEBUG_STREAM("Wy_feature_"<<Wy_feature_<<"\n");
       ROS_DEBUG_STREAM("qdot_"<<qdot_.data<<"\n");
       ROS_DEBUG_STREAM("chi_"<<feature_controller_.chi.data<<"\n");
  
-      solver_.solve(A_, feature_controller_.ydot.data, Wq_, Wy_, qdot_.data);
+      solver_.solve(A_feature_, feature_controller_.ydot.data, Wq_, Wy_feature_, qdot_.data);
       //ROS_INFO("[FeatureConstraintsController] Update Point 4");
 
       // publish state of joint limit avoidance

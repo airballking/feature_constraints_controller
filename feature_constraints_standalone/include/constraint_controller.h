@@ -79,8 +79,11 @@ private:
   //! Parses JointState messages that come from the robot
   JointStateInterpreter *joint_state_interpreter_;
 
+  //! Matrices used for talking with the feature controller
+  Eigen::MatrixXd A_feature_, Wy_feature_, H_feature_;
+
   //! Matrices used for talking to the solver
-  Eigen::MatrixXd A_, Wq_, Wy_, H_;
+  Eigen::MatrixXd Wq_;
 
   //! WDLS solver from KUL to inverse matrix
   SolverWeighted solver_;
