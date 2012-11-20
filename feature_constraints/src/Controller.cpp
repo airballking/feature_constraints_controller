@@ -25,6 +25,9 @@ void Ranges::resize(int size)
 
 void Controller::prepare(int max_constraints)
 {
+  // TODO(Ingo & Georg): Discuss whether this is still necessary? Or
+  //     whether the semantics of these variables have changed because
+  //     right now prepare(n) will be called with every new Config-msg.
   int n = (max_constraints == -1) ? constraints.size() : max_constraints;
 
   chi.resize(n);
