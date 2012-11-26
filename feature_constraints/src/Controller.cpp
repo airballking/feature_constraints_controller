@@ -101,7 +101,8 @@ void control(KDL::JntArray& ydot,
 
     if(value > hi || value < lo)
     {
-      weights(i) = 1.0;
+      //weights(i) = 1.0;
+      weights(i) = command.weight(i);
     }
     else
     {
