@@ -73,7 +73,7 @@ private:
 	double lambda;
 
 	Eigen::MatrixXd A_Wq, Wy_A_Wq;
-	Eigen::MatrixXd U, V, Sinv, Wy_U, Wq_V, U2;
+	Eigen::MatrixXd U, V, Sinv, Wy_U, Wq_V, U2, Sinv2;
 	Eigen::VectorXd S, tmp, Ut_Wyt_ydot, Sinv_Ut_Wyt_ydot, S2;
 };
 
