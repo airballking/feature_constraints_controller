@@ -51,6 +51,7 @@
   <node name="left_arm_feature_controller" launch-prefix="xterm -e gdb -args" type="constraint_controller" pkg="feature_constraints_standalone">
     <param name="~tool_frame" value="l_gripper_tool_frame"/>
     <param name="~base_frame" value="torso_lift_link"/>
+    <param name="~joint_limit_avoidance" value="false"/>
     <remap from="~qdot" to="/l_arm_vel/command"/>
     <remap from="/left_arm_feature_controller/tool_offset" to="tool_pose"/>
     <remap from="/left_arm_feature_controller/object_offset" to="object_pose"/>
@@ -65,11 +66,12 @@
   </node>
 
   <!-- startup dummy executive -->
-  <node name="feature_controller_executive" type="feature_controller_executive" pkg="feature_constraints_tests">
+  <node name="feature_controller_executive" type="feature_controller_executive" pkg="feature_constraints_tests" output="screen">
     <param name="~pancake" value="/pancake"/>
     <param name="~spatula" value="/spatula"/>
     <remap from="constraint_config" to="/left_arm_feature_controller/constraint_config"/>
     <remap from="constraint_command" to="/left_arm_feature_controller/constraint_command"/>
+    <remap from="constraint_state" to="/left_arm_feature_controller/constraint_state"/>
  </node>
 
  <!-- Start rxplot to see what is going on -->
