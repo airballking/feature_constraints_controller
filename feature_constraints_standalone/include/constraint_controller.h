@@ -79,7 +79,7 @@ private:
   Eigen::MatrixXd A_feature_, Wy_feature_, H_feature_;
 
   //! Matrices used for talking to the solver
-  Eigen::MatrixXd Wq_;
+  Eigen::MatrixXd A_, ydot_, Wy_, Wq_;
 
   //! WDLS solver from KUL to inverse matrix
   SolverWeighted solver_;
@@ -108,8 +108,11 @@ private:
   constraint_msgs::ConstraintState state_msg_;
   constraint_msgs::JointAvoidanceState joint_avoidance_state_msg_;
 
-  //! Flag to remember if feature_controller_ and solver_ have been resized meaningfully
   // flags to remember the state of the feature controller
   bool configured_, started_;
+
+  // flag to turn joint limit avoidance on and off
+  // will be set once during init
+  bool joint_limit_avoidance_on_;
 };
 

@@ -128,6 +128,15 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   A_joint_ = Eigen::MatrixXd::Identity(dof, dof);
   Wy_joint_ = Eigen::MatrixXd::Zero(dof, dof);
 
+  // read from the parameter server whether the joint limit avoidance shall be switched on
+  if (!n.getParam("joint_limit_avoidance", joint_limit_avoidance_on_)){
+    ROS_ERROR("Flag for joint_limit_avoidance not given in namespace: '%s')",
+              n.getNamespace().c_str());
+    return false;
+  }
+  if(!joint_limit_avoidance_on_)
+    ROS_WARN("Joint limit avoidance controller has been deactivated.");
+
   // resize size of message that reports the state of the joint limit avoidance
   resize(joint_avoidance_state_msg_, dof);
 
@@ -199,15 +208,29 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
     feature_controller_.gains(i) = 1.0;
   }
   // resize weights for constraints according to the number of weights
+  // for the feature controller constraints
   // (note: will be used by solver)
   Wy_feature_ = Eigen::MatrixXd::Zero(num_constraints, num_constraints);
 
-  // resize constraint matrix and interaction matrix
+  // resize constraint matrix and interaction matrix for feature controller
   A_feature_ = Eigen::MatrixXd::Zero(num_constraints, q_.rows());
   H_feature_ = Eigen::MatrixXd::Zero(num_constraints, 6);
 
+  // resize matrices provided to solver (possibly feature constraints and joint
+  // limit avoidance controller) and the solver itself
+  // NOTE: if joint limit avoidance shall be used the actual number of constraints
+  // increases by the number of joints in the kinematic chain
+  if(joint_limit_avoidance_on_)
+    num_constraints += robot_kinematics_->getNumberOfJoints();
+
+  A_ = Eigen::MatrixXd::Zero(num_constraints, q_.rows());
+  Wy_ = Eigen::MatrixXd::Zero(num_constraints, num_constraints);
+  ydot_ = Eigen::MatrixXd::Zero(num_constraints, 1);
+
   // resize solver
+  ROS_INFO("Solver gets dimensions %dx%d", num_constraints, q_.rows());
   solver_.reinitialise(num_constraints, q_.rows());
+
   // set flags to indicate that we are configured but not started, yet
   configured_ = true;
   started_ = false;
@@ -268,14 +291,60 @@ void FeatureConstraintsController::update()
 //      control(qdot_joint_, weights_joint_, q_desired_joint_, q_, joint_limit_command_, gains_joint_); 
 
       // some old debug output
+/*
       ROS_DEBUG_STREAM("A_feature_"<<A_feature_<<"\n");
       ROS_DEBUG_STREAM("ydot_"<<feature_controller_.ydot.data<<"\n");
       ROS_DEBUG_STREAM("Wq_"<<Wq_<<"\n");
       ROS_DEBUG_STREAM("Wy_feature_"<<Wy_feature_<<"\n");
       ROS_DEBUG_STREAM("qdot_"<<qdot_.data<<"\n");
       ROS_DEBUG_STREAM("chi_"<<feature_controller_.chi.data<<"\n");
- 
-      solver_.solve(A_feature_, feature_controller_.ydot.data, Wq_, Wy_feature_, qdot_.data);
+*/
+      // copy the output of possibly both controllers -- feature controller
+      // and joint limit avoidance controller -- into matrices that are sent
+      // to the solver
+/*
+      ROS_INFO("BEFORE MATRIX COPY"); 
+      ROS_INFO("A_ is a %ldx%ld matrix.", A_.rows(), A_.cols());
+      ROS_INFO("ydot_ is a %ldx%ld matrix.", ydot_.rows(), ydot_.cols());
+      ROS_INFO("Wq_ is a %ldx%ld matrix.", Wq_.rows(), Wq_.cols());
+      ROS_INFO("Wy_ is a %ldx%ld matrix.", Wy_.rows(), Wy_.cols());
+      ROS_INFO("qdot_ is a %dx%d JntArray.", qdot_.rows(), qdot_.columns());
+*/
+      assert(A_.cols() == A_feature_.cols());
+      assert(A_.cols() == A_joint_.cols());
+      assert(ydot_.cols() == 1);
+
+      if(joint_limit_avoidance_on_)
+      {
+        assert(A_.rows() == A_feature_.rows() + A_joint_.rows());
+        A_.block(0, 0, A_feature_.rows(), A_feature_.cols()) = A_feature_;
+        A_.block(A_feature_.rows() ,0 , A_joint_.rows(), A_joint_.cols()) = A_joint_;
+
+        assert(ydot_.rows() == feature_controller_.ydot.rows() + joint_limit_avoidance_controller_.q_dot_desired_.rows());
+        ydot_.block(0, 0, feature_controller_.ydot.rows(), 1) = feature_controller_.ydot.data;
+        ydot_.block(feature_controller_.ydot.rows(), 0, joint_limit_avoidance_controller_.q_dot_desired_.rows(), 1) = joint_limit_avoidance_controller_.q_dot_desired_.data;
+
+        assert(Wy_.rows() == Wy_feature_.rows() + Wy_joint_.rows());
+        assert(Wy_.cols() == Wy_feature_.cols() + Wy_joint_.cols());
+        Wy_joint_.diagonal() = joint_limit_avoidance_controller_.weights_.data;
+        Wy_.block(0, 0, Wy_feature_.rows(), Wy_feature_.cols()) = Wy_feature_;
+        Wy_.block(Wy_feature_.rows(), Wy_feature_.cols(), Wy_joint_.rows(), Wy_joint_.cols()) = Wy_joint_;
+      }
+      else
+      {
+        A_ = A_feature_;
+        ydot_ = feature_controller_.ydot.data;
+        Wy_ = Wy_feature_;
+      }
+/* 
+      ROS_INFO("AFTER MATRIX COPY"); 
+      ROS_INFO("A_ is a %ldx%ld matrix.", A_.rows(), A_.cols());
+      ROS_INFO("ydot_ is a %ldx%ld matrix.", ydot_.rows(), ydot_.cols());
+      ROS_INFO("Wq_ is a %ldx%ld matrix.", Wq_.rows(), Wq_.cols());
+      ROS_INFO("Wy_ is a %ldx%ld matrix.", Wy_.rows(), Wy_.cols());
+      ROS_INFO("qdot_ is a %dx%d JntArray.", qdot_.rows(), qdot_.columns());
+*/      
+      solver_.solve(A_, ydot_, Wq_, Wy_, qdot_.data);
       //ROS_INFO("[FeatureConstraintsController] Update Point 4");
 
       // publish state of joint limit avoidance
