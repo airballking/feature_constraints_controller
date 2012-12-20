@@ -63,9 +63,6 @@ private:
   //! Internal representation of robot state
   KDL::JntArray q_, qdot_;
 
-  //! Internal representations for joint limit avoidance
-  Eigen::MatrixXd A_joint_, Wy_joint_;
-
   //! Internal representation of robot jacobian
   KDL::Jacobian jacobian_robot_;
 
@@ -76,7 +73,7 @@ private:
   JointStateInterpreter *joint_state_interpreter_;
 
   //! Matrices used for talking with the feature controller
-  Eigen::MatrixXd A_feature_, Wy_feature_, H_feature_;
+  Eigen::MatrixXd H_feature_;
 
   //! Matrices used for talking to the solver and Nullspace projection
   Eigen::MatrixXd A_, A_inv_, ydot_, Wy_, Wq_, Identity_joints_;
