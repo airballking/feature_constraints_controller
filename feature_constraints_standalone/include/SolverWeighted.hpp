@@ -53,12 +53,22 @@ public:
 	 * Wy denotes the weights of the constraints.
 	 *
 	 * Note: Wq is a num_joints x num_joints matrix.
-	 * 		 Wy is a num_constraints x num_constraints matrix.
+	 * 	 Wy is a num_constraints x num_constraints matrix.
 	 */
-
 	bool solve(const Eigen::MatrixXd &A, const Eigen::VectorXd &ydot,
 			const Eigen::MatrixXd &Wq, const Eigen::MatrixXd & Wy,
 			Eigen::VectorXd &qdot);
+
+        /* This solves the equation A qdot = ydot for qdot using the weighted
+	 * pseudoinverse A_inv_weighted, where Wq denotes the weights of the joints and
+	 * Wy denotes the weights of the constraints.
+	 *
+	 * Note: Wq is a num_joints x num_joints matrix.
+	 * 	 Wy is a num_constraints x num_constraints matrix.
+	 */
+	bool solve(const Eigen::MatrixXd &A, const Eigen::VectorXd &ydot,
+			const Eigen::MatrixXd &Wq, const Eigen::MatrixXd & Wy,
+			Eigen::VectorXd &qdot, Eigen::MatrixXd &A_inv_weighted);
 
 	void reinitialise(const unsigned int num_constraints, const unsigned int num_joints);
 
@@ -72,7 +82,7 @@ private:
 	// lambda = 0.5 --> high clearance of singularities
 	double lambda;
 
-	Eigen::MatrixXd A_Wq, Wy_A_Wq;
+	Eigen::MatrixXd A_Wq, Wy_A_Wq, A_inv;
 	Eigen::MatrixXd U, V, Sinv, Wy_U, Wq_V, U2, Sinv2;
 	Eigen::VectorXd S, tmp, Ut_Wyt_ydot, Sinv_Ut_Wyt_ydot, S2;
 };
