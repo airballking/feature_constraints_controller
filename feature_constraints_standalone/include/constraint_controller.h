@@ -78,8 +78,8 @@ private:
   //! Matrices used for talking with the feature controller
   Eigen::MatrixXd A_feature_, Wy_feature_, H_feature_;
 
-  //! Matrices used for talking to the solver
-  Eigen::MatrixXd A_, ydot_, Wy_, Wq_;
+  //! Matrices used for talking to the solver and Nullspace projection
+  Eigen::MatrixXd A_, A_inv_, ydot_, Wy_, Wq_, Identity_joints_;
 
   //! WDLS solver from KUL to inverse matrix
   SolverWeighted solver_;

@@ -121,6 +121,7 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   q_.resize(dof);
   qdot_.resize(dof);
   jacobian_robot_.resize(dof);
+  Identity_joints_ = Eigen::MatrixXd::Identity(dof, dof);
 
   // resize internal joint limit avoidance structures and controller 
   joint_limit_avoidance_controller_.prepare(robot_kinematics_->getJointNames(),
@@ -222,10 +223,11 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   // limit avoidance controller) and the solver itself
   // NOTE: if joint limit avoidance shall be used the actual number of constraints
   // increases by the number of joints in the kinematic chain
-  if(joint_limit_avoidance_on_)
-    num_constraints += robot_kinematics_->getNumberOfJoints();
+  //if(joint_limit_avoidance_on_)
+  //  num_constraints += robot_kinematics_->getNumberOfJoints();
 
   A_ = Eigen::MatrixXd::Zero(num_constraints, q_.rows());
+  A_inv_ = Eigen::MatrixXd::Zero(q_.rows(), num_constraints);
   Wy_ = Eigen::MatrixXd::Zero(num_constraints, num_constraints);
   ydot_ = Eigen::MatrixXd::Zero(num_constraints, 1);
 
@@ -288,9 +290,7 @@ void FeatureConstraintsController::update()
       Wy_feature_.diagonal() = feature_controller_.weights.data;
       //  ROS_INFO("[FeatureConstraintsController] Update Point 3");
 
-      // calculate next output from joint limit avoidance controller
-      joint_limit_avoidance_controller_.update(q_);
-//      control(qdot_joint_, weights_joint_, q_desired_joint_, q_, joint_limit_command_, gains_joint_); 
+      //      control(qdot_joint_, weights_joint_, q_desired_joint_, q_, joint_limit_command_, gains_joint_); 
 
       // some old debug output
 /*
@@ -313,9 +313,10 @@ void FeatureConstraintsController::update()
       ROS_INFO("qdot_ is a %dx%d JntArray.", qdot_.rows(), qdot_.columns());
 */
       assert(A_.cols() == A_feature_.cols());
-      assert(A_.cols() == A_joint_.cols());
+//      assert(A_.cols() == A_joint_.cols());
       assert(ydot_.cols() == 1);
 
+/*
       if(joint_limit_avoidance_on_)
       {
         assert(A_.rows() == A_feature_.rows() + A_joint_.rows());
@@ -333,11 +334,15 @@ void FeatureConstraintsController::update()
         Wy_.block(Wy_feature_.rows(), Wy_feature_.cols(), Wy_joint_.rows(), Wy_joint_.cols()) = Wy_joint_;
       }
       else
-      {
-        A_ = A_feature_;
-        ydot_ = feature_controller_.ydot.data;
-        Wy_ = Wy_feature_;
-      }
+      {*/
+
+      // copy A-matrix, desired constraint velocities and weights
+      A_ = A_feature_;
+      ydot_ = feature_controller_.ydot.data;
+      Wy_ = Wy_feature_;
+
+
+      //}
 /* 
       ROS_INFO("AFTER MATRIX COPY"); 
       ROS_INFO("A_ is a %ldx%ld matrix.", A_.rows(), A_.cols());
@@ -346,13 +351,30 @@ void FeatureConstraintsController::update()
       ROS_INFO("Wy_ is a %ldx%ld matrix.", Wy_.rows(), Wy_.cols());
       ROS_INFO("qdot_ is a %dx%d JntArray.", qdot_.rows(), qdot_.columns());
 */      
-      solver_.solve(A_, ydot_, Wq_, Wy_, qdot_.data);
+      solver_.solve(A_, ydot_, Wq_, Wy_, qdot_.data, A_inv_);
       //ROS_INFO("[FeatureConstraintsController] Update Point 4");
 
+      // calculate next output from joint limit avoidance controller
+      joint_limit_avoidance_controller_.update(q_);
       // publish state of joint limit avoidance
       toMsg(joint_limit_avoidance_controller_, joint_avoidance_state_msg_);
       joint_avoidance_state_msg_.header.stamp = ros::Time::now();
       limit_avoidance_state_publisher_.publish(joint_avoidance_state_msg_);
+
+      // NULLSPACE PROJECTION: joint limit avoidance
+      if(joint_limit_avoidance_on_)
+      {
+        // perform actual Nullspace projection
+        assert(q_.rows() == qdot_.rows());
+        assert(Identity_joints_.rows() == q_.rows());
+	assert(Identity_joints_.cols() == q_.rows());
+        assert(A_inv_.rows() == qdot_.rows());
+        assert(A_inv_.cols() == A_.rows());
+        assert(A_.cols() == qdot_.rows());
+	assert(qdot_.rows() == joint_limit_avoidance_controller_.q_dot_desired_.rows());
+
+        qdot_.data += (Identity_joints_ - A_inv_*A_)*joint_limit_avoidance_controller_.q_dot_desired_.data;
+      }
 
       // publish desired joint velocities    
       assert(qdot_.rows() == qdot_msg_.data.size());
