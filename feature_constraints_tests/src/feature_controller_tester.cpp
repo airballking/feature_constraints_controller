@@ -5,6 +5,8 @@
 #include "constraint_msgs/Constraint.h"
 #include "constraint_msgs/ConstraintCommand.h"
 #include "constraint_msgs/ConstraintState.h"
+// for test output
+#include "std_msgs/String.h"
 // some convenience functions to build config message
 #include "feature_constraints_tests/Conversions.h"
 // the state machine
@@ -37,6 +39,8 @@ int main(int argc, char **argv)
   // advertise topics
   ros::Publisher constraint_config_publisher = n.advertise<constraint_msgs::ConstraintConfig>("constraint_config", 1, true);
   ros::Publisher constraint_command_publisher = n.advertise<constraint_msgs::ConstraintCommand>("constraint_command", 1, true);
+
+  ros::Publisher executive_state_publisher = n.advertise<std_msgs::String>("executive_state", 1, true);
 
   // subscribe to state topic
   ros::Subscriber constraint_state_subscriber = n.subscribe("constraint_state", 1, controllerStateCallback);
@@ -84,7 +88,11 @@ int main(int argc, char **argv)
   // start application which sends different command messages
   ros::Rate loop_rate(1);
   ROS_INFO("Starting executive in initial state.");
-  
+
+  std_msgs::String executive_state_msg;
+  executive_state_msg.data = "start";
+  executive_state_publisher.publish(executive_state_msg);
+
   // another flag which signals that the state machine has finished
   bool state_machine_finished = false;
   while(ros::ok() && !state_machine_finished)
@@ -98,6 +106,9 @@ int main(int argc, char **argv)
     ros::spinOnce();
     loop_rate.sleep();
   }
+
+  executive_state_msg.data = "finish";
+  executive_state_publisher.publish(executive_state_msg);
 
   // bye bye
   ROS_INFO("Terminating executive.");
