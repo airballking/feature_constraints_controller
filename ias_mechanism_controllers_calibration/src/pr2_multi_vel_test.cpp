@@ -58,49 +58,34 @@ bool retrieveParameter(const ros::NodeHandle& n, const std::string& ns, const st
   return true;
 }
 
-void performTest(const ros::Publisher& qdot_des_pub, const std::string& joint_to_test, const int& joint_index, const double& joint_velocity, const double& test_time)
+void printAndSleep(const double sleep_time)
+{
+  ROS_INFO("Sleeping for %fs...", sleep_time);
+  ros::Duration(sleep_time).sleep();
+}
+
+void performTest(const ros::Publisher& qdot_des_pub, const std::string& joint_to_test, const int joint_index, const double joint_velocity, const double test_time)
 {
   // query user for start of test
   ROS_INFO("About to test joint '%s' with index [%d]. Velocity=%f, time=%f", joint_to_test.c_str(), joint_index, joint_velocity, test_time);
-  ROS_INFO("Enter 'start' to start the test, and enter 'quit' to quit.");
-  // wait for user to trigger execution
-  std::string console_input;
-  while(true)
+  ROS_INFO("Starting test...");
+  std_msgs::Float64MultiArray qdot_msg;
+  qdot_msg.data.resize(7);
+  for(int i=0; i<7; i++)
   {
-    getline(std::cin, console_input);
-    if(!console_input.compare("start"))
-    {
-      ROS_INFO("Starting test...");
-      std_msgs::Float64MultiArray qdot_msg;
-      qdot_msg.data.resize(7);
-      for(int i=0; i<7; i++)
-      {
-        if(i==joint_index)
-          qdot_msg.data[i] = joint_velocity;
-        else
-          qdot_msg.data[i] = 0.0;
-      }
-      ROS_INFO("Sending command...");
-      qdot_des_pub.publish(qdot_msg);
-      ROS_INFO("Done. Sleeping for %fs...", test_time);
-      ros::Duration(test_time).sleep();
-      ROS_INFO("Stopping joint.");
-      qdot_msg.data[joint_index] = 0.0;
-      qdot_des_pub.publish(qdot_msg);
-      ROS_INFO("Test finished.");
-      
-      break;
-    }
-    else if(!console_input.compare("quit"))
-    {
-      ROS_INFO("Quiting test...");
-      break;
-    }
-    else 
-    {
-      ROS_INFO("Invalid input. You typed '%s'.", console_input.c_str());
-    }
+    if(i==joint_index)
+      qdot_msg.data[i] = joint_velocity;
+    else
+      qdot_msg.data[i] = 0.0;
   }
+  ROS_INFO("Sending command...");
+  qdot_des_pub.publish(qdot_msg);
+  ROS_INFO("Done.");
+  printAndSleep(test_time);
+  ROS_INFO("Stopping joint.");
+  qdot_msg.data[joint_index] = 0.0;
+  qdot_des_pub.publish(qdot_msg);
+  ROS_INFO("Test finished.");    
 }
 
 // actual test application
@@ -122,6 +107,7 @@ int main(int argc, char **argv)
 
   // activate standard controller to go to desired configuration
   ROS_INFO("Starting standard arm controllers...");
+  ros::Duration(0.5).sleep();
   if(!arm.startControllerPlugin())
     return 0;
 
@@ -154,9 +140,10 @@ int main(int argc, char **argv)
 
   // start test with user questions
   performTest(qdot_des_pub_, joint_to_test_, joint_index_, joint_velocity_, test_time_);
+  printAndSleep(5.0);
 
   // restart standard controller to be nice
-  ROS_INFO("Starting standard arm controllers...");
+  ROS_INFO("Re-starting standard arm controllers...");
   if(!arm.startControllerPlugin())
     return 0;
 
