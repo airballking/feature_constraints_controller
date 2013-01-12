@@ -1,0 +1,6 @@
+<launch>
+  <node name="constraint_rank_service" pkg="feature_constraints"
+        type="rank_test_service"/>
+  <test test-name="constraint_rank_test" pkg="feature_constraints"
+        type="rank_test.py"/>
+</launch>

@@ -22,5 +22,7 @@ rosbuild_add_library(${PROJECT_NAME} src/FeatureConstraints.cpp src/Controller.c
 
 rosbuild_add_gtest(test/test_FeatureConstraints src/test_FeatureConstraints.cpp src/FeatureConstraints.cpp src/ChainRPY.cpp)
 rosbuild_add_gtest(test/test_Analysis src/test_Analysis.cpp src/Analysis.cpp src/FeatureConstraints.cpp src/ChainRPY.cpp)
+rosbuild_add_rostest(test/constraints_rank.test)
 
 rosbuild_add_executable(analysis src/FeatureConstraints.cpp src/Analysis_main.cpp src/Analysis.cpp src/ChainRPY.cpp)
+rosbuild_add_executable(rank_test_service src/rank_test_service.cpp src/Analysis.cpp src/Conversions.cpp src/FeatureConstraints.cpp src/ChainRPY.cpp src/Controller.cpp)

@@ -4,7 +4,7 @@
 // ROS message interface
 
 // most functions exist twice to allow for realtime execution
-// TODO: make shure the classes involving strings are handled right.
+// TODO: make sure the classes involving strings are handled right.
 
 using namespace KDL;
 
@@ -48,6 +48,13 @@ void fromMsg(const constraint_msgs::Constraint& msg, Constraint& c)
 }
 
 
+void fromMsg(const std::vector<constraint_msgs::Constraint>& msg, std::vector<Constraint>& c)
+{
+  for(unsigned int i=0; i < msg.size(); i++)
+    fromMsg(msg[i], c[i]);
+}
+
+
 // TODO: this is _not_ realtime safe
 void fromMsg(const constraint_msgs::ConstraintConfig& msg, std::vector<Constraint>& cc)
 {
@@ -61,6 +68,14 @@ Constraint fromMsg(const constraint_msgs::Constraint& msg)
 {
   return Constraint(msg.name, msg.function,
                     fromMsg(msg.tool_feature), fromMsg(msg.world_feature));
+}
+
+
+std::vector<Constraint> fromMsg(const std::vector<constraint_msgs::Constraint>& msg)
+{
+  std::vector<Constraint> cc(msg.size());
+  fromMsg(msg, cc);
+  return cc;
 }
 
 

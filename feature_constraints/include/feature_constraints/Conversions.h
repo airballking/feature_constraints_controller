@@ -25,6 +25,7 @@
 void fromMsg(const geometry_msgs::Vector3& msg, KDL::Vector& vec);
 void fromMsg(const constraint_msgs::Feature& msg, Feature& feat);
 void fromMsg(const constraint_msgs::Constraint& msg, Constraint& c);
+void fromMsg(const std::vector<constraint_msgs::Constraint>& msg, std::vector<Constraint>& c);
 void fromMsg(const constraint_msgs::ConstraintConfig& msg, std::vector<Constraint>& cc);
 void fromMsg(const std::vector<double>& msg, KDL::JntArray& jnts);
 void fromMsg(const constraint_msgs::ConstraintCommand& msg, Ranges& ranges);
@@ -51,6 +52,7 @@ constraint_msgs::ConstraintState toMsg(Controller& c);
 KDL::Vector fromMsg(const geometry_msgs::Vector3& msg);
 Feature fromMsg(const constraint_msgs::Feature& msg);
 Constraint fromMsg(const constraint_msgs::Constraint& msg);
+std::vector<Constraint> fromMsg(const std::vector<constraint_msgs::Constraint>& msg);
 KDL::JntArray fromMsg(std::vector<double>& msg);
 Ranges fromMsg(constraint_msgs::ConstraintCommand& msg);
 
