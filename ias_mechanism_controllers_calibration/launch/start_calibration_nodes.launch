@@ -1,0 +1,15 @@
+<launch>
+  <!-- load the test parameters on the server -->
+  <rosparam command="load" file="$(find ias_mechanism_controllers_calibration)/launch/pr2_multi_vel_calibration_params.yaml" />
+
+  <!-- launch the velocity-resolved joint controllers -->
+  <include file="$(find ias_mechanism_controllers)/launch/pr2_multi_vel_spawn.launch" />
+  
+  <!-- start the test node -->
+  <node name="left_arm_test" pkg="ias_mechanism_controllers_calibration" type="pr2_multi_vel_test" output="screen">
+    <remap from="arm_trajectory_action" to="/l_arm_controller/joint_trajectory_action"/>
+    <remap from="~multi_vel_command" to="/l_arm_vel/command" />
+    <param name="~arm_action_server_namespace" value="/l_arm_controller" />
+    <param name="~vel_controller_namespace" value="/l_arm_vel" />
+  </node>
+</launch>
