@@ -197,6 +197,8 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
 {
   unsigned int num_constraints = msg->constraints.size();
 
+  feature_controller_.constraints.resize(num_constraints);
+
   // get new constraints into controller and re-prepare it
   // i.e. adjust size of internal variables
   fromMsg(*msg, feature_controller_.constraints);

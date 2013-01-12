@@ -55,12 +55,9 @@ void fromMsg(const std::vector<constraint_msgs::Constraint>& msg, std::vector<Co
 }
 
 
-// TODO: this is _not_ realtime safe
 void fromMsg(const constraint_msgs::ConstraintConfig& msg, std::vector<Constraint>& cc)
 {
-  int num = msg.constraints.size();
-  cc.resize(num);
-  for(int i=0; i < num; i++)
+  for(int i=0; i < msg.constraints.size(); i++)
     fromMsg(msg.constraints[i], cc[i]);
 }
 
