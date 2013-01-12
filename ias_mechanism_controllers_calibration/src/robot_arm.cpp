@@ -136,10 +136,12 @@ bool RobotArm::gotoDesiredConfiguration()
 
 bool RobotArm::startControllerPlugin()
 {
-  // instruct pr2 controller manager to start standard controllers
+  // instruct pr2 controller manager to start standard controllers and stop velocity-resolved ones
   pr2_mechanism_msgs::SwitchController srv;
   srv.request.start_controllers.push_back("l_arm_controller");
   srv.request.start_controllers.push_back("r_arm_controller");
+  srv.request.stop_controllers.push_back("l_arm_vel");
+  srv.request.stop_controllers.push_back("r_arm_vel");
   srv.request.strictness = srv.request.STRICT;
   if(ros::service::call("/pr2_controller_manager/switch_controller", srv))
   {
@@ -156,10 +158,12 @@ bool RobotArm::startControllerPlugin()
 
 bool RobotArm::stopControllerPlugin()
 {
-  // instruct controller manager to stop standard controllers
+  // instruct controller manager to stop standard controllers and start velocity-resolved ones
   pr2_mechanism_msgs::SwitchController srv;
   srv.request.stop_controllers.push_back("l_arm_controller");
   srv.request.stop_controllers.push_back("r_arm_controller");
+  srv.request.start_controllers.push_back("l_arm_vel");
+  srv.request.start_controllers.push_back("r_arm_vel");
   srv.request.strictness = srv.request.STRICT;
   if(ros::service::call("/pr2_controller_manager/switch_controller", srv))
   {
