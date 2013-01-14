@@ -9,6 +9,9 @@
   <review status="unreviewed" notes=""/>
   <depend package="std_msgs"/>
   <depend package="sensor_msgs"/>
+  <depend package="kdl"/>
+  <depend package="urdf_parser_py"/>
+  <depend package="motion_viz"/>
   <depend package="rospy"/>
 </package>
 
