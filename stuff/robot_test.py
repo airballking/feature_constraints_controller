@@ -10,13 +10,9 @@ import unittest
 import rospy
 import rostest
 
-from constraint_msgs.srv import ConstraintsRank
-from constraint_msgs.msg import Constraint, Feature
-from geometry_msgs.msg import Vector3
-
 import PyKDL as kdl
 
-rospy.init_node('feature_rank_test')
+rospy.init_node('robot_test')
 
 import robot
 
