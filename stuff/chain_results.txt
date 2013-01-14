@@ -1,0 +1,25 @@
+of the 6**6 = 46656 possible VKCs, 5664 have full rank. Of them, 504 can be
+separated into a positioning part (i.e. three joints that cover 3d positioning)
+and an orientation part (i.e. three joints that cover orientations). Some chains
+are kinematically equivalent when permuting some of the joint angles. Under this
+equivalence, 2927 virtual chains are left.
+
+These chains have at least one and at most three prismatic joints.
+
+One p-joint:  spherical coordinates
+Two p-joints: cylinder coordinates
+Three p-joints: cartesian coordinates
+
+full rank chains
+[288, 2208, 3168]
+unique chains
+[240, 1296, 1391]
+separable chains
+[144, 216, 144]
+unique separable chains
+[144, 144, 24]
+
+It can be seen that still a lot of possible VKCs exist. Choosing the right one
+is hard to formalize. It can be aided by semantic hints, such as object
+symmetries.
+
