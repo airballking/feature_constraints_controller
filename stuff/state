@@ -1,5 +1,11 @@
 #!/usr/bin/python
 
+"""Print the state of the feature controller in a concise way.
+
+This script prints out the current constraint values, desired state,
+the current joint state and the task cartesian pose.
+"""
+
 import sys
 import roslib
 roslib.load_manifest('constraint_msgs')

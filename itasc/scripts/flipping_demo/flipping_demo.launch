@@ -1,0 +1,7 @@
+<launch>
+  <node name="flipping_demo" pkg="itasc" type="sim_itasc_test.py"
+        output="screen">
+    <remap from="/state" to="/feature_controller/constraint_state"/>
+    <remap from="/command" to="/feature_controller/constraint_command"/>
+  </node>
+</launch>

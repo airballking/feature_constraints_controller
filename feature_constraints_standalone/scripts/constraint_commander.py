@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+# Send constraint commands (i.e. desired values for the constraints)
+# from a joystick. Uses the 'joy_to_twist' class to
+# quickly configure the joystick.
+
 from math import *
 
 import roslib
@@ -22,6 +26,7 @@ command = ConstraintCommand()
 
 import mapping
 button_mapping = mapping.MultiMapping(default_mapping=[0, 1, 2, 3])
+
 
 def command_init(values):
   command.pos_lo = [x-eps for x in values]
@@ -52,6 +57,7 @@ def callback_state(msg):
 
   if len(command.weight) == 0:
     command_init(chi)
+
 
 if __name__ == "__main__":
   # connect and start

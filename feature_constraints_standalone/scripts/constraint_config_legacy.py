@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+# Constraint configuration for pancake flipping.
+# The legacy configuration, reproducing the manual
+# cylinder-coordinates/RPY scheme with its deficiencies.
+# This is meant for comparison.
+
 import roslib
 roslib.load_manifest('constraint_msgs')
 import rospy

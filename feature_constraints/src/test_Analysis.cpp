@@ -77,6 +77,7 @@ TEST(Analysis, axis_sampler_uniqueness)
 TEST(Analysis, dependent_spatula_sides)
 {
   Constraint::init();
+  Analysis analysis(2);
 
   Feature tool_side_left("side_edge", Vector(0,-0.05,0), Vector(0,0,0.15));
   Feature tool_side_right("side_edge", Vector(0,0.05,0), Vector(0,0,0.15));
@@ -89,7 +90,7 @@ TEST(Analysis, dependent_spatula_sides)
   constraints.push_back(Constraint("align_side_right",  "perpendicular",
                                    tool_side_right, up));
 
-  int r = rank(constraints, 0.01, 1e-5);
+  int r = analysis.rank(constraints, 0.01, 1e-5);
 
   EXPECT_EQ(1, r);
 }
@@ -98,6 +99,7 @@ TEST(Analysis, dependent_spatula_sides)
 TEST(Analysis, dependent_spatula_edges_blade)
 {
   Constraint::init();
+  Analysis analysis(3);
 
   Feature tool_front("front_edge", Vector(0,0,0.075), Vector(0,0.1,0));
   Feature tool_side("side_edge", Vector(0,-0.05,0), Vector(0,0,0.15));
@@ -113,7 +115,7 @@ TEST(Analysis, dependent_spatula_edges_blade)
   constraints.push_back(Constraint("align_blade",  "perpendicular",
                                    tool_blade, up));
 
-  int r = rank(constraints, 0.01, 1e-5);
+  int r = analysis.rank(constraints, 0.01, 1e-5);
 
   EXPECT_EQ(2, r);
 }

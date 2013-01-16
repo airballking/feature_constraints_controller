@@ -65,7 +65,7 @@ public:
     \param tool_feature   A geometric feature which is attached to the tool
     \param tool_feature   A geometric feature which is attached to the object
 */
-typedef double (*ConstraintFunc) (KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+typedef double (*ConstraintFunc) (const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 //! A constraint between two features
@@ -125,39 +125,42 @@ public:
  */
 
 ///@{
+// aux debugging printing
+void printVector(const KDL::Vector& vector);
+void printFrame(const KDL::Frame& frame);
 
 /*! zero when perpendicular (cos of the angle)
  */
-double perpendicular(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double perpendicular(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 /*! distance between features, projected onto the
     the direction of the object feature
  */
-double height(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double height(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 /*! distance between features, perpendicular to
     the direction of the object feature
  */
-double distance(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double distance(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 /*! angle between tool feature direction and
     connecting line between object and tool positions
     (seen perpendicular to the object direction)
  */
-double pointing_at(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double pointing_at(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 /*! cosine of the angle of cylinder coordinates.
  */
-double direction(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double direction(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 
 /*! always returns 0
  */
-double null(KDL::Frame& frame, Feature tool_feature, Feature object_feature);
+double null(const KDL::Frame& frame, const Feature& tool_feature, const Feature& object_feature);
 
 ///@}
 
@@ -192,5 +195,32 @@ void differentiateConstraints(KDL::Jacobian& Ht,
                               const std::vector<Constraint> &constraints,
                               double dd,
                               KDL::JntArray& tmp);
+
+
+/*! Differentiates numerically using a 3-point sampling:
+    (x_0 = x-dd, x_1 = x, x_2 = x+dd)
+    First derivative is (x_2 - x_0) / (2*dd)
+    (central differences).
+    The second derivative is (x_2 - 2*x_1 + x_0)/(d*d),
+    basically the change in slope.
+ 
+   \param Ht     [out] Transposed interaction matrix
+   \param H2t    [out] Transposed second derivatives
+   \param values [out] The values of the constraints at 'frame'. (must have n rows)
+   \param frame  [in]  The transform between tool and object where the constraints shall be evaluated
+   \param constraints [in] The constraints to be evaluated
+   \param dd     [in]  How far frame should be moved in order to obtain Ht.
+   \param tmp    [out] Temporary variable (must have n rows)
+   \param tmp2   [out] Another temporary variable (must have n rows)
+*/
+
+void differentiateConstraints_3point(KDL::Jacobian& Ht,
+                                     KDL::Jacobian& H2t,
+                                     KDL::JntArray& values,
+                                     const KDL::Frame& frame,
+                                     const std::vector<Constraint> &constraints,
+                                     double dd,
+                                     KDL::JntArray& tmp,
+                                     KDL::JntArray& tmp2);
 
 #endif //FEATURE_CONSTRAINTS_FEATURE_CONSTRAINTS_H

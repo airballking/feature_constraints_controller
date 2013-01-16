@@ -25,6 +25,9 @@ void Ranges::resize(int size)
 
 void Controller::prepare(int max_constraints)
 {
+  // TODO(Ingo & Georg): Discuss whether this is still necessary? Or
+  //     whether the semantics of these variables have changed because
+  //     right now prepare(n) will be called with every new Config-msg.
   int n = (max_constraints == -1) ? constraints.size() : max_constraints;
 
   chi.resize(n);
@@ -38,10 +41,10 @@ void Controller::prepare(int max_constraints)
   command.resize(n);
 
   J.resize(n);
-  singularValues.resize(n);
+  singularValues.resize(6);
 
   tmp.resize(n);
-  tmp_pinv.resize(n);  // maximum number of constraints
+  analysis.resize(n);  // maximum number of constraints
 }
 
 
@@ -49,7 +52,7 @@ void Controller::update(KDL::Frame& frame)
 {
   differentiateConstraints(Ht, chi, frame, constraints, 0.001, tmp);
   control(ydot, weights, chi_desired, chi, command, gains);
-  analyzeH(tmp_pinv, Ht, J, singularValues, 1e-7);
+  analysis.analyzeH(Ht, J, singularValues, 1e-7);
   this->frame = frame;
 }
 
@@ -98,7 +101,8 @@ void control(KDL::JntArray& ydot,
 
     if(value > hi || value < lo)
     {
-      weights(i) = 1.0;
+      //weights(i) = 1.0;
+      weights(i) = command.weight(i);
     }
     else
     {
@@ -110,6 +114,20 @@ void control(KDL::JntArray& ydot,
 
       weights(i) = (w_lo > w_hi) ? w_lo : w_hi;
     }
+  }
+}
+
+void clamp(KDL::JntArray& joint_velocities, double min_velocity,
+           double max_velocity)
+{
+  assert(min_velocity <= max_velocity);
+
+  for(unsigned int i=0; i<joint_velocities.rows(); i++)
+  {
+    if(joint_velocities(i) < min_velocity)
+      joint_velocities(i) = min_velocity;
+    if(joint_velocities(i) > max_velocity)
+      joint_velocities(i) = max_velocity;
   }
 }
 

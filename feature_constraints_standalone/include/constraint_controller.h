@@ -4,12 +4,14 @@
 
 #include <constraint_msgs/ConstraintConfig.h>
 #include <constraint_msgs/ConstraintCommand.h>
+#include <constraint_msgs/JointAvoidanceState.h>
 
 #include <robot_kinematics.h>
 
 #include <SolverWeighted.hpp>
 #include <feature_constraints/Controller.h>
 #include <feature_constraints/Conversions.h>
+#include <feature_constraints/JointLimitAvoidanceController.h>
 
 #include <Eigen/Core>
 
@@ -23,6 +25,8 @@
 class FeatureConstraintsController
 {
 public:
+  FeatureConstraintsController();
+  ~FeatureConstraintsController();
   // non-realtime
   bool init(ros::NodeHandle& n);  //!< initialize controller, solver and ROS communication
 
@@ -47,8 +51,14 @@ private:
   //! Receives the offset of the object from the world's origin
   void object_offset_callback(const geometry_msgs::Pose::ConstPtr& msg);
 
+  //! Receives the offset of the arm_base from the robot base  
+  void robot_arm_offset_callback(const geometry_msgs::Pose::ConstPtr& msg);
+
+  // Receives the position of the robot base in the world frame
+  void robot_base_callback(const geometry_msgs::Pose::ConstPtr& msg);
+
   //! These transforms will be looked up from tf
-  KDL::Frame T_tool_in_ee_, T_object_in_world_, T_base_in_world_;
+  KDL::Frame T_tool_in_ee_, T_object_in_world_, T_base_in_world_, T_arm_in_base_;
 
   //! Internal representation of robot state
   KDL::JntArray q_, qdot_;
@@ -62,8 +72,11 @@ private:
   //! Parses JointState messages that come from the robot
   JointStateInterpreter *joint_state_interpreter_;
 
-  //! Matrices used for talking to the solver
-  Eigen::MatrixXd A_, Wq_, Wy_, H_;
+  //! Matrices used for talking with the feature controller
+  Eigen::MatrixXd H_feature_;
+
+  //! Matrices used for talking to the solver and Nullspace projection
+  Eigen::MatrixXd A_, A_inv_, ydot_, Wy_, Wq_, Identity_joints_;
 
   //! WDLS solver from KUL to inverse matrix
   SolverWeighted solver_;
@@ -71,23 +84,32 @@ private:
   //! Controller component to translate feature constraints into interaction matrix and output velocities
   Controller feature_controller_;
 
+  //! Controller component that avoids joint limits
+  JointLimitAvoidanceController joint_limit_avoidance_controller_;
+
   //! Subscribers
   ros::Subscriber joint_state_subscriber_;
   ros::Subscriber feature_constraints_subscriber_;
   ros::Subscriber constraint_command_subscriber_;
   ros::Subscriber tool_offset_subscriber_;
   ros::Subscriber object_offset_subscriber_;
-
+  ros::Subscriber arm_offset_subscriber_;
+  ros::Subscriber base_pose_subscriber_;
 
   //! Publishers
   ros::Publisher qdot_publisher_;
   ros::Publisher state_publisher_;
+  ros::Publisher limit_avoidance_state_publisher_;
   //! Corresponding message for publishing
   std_msgs::Float64MultiArray qdot_msg_;
   constraint_msgs::ConstraintState state_msg_;
+  constraint_msgs::JointAvoidanceState joint_avoidance_state_msg_;
 
+  // flags to remember the state of the feature controller
+  bool configured_, started_;
 
-  //! Flag to remember if feature_controller_ and solver_ have been resized meaningfully
-  bool ready_;
+  // flag to turn joint limit avoidance on and off
+  // will be set once during init
+  bool joint_limit_avoidance_on_;
 };
 

@@ -4,7 +4,7 @@
 // ROS message interface
 
 // most functions exist twice to allow for realtime execution
-// TODO: make shure the classes involving strings are handled right.
+// TODO: make sure the classes involving strings are handled right.
 
 using namespace KDL;
 
@@ -48,12 +48,16 @@ void fromMsg(const constraint_msgs::Constraint& msg, Constraint& c)
 }
 
 
-// TODO: this is _not_ realtime safe
+void fromMsg(const std::vector<constraint_msgs::Constraint>& msg, std::vector<Constraint>& c)
+{
+  for(unsigned int i=0; i < msg.size(); i++)
+    fromMsg(msg[i], c[i]);
+}
+
+
 void fromMsg(const constraint_msgs::ConstraintConfig& msg, std::vector<Constraint>& cc)
 {
-  int num = msg.constraints.size();
-  cc.resize(num);
-  for(int i=0; i < num; i++)
+  for(int i=0; i < msg.constraints.size(); i++)
     fromMsg(msg.constraints[i], cc[i]);
 }
 
@@ -61,6 +65,14 @@ Constraint fromMsg(const constraint_msgs::Constraint& msg)
 {
   return Constraint(msg.name, msg.function,
                     fromMsg(msg.tool_feature), fromMsg(msg.world_feature));
+}
+
+
+std::vector<Constraint> fromMsg(const std::vector<constraint_msgs::Constraint>& msg)
+{
+  std::vector<Constraint> cc(msg.size());
+  fromMsg(msg, cc);
+  return cc;
 }
 
 
@@ -123,6 +135,7 @@ void toMsg(Controller& c, constraint_msgs::ConstraintState& msg)
   toMsg(c.frame, msg.pose);
   toMsg(c.chi, msg.chi);
   toMsg(c.chi_desired, msg.chi_desired);
+  toMsg(c.ydot, msg.ydot_desired);
   toMsg(c.weights, msg.weights);
   toMsg(c.J, msg.jacobian);
   toMsg(c.Ht, msg.interaction_matrix);
@@ -131,6 +144,21 @@ void toMsg(Controller& c, constraint_msgs::ConstraintState& msg)
     msg.constraint_names[i] = c.constraints[i].name;
 }
 
+void toMsg(JointLimitAvoidanceController& c, constraint_msgs::JointAvoidanceState& c_msg)
+{
+  assert(c.joint_names_.size() == c_msg.joint_names.size());
+  for(unsigned int i=0; i<c.joint_names_.size(); i++)
+  {
+    c_msg.joint_names[i] = c.joint_names_[i];
+  }
+
+  toMsg(c.q_, c_msg.q);
+  toMsg(c.command_.pos_lo, c_msg.q_lower_limits);
+  toMsg(c.command_.pos_hi, c_msg.q_upper_limits);
+  toMsg(c.q_desired_, c_msg.q_desired);
+  toMsg(c.weights_, c_msg.weights);
+  toMsg(c.q_dot_desired_, c_msg.q_dot_desired);
+}
 
 // convenience functions
 
@@ -178,9 +206,21 @@ void resize(constraint_msgs::ConstraintState &msg, unsigned int number_constrain
 {
   msg.chi.resize(number_constraints);
   msg.chi_desired.resize(number_constraints);
+  msg.ydot_desired.resize(number_constraints);
   msg.weights.resize(number_constraints);
   msg.jacobian.resize(number_constraints);
   msg.interaction_matrix.resize(number_constraints);
-  msg.singular_values.resize(number_constraints);
+  msg.singular_values.resize(6);
   msg.constraint_names.resize(number_constraints);
+}
+
+void resize(constraint_msgs::JointAvoidanceState &msg, unsigned int number_joints)
+{
+  msg.joint_names.resize(number_joints);
+  msg.q.resize(number_joints);
+  msg.q_lower_limits.resize(number_joints);
+  msg.q_upper_limits.resize(number_joints);
+  msg.q_desired.resize(number_joints);
+  msg.weights.resize(number_joints);
+  msg.q_dot_desired.resize(number_joints);
 }

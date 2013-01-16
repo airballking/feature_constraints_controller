@@ -69,7 +69,7 @@ void print_discontinuity(bool legacy, int index)
     c = feature_pancake_constraints()[index];
 
   Frame frame(Vector(1,0,0));
-  vector<pair<Eigen::Quaterniond, double> > dis = continuityPlotRPY(c, frame, 128, 0.01, 0.3);
+  vector<pair<Eigen::Quaterniond, double> > dis = continuityPlotRPY(c, frame, 256, 0.01, 0.3);
 
   for(unsigned int i=0; i < dis.size(); i++)
   {
@@ -108,7 +108,7 @@ void discontinuity_at(bool legacy, KDL::Frame frame)
 
 int main(int argc, char* argv[])
 {
-  print_discontinuity(true, 5);
+  print_discontinuity(false, 5);
   //discontinuity_at(false, Frame(Rotation::RotY(0.4), Vector(0,0,1)));
 }
 

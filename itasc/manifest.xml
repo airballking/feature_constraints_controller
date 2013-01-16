@@ -15,7 +15,6 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/iTaSC</url>
 
-  <!-- depend package="eigen"/ -->
   <depend package="orocos_kdl"/>
   <depend package="feature_constraints"/>
   <depend package="rtt_geometry_msgs"/>

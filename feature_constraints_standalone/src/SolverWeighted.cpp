@@ -32,12 +32,14 @@ SolverWeighted::SolverWeighted(unsigned int num_constraints,
 	lambda = 0.1;
 
 	// resize and initialise all internal temporary structures
+        A_inv.resize(num_joints, num_constraints);
 	A_Wq.resize(num_constraints, num_joints);
 	Wy_A_Wq.resize(num_constraints, num_joints);
 	U.setZero(num_constraints, num_constraints);
 	U2.setZero(num_constraints, num_joints);
 	V.setIdentity(num_joints, num_joints);
 	Sinv.setZero(num_joints, num_constraints);
+        Sinv2.setZero(num_joints, num_joints);
 	Wy_U.resize(num_constraints, num_constraints);
 	Wq_V.resize(num_joints, num_joints);
 
@@ -63,12 +65,14 @@ void SolverWeighted::reinitialise(const unsigned int num_constraints,
 	this->num_joints = num_joints;
 
 	// resize and initialise all internal temporary structures
-	A_Wq.resize(num_constraints, num_joints);
+	A_inv.resize(num_joints, num_constraints);
+        A_Wq.resize(num_constraints, num_joints);
 	Wy_A_Wq.resize(num_constraints, num_joints);
 	U.setZero(num_constraints, num_constraints);
 	U2.setZero(num_constraints, num_joints);
 	V.setIdentity(num_joints, num_joints);
 	Sinv.setZero(num_joints, num_constraints);
+        Sinv2.setZero(num_joints, num_joints);
 	Wy_U.resize(num_constraints, num_constraints);
 	Wq_V.resize(num_joints, num_joints);
 
@@ -79,17 +83,30 @@ void SolverWeighted::reinitialise(const unsigned int num_constraints,
 	Sinv_Ut_Wyt_ydot.resize(num_joints);
 }
 
-
 /* This solves the equation A qdot = ydot for qdot using the weighted
  * pseudoinverse, where Wq denotes the weights of the joints and
  * Wy denotes the weights of the constraints.
  *
  * Note: Wq is a num_joints x num_joints matrix.
- * 		 Wy is a num_constraints x num_constraints matrix.
+ * 	 Wy is a num_constraints x num_constraints matrix.
  */
 bool SolverWeighted::solve(const Eigen::MatrixXd &A,
 		const Eigen::VectorXd &ydot, const Eigen::MatrixXd &Wq,
 		const Eigen::MatrixXd &Wy, Eigen::VectorXd &qdot)
+{
+  return solve(A, ydot, Wq, Wy, qdot, A_inv);
+}
+
+/* This solves the equation A qdot = ydot for qdot using the weighted
+ * pseudoinverse A_inv_weighted, where Wq denotes the weights of the joints and
+ * Wy denotes the weights of the constraints.
+ *
+ * Note: Wq is a num_joints x num_joints matrix.
+ * 	 Wy is a num_constraints x num_constraints matrix.
+ */
+bool SolverWeighted::solve(const Eigen::MatrixXd &A,
+		const Eigen::VectorXd &ydot, const Eigen::MatrixXd &Wq,
+		const Eigen::MatrixXd &Wy, Eigen::VectorXd &qdot, Eigen::MatrixXd &A_inv_weighted)
 {
 	// Create the Weighted Jacobian
 	A_Wq = (A * Wq);
@@ -101,9 +118,11 @@ bool SolverWeighted::solve(const Eigen::MatrixXd &A,
 		return false;
 	}
 
+/* NOTE: ORIGINAL 'OPTIMIZED' CODE FROM LEUVEN HAD PROBLEMS WITH OVERSPECIFIED CASES
 	// put U2 and S2 into U and S
-	U = U2.block(0, 0, num_constraints, num_constraints);
-	S = S2.segment(0, num_constraints);
+	int block_size = std::min(num_constraints, num_joints);
+	U.block(0, 0, block_size, block_size) = U2.block(0, 0, block_size, block_size);
+	S.segment(0, block_size) = S2.segment(0, block_size);
 
 	for (int j = 0; j < U.rows(); j++) {
 		if (fabs(U2(j, num_joints - 1)) > EPSILON) {
@@ -125,5 +144,23 @@ bool SolverWeighted::solve(const Eigen::MatrixXd &A,
 	// qdot = Wq*V * S^-1 * U'*Wy' * ydot
 	qdot = (Wq_V * Sinv * Wy_U.transpose() * ydot);
 
-	return true;
+*/
+
+       // BEGINNING RE-IMPLEMENTATION WITHOUT OPTIMIZATION
+
+       // Pre-multiply U and V by the task space and joint space weighting matrix respectively
+       Wy_U = (Wy * U2);
+       Wq_V = (Wq * V);
+ 
+       // invert S2 and also be aware of very small diagonale values
+       for (unsigned int i = 0; i < S2.rows(); i++)
+         Sinv2(i, i) = (S2(i) / (S2(i) * S2(i) + lambda * lambda));
+
+       // finally calculate the results...
+       // Ainv = Wq*V * S^-1 * U'*Wy'
+       A_inv_weighted = Wq_V * Sinv2 * Wy_U.transpose();
+       qdot = A_inv_weighted * ydot;
+
+       return true;
 }
+
