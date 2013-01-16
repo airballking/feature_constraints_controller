@@ -49,7 +49,7 @@ void fillCommandPushUnder(constraint_msgs::ConstraintCommand& target)
   // ...align command
   addConstraintCommand(target, 1.0, -0.05, 0.05);
   // ...height command
-  addConstraintCommand(target, 1.0, 0.0, 0.01);
+  addConstraintCommand(target, 1.0, -0.01, 0.01);
   // ...align front command
   addConstraintCommand(target, 1.0, -0.05, 0.05);
 }
