@@ -117,3 +117,17 @@ void control(KDL::JntArray& ydot,
   }
 }
 
+void clamp(KDL::JntArray& joint_velocities, double min_velocity,
+           double max_velocity)
+{
+  assert(min_velocity <= max_velocity);
+
+  for(unsigned int i=0; i<joint_velocities.rows(); i++)
+  {
+    if(joint_velocities(i) < min_velocity)
+      joint_velocities(i) = min_velocity;
+    if(joint_velocities(i) > max_velocity)
+      joint_velocities(i) = max_velocity;
+  }
+}
+

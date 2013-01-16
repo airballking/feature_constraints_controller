@@ -208,7 +208,7 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   // set gains of feature controller to whatever we want
   for(unsigned int i=0; i < num_constraints; i++)
   {
-    feature_controller_.gains(i) = 1.0;
+    feature_controller_.gains(i) = 4.0;
   }
 
   // resize interaction matrix for feature controller
@@ -260,6 +260,8 @@ void FeatureConstraintsController::update()
     {  
       // evaluate constraints, i.e. run feature controller for this cycle
       feature_controller_.update(T_tool_in_object);
+      // and clamp desired feature velocities
+      clamp(feature_controller_.ydot, -0.2, 0.2);
 
       // transform interaction matrix (ref frame base, ref point base)
       // NOTE: Discuss why we are transposing H_transpose here. --> Not intuitive.

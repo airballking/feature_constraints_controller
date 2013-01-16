@@ -99,6 +99,15 @@ void control(KDL::JntArray& ydot,
 	     const Ranges& command,
              const KDL::JntArray gains);
 
+/* Auxiliary convenience function to clamp --for example-- output
+   velocities that come from a controller.
+   \param joint_velocities [in AND out] the original velocities to clamp
+   \parm min_velocitiy [in] desired lower velocity boundary
+   \param max_velocity [in] desired upper velocity boundary
+*/
+void clamp(KDL::JntArray &joint_velocities,
+           double min_velocity,
+           double max_velocity);
 
 #endif //FEATURE_CONSTRAINTS_CONTROLLER_H
 
