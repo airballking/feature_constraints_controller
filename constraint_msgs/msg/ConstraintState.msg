@@ -18,6 +18,9 @@ float64[] chi_desired        # desired constraint values
 # depends on whether or not constraint is currently fulfilled
 float64[] weights            # actual weights of constraints
 
+# current desired output feature velocities from controller
+float64[] ydot_desired
+
 # interaction matrix obtained by numerically differentiating
 # the constraint functions
 geometry_msgs/Twist[] interaction_matrix  # H
