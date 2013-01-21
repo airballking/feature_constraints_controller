@@ -5,3 +5,5 @@
 float64[] pos_lo
 float64[] pos_hi
 float64[] weight
+float64[] max_vel
+float64[] min_vel

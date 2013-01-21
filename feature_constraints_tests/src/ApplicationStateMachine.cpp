@@ -20,6 +20,8 @@ void emptyCommand(constraint_msgs::ConstraintCommand& target)
   target.weight.clear();
   target.pos_lo.clear();
   target.pos_hi.clear();
+  target.min_vel.clear();
+  target.max_vel.clear();
 }
 
 void fillCommandApproach(constraint_msgs::ConstraintCommand& target)
@@ -27,15 +29,15 @@ void fillCommandApproach(constraint_msgs::ConstraintCommand& target)
   emptyCommand(target);
 
   // ...pointing command
-  addConstraintCommand(target, 1.0, -0.05, 0.05);
+  addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
   // ...distance command
-  addConstraintCommand(target, 1.0, 0.2, 0.3);
+  addConstraintCommand(target, 1.0, 0.2, 0.3, -0.1, 0.1);
   // ...align command
-  addConstraintCommand(target, 1.0, -0.3, -0.1);
+  addConstraintCommand(target, 1.0, -0.3, -0.1, -0.1, 0.1);
   // ...height command
-  addConstraintCommand(target, 1.0, 0.0, 0.01);
+  addConstraintCommand(target, 1.0, 0.0, 0.01, -0.1, 0.1);
   // ...align front command
-  addConstraintCommand(target, 1.0, -0.05, 0.05);
+  addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
 }
 
 void fillCommandPushUnder(constraint_msgs::ConstraintCommand& target)
@@ -43,15 +45,15 @@ void fillCommandPushUnder(constraint_msgs::ConstraintCommand& target)
   emptyCommand(target);
 
   // ...pointing command
-  addConstraintCommand(target, 1.0, -0.05, 0.05);
+  addConstraintCommand(target, 0.0, -0.05, 0.05, -0.4, 0.4);
   // ...distance command
-  addConstraintCommand(target, 1.0, -0.02, 0.02);
+  addConstraintCommand(target, 1.0, -0.02, 0.02, -0.1, 0.1);
   // ...align command
-  addConstraintCommand(target, 1.0, -0.05, 0.05);
+  addConstraintCommand(target, 1.0, -0.05, 0.05, -0.4, 0.4);
   // ...height command
-  addConstraintCommand(target, 1.0, -0.01, 0.01);
+  addConstraintCommand(target, 1.0, -0.01, 0.01, -0.1, 0.1);
   // ...align front command
-  addConstraintCommand(target, 1.0, -0.05, 0.05);
+  addConstraintCommand(target, 1.0, -0.05, 0.05, -0.4, 0.4);
 }
 
 void fillCommandLift(constraint_msgs::ConstraintCommand& target)
@@ -59,15 +61,16 @@ void fillCommandLift(constraint_msgs::ConstraintCommand& target)
   emptyCommand(target);
 
   // ...pointing command
-  addConstraintCommand(target, 1.0, -0.05, 0.05);
+  //addConstraintCommand(target, 1.0, -0.05, 0.05);
+  addConstraintCommand(target, 0.0, -0.05, 0.05, -0.4, 0.4);
   // ...distance command
-  addConstraintCommand(target, 1.0, 0.03, 0.07);
+  addConstraintCommand(target, 1.0, 0.00, 0.07, -0.1, 0.1);
   // ...align command
-  addConstraintCommand(target, 1.0, -0.08, 0.08);
+  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.4, 0.4);
   // ...height command
-  addConstraintCommand(target, 1.0, 0.1, 0.2);
+  addConstraintCommand(target, 1.0, 0.1, 0.2, -0.1, 0.1);
   // ...align front command
-  addConstraintCommand(target, 1.0, -0.08, 0.08);
+  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.4, 0.4);
 }
 
 void fillCommandFlip(constraint_msgs::ConstraintCommand& target)
@@ -75,16 +78,17 @@ void fillCommandFlip(constraint_msgs::ConstraintCommand& target)
   emptyCommand(target);
 
   // ...pointing command
-  addConstraintCommand(target, 1.0, -0.05, 0.05);
+  addConstraintCommand(target, 0.0, -0.05, 0.05, -0.4, 0.4);
   // ...distance command
-  addConstraintCommand(target, 1.0, 0.03, 0.07);
+  addConstraintCommand(target, 1.0, 0.00, 0.07, -0.1, 0.1);
   // ...align command
-  addConstraintCommand(target, 1.0, -0.08, 0.08);
+  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.4, 0.4);
   // ...height command
-  addConstraintCommand(target, 1.0, 0.1, 0.2);
+  addConstraintCommand(target, 1.0, 0.1, 0.2, -0.1, 0.1);
   // ...align front command
   // SINGULARITY !!
-  addConstraintCommand(target, 1.0, -1.0, -0.95);
+  // maybe implement and try new command 'facing'
+  addConstraintCommand(target, 1.0, -1.0, -0.95, -0.4, 0.4);
 }
 
 void fillCommandStop(constraint_msgs::ConstraintCommand& target)
@@ -94,15 +98,15 @@ void fillCommandStop(constraint_msgs::ConstraintCommand& target)
   // give all constraints a well-behaved command with zero weight, i.e. do not change
   // NOTE: this might still causes motion because of the joint limit avoidance
   // ...pointing command
-  addConstraintCommand(target, 0.0, -0.1, 0.1);
+  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.4, 0.4);
   // ...distance command
-  addConstraintCommand(target, 0.0, -0.1, 0.1);
+  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.1, 0.1);
   // ...align command
-  addConstraintCommand(target, 0.0, -0.1, 0.1);
+  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.4, 0.4);
   // ...height command
-  addConstraintCommand(target, 0.0, -0.1, 0.1);
+  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.1, 0.1);
   // ...align front command
-  addConstraintCommand(target, 0.0, -0.1, 0.1);
+  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.4, 0.4);
 }
 
 // the actual state machine code

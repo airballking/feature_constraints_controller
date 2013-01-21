@@ -29,6 +29,8 @@ public:
   KDL::JntArray pos_lo;  //!< min values for the constraints
   KDL::JntArray pos_hi;  //!< max values for the constraints
   KDL::JntArray weight;  //!< weights for the constraints (0|1)
+  KDL::JntArray max_vel; //!< max velocities for the constraints
+  KDL::JntArray min_vel; //!< min velocities for the constraints
 };
 
 
@@ -73,6 +75,9 @@ public:
 
   // calls deriveConstraints(), control() and analyzeH()
   void update(KDL::Frame& frame);
+
+  // calls clamp(KDL::JntArray, const KDL::JntArray, const KDL::JntArray)
+  void clampOutput();
 };
 
 
@@ -102,12 +107,16 @@ void control(KDL::JntArray& ydot,
 /* Auxiliary convenience function to clamp --for example-- output
    velocities that come from a controller.
    \param joint_velocities [in AND out] the original velocities to clamp
-   \parm min_velocitiy [in] desired lower velocity boundary
-   \param max_velocity [in] desired upper velocity boundary
+   \param min_velocities [in] desired lower velocity boundaries
+   \param max_velocities [in] desired upper velocity boundariess
 */
-void clamp(KDL::JntArray &joint_velocities,
-           double min_velocity,
-           double max_velocity);
+void clamp(KDL::JntArray& joint_velocities,
+           const KDL::JntArray& min_velocities,
+           const KDL::JntArray& max_velocities);
 
+double clamp(double input_velocity,
+             double min_velocity,
+             double max_velocity);
+             
 #endif //FEATURE_CONSTRAINTS_CONTROLLER_H
 

@@ -261,7 +261,7 @@ void FeatureConstraintsController::update()
       // evaluate constraints, i.e. run feature controller for this cycle
       feature_controller_.update(T_tool_in_object);
       // and clamp desired feature velocities
-      clamp(feature_controller_.ydot, -0.2, 0.2);
+      feature_controller_.clampOutput();
 
       // transform interaction matrix (ref frame base, ref point base)
       // NOTE: Discuss why we are transposing H_transpose here. --> Not intuitive.

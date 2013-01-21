@@ -94,6 +94,8 @@ void fromMsg(const constraint_msgs::ConstraintCommand& msg, Ranges& ranges)
   fromMsg(msg.pos_lo, ranges.pos_lo);
   fromMsg(msg.pos_hi, ranges.pos_hi);
   fromMsg(msg.weight, ranges.weight);
+  fromMsg(msg.max_vel, ranges.max_vel);
+  fromMsg(msg.min_vel, ranges.min_vel);
 }
 
 Ranges fromMsg(constraint_msgs::ConstraintCommand& msg)

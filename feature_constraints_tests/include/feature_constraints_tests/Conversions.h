@@ -18,6 +18,6 @@ void fillDistanceConstraint(constraint_msgs::Constraint& target, constraint_msgs
 void fillHeightConstraint(constraint_msgs::Constraint& target, constraint_msgs::Feature& tool, constraint_msgs::Feature& world, std::string name);
 
 // Convenience Command Filler
-void addConstraintCommand(constraint_msgs::ConstraintCommand& target, double weight, double lower_limit, double upper_limit);
+void addConstraintCommand(constraint_msgs::ConstraintCommand& target, double weight, double lower_limit, double upper_limit, double min_vel, double max_vel);
 
 #endif //FEATURE_CONSTRAINTS_TESTS_CONVERSIONS_H

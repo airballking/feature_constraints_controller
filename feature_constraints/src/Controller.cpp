@@ -10,7 +10,7 @@ using namespace Eigen;
 
 
 Ranges::Ranges(int size) :
-  pos_lo(size), pos_hi(size), weight(size)
+  pos_lo(size), pos_hi(size), weight(size), max_vel(size), min_vel(size)
 {
 
 }
@@ -20,6 +20,8 @@ void Ranges::resize(int size)
   pos_lo.resize(size);
   pos_hi.resize(size);
   weight.resize(size);
+  max_vel.resize(size);
+  min_vel.resize(size);
 }
 
 
@@ -56,6 +58,10 @@ void Controller::update(KDL::Frame& frame)
   this->frame = frame;
 }
 
+void Controller::clampOutput()
+{
+  clamp(ydot, command.min_vel, command.max_vel);
+}
 
 void control(KDL::JntArray& ydot,
              KDL::JntArray& weights,
@@ -117,17 +123,28 @@ void control(KDL::JntArray& ydot,
   }
 }
 
-void clamp(KDL::JntArray& joint_velocities, double min_velocity,
-           double max_velocity)
+double clamp(double input_velocity, double min_velocity, double max_velocity)
 {
   assert(min_velocity <= max_velocity);
 
-  for(unsigned int i=0; i<joint_velocities.rows(); i++)
-  {
-    if(joint_velocities(i) < min_velocity)
-      joint_velocities(i) = min_velocity;
-    if(joint_velocities(i) > max_velocity)
-      joint_velocities(i) = max_velocity;
-  }
+  if(input_velocity < min_velocity)
+    return min_velocity;
+  if(input_velocity > max_velocity)
+    return max_velocity;
+
+  // nothing to clamp
+  return input_velocity;
 }
 
+void clamp(KDL::JntArray& joint_velocities, const KDL::JntArray& min_velocities,
+           const KDL::JntArray& max_velocities)
+{
+  assert(joint_velocities.rows() == min_velocities.rows());
+  assert(joint_velocities.rows() == max_velocities.rows());
+
+  for(unsigned int i=0; i<joint_velocities.rows(); i++)
+  {
+    joint_velocities(i) = clamp(joint_velocities(i), min_velocities(i), 
+                            max_velocities(i));
+  }
+}

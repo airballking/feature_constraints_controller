@@ -49,10 +49,12 @@ void fillHeightConstraint(constraint_msgs::Constraint& target, constraint_msgs::
   target.function = "height";
 }
 
-void addConstraintCommand(constraint_msgs::ConstraintCommand& target, double weight, double lower_limit, double upper_limit)
+void addConstraintCommand(constraint_msgs::ConstraintCommand& target, double weight, double lower_limit, double upper_limit, double min_vel, double max_vel)
 {
   target.weight.push_back(weight);
   target.pos_lo.push_back(lower_limit);
   target.pos_hi.push_back(upper_limit);
+  target.min_vel.push_back(min_vel);
+  target.max_vel.push_back(max_vel);
 }
 
