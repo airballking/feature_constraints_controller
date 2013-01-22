@@ -19,6 +19,11 @@
   <depend package="trajectory_msgs" />
   <depend package="pr2_gazebo" />
   <depend package="rxtools" />
+
+  <export>
+   <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lias_mechanism_controllers_calibration"/>
+  </export>
+
 </package>
 
 

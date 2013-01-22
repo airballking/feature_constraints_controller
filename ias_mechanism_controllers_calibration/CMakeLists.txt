@@ -6,5 +6,7 @@ rosbuild_init()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
+rosbuild_add_library(${PROJECT_NAME} src/robot_arm.cpp)
+
 rosbuild_add_executable(pr2_multi_vel_test src/pr2_multi_vel_test.cpp src/robot_arm.cpp)
 rosbuild_link_boost(pr2_multi_vel_test thread)
