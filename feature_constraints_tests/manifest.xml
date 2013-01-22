@@ -20,8 +20,13 @@
   <!-- We will use the ias_mechanism_controllers to simulate our robot -->
   <depend package="loopback_controller_manager" />
   <depend package="ias_mechanism_controllers" />
-<!--  <depend package="robot_state_chain_publisher" /> -->
 
+  <!-- Using the standard controller to get into a nice init configuration -->
+  <depend package="actionlib" />
+  <depend package="pr2_controller_msgs" />
+  <depend package="trajectory_msgs" />
+  <depend package="pr2_mechanism_msgs" />
+  <depend package="pr2_mechanism" />
 
 </package>
 
