@@ -62,15 +62,15 @@ void fillCommandLift(constraint_msgs::ConstraintCommand& target)
 
   // ...pointing command
   //addConstraintCommand(target, 1.0, -0.05, 0.05);
-  addConstraintCommand(target, 0.0, -0.05, 0.05, -0.4, 0.4);
+  addConstraintCommand(target, 0.0, -0.05, 0.05, -0.1, 0.1);
   // ...distance command
   addConstraintCommand(target, 1.0, 0.00, 0.07, -0.1, 0.1);
   // ...align command
-  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.4, 0.4);
+  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.1, 0.1);
   // ...height command
-  addConstraintCommand(target, 1.0, 0.1, 0.2, -0.1, 0.1);
+  addConstraintCommand(target, 1.0, 0.1, 0.3, -0.1, 0.1);
   // ...align front command
-  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.4, 0.4);
+  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.1, 0.1);
 }
 
 void fillCommandFlip(constraint_msgs::ConstraintCommand& target)
@@ -78,17 +78,17 @@ void fillCommandFlip(constraint_msgs::ConstraintCommand& target)
   emptyCommand(target);
 
   // ...pointing command
-  addConstraintCommand(target, 0.0, -0.05, 0.05, -0.4, 0.4);
+  addConstraintCommand(target, 0.0, -0.05, 0.05, -0.2, 0.2);
   // ...distance command
-  addConstraintCommand(target, 1.0, 0.00, 0.07, -0.1, 0.1);
+  addConstraintCommand(target, 1.0, 0.00, 0.07, -0.2, 0.2);
   // ...align command
-  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.4, 0.4);
+  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.2, 0.2);
   // ...height command
-  addConstraintCommand(target, 1.0, 0.1, 0.2, -0.1, 0.1);
+  addConstraintCommand(target, 1.0, 0.1, 0.3, -0.2, 0.2);
   // ...align front command
   // SINGULARITY !!
   // maybe implement and try new command 'facing'
-  addConstraintCommand(target, 1.0, -1.0, -0.95, -0.4, 0.4);
+  addConstraintCommand(target, 1.0, -1.0, -0.95, -0.2, 0.2);
 }
 
 void fillCommandStop(constraint_msgs::ConstraintCommand& target)
