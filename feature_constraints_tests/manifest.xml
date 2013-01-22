@@ -23,10 +23,10 @@
 
   <!-- Using the standard controller to get into a nice init configuration -->
   <depend package="actionlib" />
-  <depend package="pr2_controller_msgs" />
+  <depend package="pr2_controllers_msgs" />
   <depend package="trajectory_msgs" />
   <depend package="pr2_mechanism_msgs" />
-  <depend package="pr2_mechanism" />
+  <depend package="pr2_controller_manager" />
 
 </package>
 
