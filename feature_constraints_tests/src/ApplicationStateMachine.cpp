@@ -45,15 +45,15 @@ void fillCommandPushUnder(constraint_msgs::ConstraintCommand& target)
   emptyCommand(target);
 
   // ...pointing command
-  addConstraintCommand(target, 0.0, -0.05, 0.05, -0.4, 0.4);
+  addConstraintCommand(target, 0.0, -0.05, 0.05, -0.1, 0.1);
   // ...distance command
   addConstraintCommand(target, 1.0, -0.02, 0.02, -0.1, 0.1);
   // ...align command
-  addConstraintCommand(target, 1.0, -0.05, 0.05, -0.4, 0.4);
+  addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
   // ...height command
   addConstraintCommand(target, 1.0, -0.01, 0.01, -0.1, 0.1);
   // ...align front command
-  addConstraintCommand(target, 1.0, -0.05, 0.05, -0.4, 0.4);
+  addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
 }
 
 void fillCommandLift(constraint_msgs::ConstraintCommand& target)
