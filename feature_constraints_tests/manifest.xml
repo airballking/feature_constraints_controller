@@ -22,12 +22,8 @@
   <depend package="ias_mechanism_controllers" />
 
   <!-- Using the standard controller to get into a nice init configuration -->
-  <depend package="actionlib" />
-  <depend package="pr2_controllers_msgs" />
-  <depend package="trajectory_msgs" />
-  <depend package="pr2_mechanism_msgs" />
-  <depend package="pr2_controller_manager" />
-
+  <!-- use convenience interface provided by class robot_arm -->
+  <depend package="ias_mechanism_controllers_calibration" />
 </package>
 
 

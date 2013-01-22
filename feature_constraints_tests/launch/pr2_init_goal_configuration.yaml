@@ -1,0 +1,38 @@
+r_arm_controller:
+  joints:
+    - r_shoulder_pan_joint
+    - r_shoulder_lift_joint
+    - r_upper_arm_roll_joint
+    - r_elbow_flex_joint
+    - r_forearm_roll_joint
+    - r_wrist_flex_joint
+    - r_wrist_roll_joint
+  test_goals:
+    r_shoulder_pan_joint:   {q: 0.3, qdot: 0.0}
+    r_shoulder_lift_joint:  {q: 0.0, qdot: 0.0}
+    r_upper_arm_roll_joint: {q: 0.0, qdot: 0.0}
+    r_elbow_flex_joint:     {q: 0.3, qdot: 0.0}
+    r_forearm_roll_joint:   {q: 0.0, qdot: 0.0}
+    r_wrist_flex_joint:     {q: 0.3, qdot: 0.0}
+    r_wrist_roll_joint:     {q: 0.0, qdot: 0.0}
+  test_execution_time: 5.0
+
+l_arm_controller:
+  type: "ias_mechanism_controllers/MultiJointVelocityController"
+  joints:
+    - l_shoulder_pan_joint
+    - l_shoulder_lift_joint
+    - l_upper_arm_roll_joint
+    - l_elbow_flex_joint
+    - l_forearm_roll_joint
+    - l_wrist_flex_joint
+    - l_wrist_roll_joint
+  test_goals:
+    l_shoulder_pan_joint:   {q: 1.05, qdot: 0.0}
+    l_shoulder_lift_joint:  {q: 0.01, qdot: 0.0}
+    l_upper_arm_roll_joint: {q: 0.61, qdot: 0.0}
+    l_elbow_flex_joint:     {q: -0.44, qdot: 0.0}
+    l_forearm_roll_joint:   {q: -5.6, qdot: 0.0}
+    l_wrist_flex_joint:     {q: -0.86, qdot: 0.0}
+    l_wrist_roll_joint:     {q: 0.16, qdot: 0.0}
+  test_execution_time: 5.0
