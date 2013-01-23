@@ -80,24 +80,53 @@
  </node>
 
  <!-- Start rxplot to see what is going on -->
-
- <node name="weights_plotter" type="rxplot" pkg="rxtools" 
-   args="-p 25
-         -P
-         -l 'point main axis at pancake','distance from pancake','spatula pointing downwards','keep over','align front edge'
-         /left_arm_feature_controller/constraint_state/weights[0],/left_arm_feature_controller/constraint_state/weights[1],/left_arm_feature_controller/constraint_state/weights[2],/left_arm_feature_controller/constraint_state/weights[3],/left_arm_feature_controller/constraint_state/weights[4]"/>
-
-<node name="chi_plotter" type="rxplot" pkg="rxtools"
-  args="-p 25
-        -P
-        -l 'chi[0]','chi_desired[0]'
-        /left_arm_feature_controller/constraint_state/chi[0],/left_arm_feature_controller/constraint_state/chi_desired[0]"/>
-
- <!-- plot weights of joint limit avoidance controller to know which joint is critical -->
 <!--
- <node name="live_plotter" type="rxplot" pkg="rxtools" 
+ <node name="plotter_pointing_at" type="rxplot" pkg="rxtools" 
    args="-p 25
          -P
-         /left_arm_feature_controller/joint_limit_avoidance_state/weights[0]:weights[1]:weights[2]:weights[3]:weights[4]:weights[5]:weights[6]"/>
+         -t 'POINTING-AT CONSTRAINT'
+         -l 'lower_boundary','upper_boundary','chi_desired','chi','weight_desired','weight','ydot_desired'
+         /left_arm_feature_controller/constraint_command/pos_lo[0],/left_arm_feature_controller/constraint_command/pos_hi[0],/left_arm_feature_controller/constraint_state/chi_desired[0],/left_arm_feature_controller/constraint_state/chi[0]
+         /left_arm_feature_controller/constraint_command/weight[0],/left_arm_feature_controller/constraint_state/weights[0],/left_arm_feature_controller/constraint_state/ydot_desired[0]"/>
+
+ <node name="plotter_distance" type="rxplot" pkg="rxtools" 
+   args="-p 25
+         -P
+         -t 'DISTANCE CONSTRAINT'
+         -l 'lower_boundary','upper_boundary','chi_desired','chi','weight_desired','weight','ydot_desired'
+         /left_arm_feature_controller/constraint_command/pos_lo[1],/left_arm_feature_controller/constraint_command/pos_hi[1],/left_arm_feature_controller/constraint_state/chi_desired[1],/left_arm_feature_controller/constraint_state/chi[1]
+         /left_arm_feature_controller/constraint_command/weight[1],/left_arm_feature_controller/constraint_state/weights[1],/left_arm_feature_controller/constraint_state/ydot_desired[1]"/>
+
+ <node name="plotter_align_main" type="rxplot" pkg="rxtools" 
+   args="-p 25
+         -P
+         -t 'ALIGN-MAIN CONSTRAINT'
+         -l 'lower_boundary','upper_boundary','chi_desired','chi','weight_desired','weight','ydot_desired'
+         /left_arm_feature_controller/constraint_command/pos_lo[2],/left_arm_feature_controller/constraint_command/pos_hi[2],/left_arm_feature_controller/constraint_state/chi_desired[2],/left_arm_feature_controller/constraint_state/chi[2]
+         /left_arm_feature_controller/constraint_command/weight[2],/left_arm_feature_controller/constraint_state/weights[2],/left_arm_feature_controller/constraint_state/ydot_desired[2]"/>
+
+ <node name="plotter_height" type="rxplot" pkg="rxtools" 
+   args="-p 25
+         -P
+         -t 'HEIGHT CONSTRAINT'
+         -l 'lower_boundary','upper_boundary','chi_desired','chi','weight_desired','weight','ydot_desired'
+         /left_arm_feature_controller/constraint_command/pos_lo[3],/left_arm_feature_controller/constraint_command/pos_hi[3],/left_arm_feature_controller/constraint_state/chi_desired[3],/left_arm_feature_controller/constraint_state/chi[3]
+         /left_arm_feature_controller/constraint_command/weight[3],/left_arm_feature_controller/constraint_state/weights[3],/left_arm_feature_controller/constraint_state/ydot_desired[3]"/>
+
+ <node name="plotter_align_front" type="rxplot" pkg="rxtools" 
+   args="-p 25
+         -P
+         -t 'ALIGN-FRONT CONSTRAINT'
+         -l 'lower_boundary','upper_boundary','chi_desired','chi','weight_desired','weight','ydot_desired'
+         /left_arm_feature_controller/constraint_command/pos_lo[4],/left_arm_feature_controller/constraint_command/pos_hi[4],/left_arm_feature_controller/constraint_state/chi_desired[4],/left_arm_feature_controller/constraint_state/chi[4]
+         /left_arm_feature_controller/constraint_command/weight[4],/left_arm_feature_controller/constraint_state/weights[4],/left_arm_feature_controller/constraint_state/ydot_desired[4]"/>
+
+ <node name="plotter_facing_spatula_top" type="rxplot" pkg="rxtools" 
+   args="-p 25
+         -P
+         -t 'FACING-SPATULA-TOP CONSTRAINT'
+         -l 'lower_boundary','upper_boundary','chi_desired','chi','weight_desired','weight','ydot_desired'
+         /left_arm_feature_controller/constraint_command/pos_lo[5],/left_arm_feature_controller/constraint_command/pos_hi[5],/left_arm_feature_controller/constraint_state/chi_desired[5],/left_arm_feature_controller/constraint_state/chi[5]
+         /left_arm_feature_controller/constraint_command/weight[5],/left_arm_feature_controller/constraint_state/weights[5],/left_arm_feature_controller/constraint_state/ydot_desired[5]"/>
 -->
 </launch>
