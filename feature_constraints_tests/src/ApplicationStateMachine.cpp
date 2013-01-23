@@ -9,6 +9,7 @@
 // state flags
 bool initial_state_ = true;
 bool approach_state_ = false;
+bool touch_oven_state_ = false;
 bool push_under_state_ = false;
 bool lift_state_ = false;
 bool flip_state_ = false;
@@ -31,13 +32,33 @@ void fillCommandApproach(constraint_msgs::ConstraintCommand& target)
   // ...pointing command
   addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
   // ...distance command
-  addConstraintCommand(target, 1.0, 0.2, 0.3, -0.1, 0.1);
+  addConstraintCommand(target, 1.0, 0.19, 0.21, -0.1, 0.1);
+  // ...align command
+  addConstraintCommand(target, 1.0, -0.3, -0.1, -0.1, 0.1);
+  // ...height command
+  addConstraintCommand(target, 1.0, 0.05, 0.1, -0.1, 0.1);
+  // ...align front command
+  addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
+  // ... facing constraint
+  addConstraintCommand(target, 0.0, 0.8, 1.0, -0.1, 0.1);
+}
+
+void fillCommandTouchOven(constraint_msgs::ConstraintCommand& target)
+{
+  emptyCommand(target);
+
+  // ...pointing command
+  addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
+  // ...distance command
+  addConstraintCommand(target, 1.0, 0.19, 0.21, -0.1, 0.1);
   // ...align command
   addConstraintCommand(target, 1.0, -0.3, -0.1, -0.1, 0.1);
   // ...height command
   addConstraintCommand(target, 1.0, 0.0, 0.01, -0.1, 0.1);
   // ...align front command
   addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
+  // ... facing constraint
+  addConstraintCommand(target, 0.0, 0.8, 1.0, -0.1, 0.1);
 }
 
 void fillCommandPushUnder(constraint_msgs::ConstraintCommand& target)
@@ -54,6 +75,8 @@ void fillCommandPushUnder(constraint_msgs::ConstraintCommand& target)
   addConstraintCommand(target, 1.0, -0.01, 0.01, -0.1, 0.1);
   // ...align front command
   addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
+  // ... facing constraint
+  addConstraintCommand(target, 0.0, 0.8, 1.0, -0.1, 0.1);
 }
 
 void fillCommandLift(constraint_msgs::ConstraintCommand& target)
@@ -61,16 +84,17 @@ void fillCommandLift(constraint_msgs::ConstraintCommand& target)
   emptyCommand(target);
 
   // ...pointing command
-  //addConstraintCommand(target, 1.0, -0.05, 0.05);
   addConstraintCommand(target, 0.0, -0.05, 0.05, -0.1, 0.1);
   // ...distance command
   addConstraintCommand(target, 1.0, 0.00, 0.07, -0.1, 0.1);
   // ...align command
   addConstraintCommand(target, 1.0, -0.08, 0.08, -0.1, 0.1);
   // ...height command
-  addConstraintCommand(target, 1.0, 0.1, 0.3, -0.1, 0.1);
+  addConstraintCommand(target, 1.0, 0.15, 0.3, -0.1, 0.1);
   // ...align front command
-  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.1, 0.1);
+  addConstraintCommand(target, 1.0, -0.1, -0.05, -0.1, 0.1);
+  // ... facing constraint
+  addConstraintCommand(target, 0.0, 0.8, 1.0, -0.1, 0.1);
 }
 
 void fillCommandFlip(constraint_msgs::ConstraintCommand& target)
@@ -82,13 +106,15 @@ void fillCommandFlip(constraint_msgs::ConstraintCommand& target)
   // ...distance command
   addConstraintCommand(target, 1.0, 0.00, 0.07, -0.2, 0.2);
   // ...align command
-  addConstraintCommand(target, 1.0, -0.08, 0.08, -0.2, 0.2);
+  addConstraintCommand(target, 1.0, -0.2, 0.2, -0.2, 0.2);
   // ...height command
   addConstraintCommand(target, 1.0, 0.1, 0.3, -0.2, 0.2);
   // ...align front command
   // SINGULARITY !!
   // maybe implement and try new command 'facing'
-  addConstraintCommand(target, 1.0, -1.0, -0.95, -0.2, 0.2);
+  addConstraintCommand(target, 0.0, -0.9, -0.8, -0.1, 0.1);
+  // ... facing constraint
+  addConstraintCommand(target, 1.0, -0.5, -0.4, -0.1, 0.1);
 }
 
 void fillCommandStop(constraint_msgs::ConstraintCommand& target)
@@ -98,15 +124,17 @@ void fillCommandStop(constraint_msgs::ConstraintCommand& target)
   // give all constraints a well-behaved command with zero weight, i.e. do not change
   // NOTE: this might still causes motion because of the joint limit avoidance
   // ...pointing command
-  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.4, 0.4);
+  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.1, 0.1);
   // ...distance command
   addConstraintCommand(target, 0.0, -0.1, 0.1, -0.1, 0.1);
   // ...align command
-  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.4, 0.4);
+  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.1, 0.1);
   // ...height command
   addConstraintCommand(target, 0.0, -0.1, 0.1, -0.1, 0.1);
   // ...align front command
-  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.4, 0.4);
+  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.1, 0.1);
+  // ...spatula plane facing pancake plan command
+  addConstraintCommand(target, 0.0, -0.1, 0.1, -0.1, 0.1);
 }
 
 // the actual state machine code
@@ -124,8 +152,17 @@ bool updateStateMachineAndWriteCommand(constraint_msgs::ConstraintCommand& const
 
     if(approach_state_ && constraints_fulfilled)
     {
-      ROS_INFO("Switching to push-under-state.");
+      ROS_INFO("Switching to touc-oven-state.");
       approach_state_ = false;
+      touch_oven_state_ = true;
+      fillCommandTouchOven(constraint_command_msg);
+      return false;
+    }
+    
+    if(touch_oven_state_ && constraints_fulfilled)
+    {
+      ROS_INFO("Switching to push-under-state.");
+      touch_oven_state_ = false;
       push_under_state_ = true;
       fillCommandPushUnder(constraint_command_msg);
       return false;

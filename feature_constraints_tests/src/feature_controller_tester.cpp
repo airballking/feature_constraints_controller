@@ -47,9 +47,9 @@ int main(int argc, char **argv)
 
   // construct messages...
   // ... features
-  constraint_msgs::Feature spatula_axis, spatula_front, pancake_plane;
+  constraint_msgs::Feature spatula_axis, spatula_front, pancake_plane, spatula_plane;
   // ... constraints
-  constraint_msgs::Constraint pointing_constraint, distance_constraint, align_constraint, align_front_constraint, height_constraint;
+  constraint_msgs::Constraint pointing_constraint, distance_constraint, align_constraint, align_front_constraint, height_constraint, facing_constraint;
   // ... entire configuration
   constraint_msgs::ConstraintConfig constraint_config_msg;
     // ... command
@@ -68,12 +68,17 @@ int main(int argc, char **argv)
   pancake_plane.direction.z = 0.25;
   pancake_plane.contact_direction.x = 0.25;
 
+  fillPlaneFeature(spatula_plane, "spatula plane", "spatula");
+  spatula_plane.direction.x = 0.1;
+  spatula_plane.contact_direction.z = 0.1;
+
   // ...constraints
   fillPointingAtConstraint(pointing_constraint, spatula_axis, pancake_plane, "spatula at pancake");
   fillPerpendicularConstraint(align_constraint, spatula_axis, pancake_plane, "spatula pointing downwards");
   fillPerpendicularConstraint(align_front_constraint, spatula_front, pancake_plane, "align spatula front");
   fillDistanceConstraint(distance_constraint, spatula_axis, pancake_plane, "distance from pancake");
   fillHeightConstraint(height_constraint, spatula_axis, pancake_plane, "keep over");
+  fillPerpendicularConstraint(facing_constraint, spatula_plane, pancake_plane, "spatula facing pancake");
 
   // ... entire configuration
   constraint_config_msg.constraints.push_back(pointing_constraint);
@@ -81,6 +86,7 @@ int main(int argc, char **argv)
   constraint_config_msg.constraints.push_back(align_constraint);
   constraint_config_msg.constraints.push_back(height_constraint);
   constraint_config_msg.constraints.push_back(align_front_constraint);
+  constraint_config_msg.constraints.push_back(facing_constraint);
 
   // publish constraint configuration message
   constraint_config_publisher.publish(constraint_config_msg);
