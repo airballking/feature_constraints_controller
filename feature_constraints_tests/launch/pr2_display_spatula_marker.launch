@@ -1,0 +1,12 @@
+<launch>
+  <!-- publish transform l_gripper to spatula_handle to tf -->
+  <node name="spatula_handle_transform" pkg="tf" type="static_transform_publisher"
+    args="0.0 0.0 0.0 0 0 1.57 /l_gripper_tool_frame /spatula_handle 100"/>
+
+  <!-- publish transform spatula_handle to spatula (blade) to tf -->
+  <node name="spatula_transform" pkg="tf" type="static_transform_publisher"
+    args="0.245 0.0 -0.015 0 2.1 0 /spatula_handle /spatula 100"/>
+
+  <!-- start publishing the spatula marker -->
+  <node name="spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/spatula"/>
+</launch>
