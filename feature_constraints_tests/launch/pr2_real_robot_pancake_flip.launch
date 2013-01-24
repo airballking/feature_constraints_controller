@@ -1,0 +1,61 @@
+<launch>
+
+  <!-- GET RELEVANT FRAMES INTO TF -->
+  <!-- table transform relative pancake -->
+  <node name="table_transform" pkg="tf" type="static_transform_publisher"
+    args="0.1 0.0 -0.763  0 0 0 /pancake /table 100"/>
+  <!-- pancake transform relative to base_link -->
+  <node name="pancake_transform" pkg="tf" type="static_transform_publisher"
+    args="0.6698 0.032 0.885 0 0 0 /base_link /pancake 100"/>
+  <!-- spatula handle transform relative to left gripper -->
+  <node name="spatula_handle_transform" pkg="tf" type="static_transform_publisher"
+    args="0.0 0.0 0.0 0 0 1.57 /l_gripper_tool_frame /spatula_handle 100"/>
+  <!-- spatula blade transform relative to spatula handle -->
+  <node name="spatula_transform" pkg="tf" type="static_transform_publisher"
+    args="0.245 0.0 -0.015 0 2.1 0 /spatula_handle /spatula 100"/>
+
+
+  <!-- PUBLISH RELEVANT REAL-TIME TRANSFORMS IN TOPICS -->
+  <!-- spatula_blade in l_gripper_tool_frame -->
+  <node name="spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/spatula /l_gripper_tool_frame /tool_pose -plain"/>
+  <!-- pancake (actually mean oven) in base_link -->
+  <node name="pancake_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/pancake /base_link /object_pose -plain"/>
+  <!-- torso_lift_link in base_link -->
+  <node name="arm_base_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/torso_lift_link /base_link /arm_base_pose -plain"/>
+  <!-- base_link in base_link (should be odometry-based...) -->
+  <node name="robot_base_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/base_link /base_link /robot_base_pose -plain"/>
+
+  
+  <!-- START RVIZ VISUALIZATION -->
+  <!-- spatula model -->
+  <node name="spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/spatula"/>
+  <!-- table model with oven -->
+  <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
+
+
+  <!-- STARTUP PR2 VELOCITY-RESOLVED CONTROLLERS IN STOPPED STATE -->
+  <include file="$(find ias_mechanism_controllers)/launch/pr2_multi_vel_spawn.launch"/>
+
+
+  <!-- STARTUP FEATURE CONTROLLER WITH TOPIC REMAPS -->
+  <node name="left_arm_feature_controller" type="constraint_controller" pkg="feature_constraints_standalone">
+    <param name="~tool_frame" value="l_gripper_tool_frame"/>
+    <param name="~base_frame" value="torso_lift_link"/>
+    <param name="~joint_limit_avoidance" value="false"/>
+    <remap from="~qdot" to="/l_arm_vel/command"/>
+    <remap from="/left_arm_feature_controller/tool_offset" to="tool_pose"/>
+    <remap from="/left_arm_feature_controller/object_offset" to="object_pose"/>
+    <remap from="/left_arm_feature_controller/arm_offset" to="arm_base_pose"/>
+    <remap from="/left_arm_feature_controller/base_pose" to="robot_base_pose"/>
+  </node>
+
+
+  <!-- STARTUP DUMMY EXECUTIVE -->
+  <node name="feature_controller_executive" type="feature_controller_executive" pkg="feature_constraints_tests" output="screen">
+    <param name="~pancake" value="/pancake"/>
+    <param name="~spatula" value="/spatula"/>
+    <remap from="constraint_config" to="/left_arm_feature_controller/constraint_config"/>
+    <remap from="constraint_command" to="/left_arm_feature_controller/constraint_command"/>
+    <remap from="constraint_state" to="/left_arm_feature_controller/constraint_state"/>
+ </node>
+</launch>
