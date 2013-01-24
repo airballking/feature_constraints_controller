@@ -32,7 +32,7 @@ void fillCommandApproach(constraint_msgs::ConstraintCommand& target)
   // ...pointing command
   addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
   // ...distance command
-  addConstraintCommand(target, 1.0, 0.19, 0.21, -0.1, 0.1);
+  addConstraintCommand(target, 1.0, 0.15, 0.17, -0.1, 0.1);
   // ...align command
   addConstraintCommand(target, 1.0, -0.3, -0.1, -0.1, 0.1);
   // ...height command
@@ -50,7 +50,7 @@ void fillCommandTouchOven(constraint_msgs::ConstraintCommand& target)
   // ...pointing command
   addConstraintCommand(target, 1.0, -0.05, 0.05, -0.1, 0.1);
   // ...distance command
-  addConstraintCommand(target, 1.0, 0.19, 0.21, -0.1, 0.1);
+  addConstraintCommand(target, 1.0, 0.15, 0.17, -0.1, 0.1);
   // ...align command
   addConstraintCommand(target, 1.0, -0.3, -0.1, -0.1, 0.1);
   // ...height command

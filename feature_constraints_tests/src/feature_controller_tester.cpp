@@ -61,7 +61,7 @@ int main(int argc, char **argv)
   spatula_axis.direction.z = 0.125;
 
   fillLineFeature(spatula_front, "front spatula", "spatula");
-  spatula_front.position.z = 0.075;
+  spatula_front.position.z = 0.0475;
   spatula_front.direction.y = 0.125;
 
   fillPlaneFeature(pancake_plane, "pancake plane", "pancake");

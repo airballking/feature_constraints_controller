@@ -1,7 +1,7 @@
 <launch>
 
   <!-- Start nodes that handle visualization of spatula and table -->
-  <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/spatula" />
+  <node name="spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/spatula" />
   <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table" />
 
   <!-- Publish relevant poses directly (decouple from realtime node) -->
@@ -19,12 +19,12 @@
   <node name="spatula_handle_transform" pkg="tf" type="static_transform_publisher"
         args="0.0 0.0 0.0  0.0 0.0 1.57  /l_gripper_tool_frame /spatula_handle 100"/>
   <node name="spatula_transform" pkg="tf" type="static_transform_publisher"
-        args="0.19 0.0 -0.03  0.0 2.1 0.0  /spatula_handle /spatula 100"/>
+        args="0.245 0.0 -0.015  0.0 2.1 0.0  /spatula_handle /spatula 100"/>
 
   <!-- replace with a pose2tf node for reachability test,
        so the test can set this! -->
   <node name="pancake_transform" pkg="tf" type="static_transform_publisher"
-        args="0.8 0.0 0.763  0 0 0 /base_link /pancake 100"/>
+        args="0.734 0.0 0.746  0 0 0 /base_link /pancake 100"/>
 
   <!-- desired startup configuration of the robot -->
   <!-- the so-called 'bunny configuration' -->
