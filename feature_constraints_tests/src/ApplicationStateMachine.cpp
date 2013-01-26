@@ -104,7 +104,7 @@ void fillCommandFlip(constraint_msgs::ConstraintCommand& target)
   // ...pointing command
   addConstraintCommand(target, 0.0, -0.05, 0.05, -0.2, 0.2);
   // ...distance command
-  addConstraintCommand(target, 1.0, 0.00, 0.07, -0.2, 0.2);
+  addConstraintCommand(target, 100.0, 0.00, 0.07, -0.4, 0.4);
   // ...align command
   addConstraintCommand(target, 1.0, -0.2, 0.2, -0.2, 0.2);
   // ...height command
