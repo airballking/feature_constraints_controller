@@ -8,13 +8,13 @@ r_arm_controller:
     - r_wrist_flex_joint
     - r_wrist_roll_joint
   test_goals:
-    r_shoulder_pan_joint:   {q: 0.3, qdot: 0.0}
-    r_shoulder_lift_joint:  {q: 0.0, qdot: 0.0}
-    r_upper_arm_roll_joint: {q: 0.0, qdot: 0.0}
-    r_elbow_flex_joint:     {q: 0.3, qdot: 0.0}
-    r_forearm_roll_joint:   {q: 0.0, qdot: 0.0}
-    r_wrist_flex_joint:     {q: 0.3, qdot: 0.0}
-    r_wrist_roll_joint:     {q: 0.0, qdot: 0.0}
+    r_shoulder_pan_joint:   {q: -1.05, qdot: 0.0}
+    r_shoulder_lift_joint:  {q: -0.01, qdot: 0.0}
+    r_upper_arm_roll_joint: {q: -0.61, qdot: 0.0}
+    r_elbow_flex_joint:     {q: -0.44, qdot: 0.0}
+    r_forearm_roll_joint:   {q: 5.60, qdot: 0.0}
+    r_wrist_flex_joint:     {q: -0.86, qdot: 0.0}
+    r_wrist_roll_joint:     {q: 0.16, qdot: 0.0}
   test_execution_time: 5.0
 
 l_arm_controller:

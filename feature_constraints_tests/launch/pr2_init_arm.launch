@@ -2,8 +2,14 @@
 
   <rosparam command="load" file="$(find feature_constraints_tests)/launch/pr2_init_goal_configuration.yaml"/>
 
-  <node name="init_arm_executive" pkg="feature_constraints_tests" type="init_arm_executive" output="screen">
+  <node name="init_l_arm_executive" pkg="feature_constraints_tests" type="init_arm_executive" output="screen">
     <remap from="arm_trajectory_action" to="/l_arm_controller/joint_trajectory_action"/>
     <param name="~arm_action_server_namespace" value="/l_arm_controller"/>
   </node>
+
+  <node name="init_r_arm_executive" pkg="feature_constraints_tests" type="init_arm_executive" output="screen">
+    <remap from="arm_trajectory_action" to="/r_arm_controller/joint_trajectory_action"/>
+    <param name="~arm_action_server_namespace" value="/r_arm_controller"/>
+  </node>
+
 </launch>
