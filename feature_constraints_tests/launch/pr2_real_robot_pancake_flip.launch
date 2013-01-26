@@ -6,18 +6,23 @@
     args="0.1 0.0 -0.763  0 0 0 /pancake /table 100"/>
   <!-- pancake transform relative to base_link -->
   <node name="pancake_transform" pkg="tf" type="static_transform_publisher"
-    args="0.702 0.0 0.767 0 0 0 /base_link /pancake 100"/>
+    args="0.618 0.02 0.771 0 0 0 /base_link /pancake 100"/>
   <!-- spatula handle transform relative to left gripper -->
-  <node name="spatula_handle_transform" pkg="tf" type="static_transform_publisher"
-    args="0.0 0.0 0.0 0 0 1.57 /l_gripper_tool_frame /spatula_handle 100"/>
+  <node name="l_spatula_handle_transform" pkg="tf" type="static_transform_publisher"
+    args="0.0 0.0 0.0 0 0 1.57 /l_gripper_tool_frame /l_spatula_handle 100"/>
   <!-- spatula blade transform relative to spatula handle -->
-  <node name="spatula_transform" pkg="tf" type="static_transform_publisher"
-    args="0.245 0.0 -0.015 0 2.1 0 /spatula_handle /spatula 100"/>
-
+  <node name="l_spatula_transform" pkg="tf" type="static_transform_publisher"
+    args="0.245 0.0 -0.015 0 2.1 0 /l_spatula_handle /l_spatula 100"/>
+  <node name="r_spatula_handle_transform" pkg="tf" type="static_transform_publisher"
+    args="-0.01 0.0 0.0 0 0.05 1.57 /r_gripper_tool_frame /r_spatula_handle 100"/>
+  <node name="r_spatula_transform" pkg="tf" type="static_transform_publisher"
+    args="0.245 0.0 -0.015 0 2.1 0 /r_spatula_handle /r_spatula 100"/>
 
   <!-- PUBLISH RELEVANT REAL-TIME TRANSFORMS IN TOPICS -->
-  <!-- spatula_blade in l_gripper_tool_frame -->
-  <node name="spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/spatula /l_gripper_tool_frame /tool_pose -plain"/>
+  <!-- l_spatula_blade in l_gripper_tool_frame -->
+  <node name="l_spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/l_spatula /l_gripper_tool_frame /l_tool_pose -plain"/>
+  <!-- r_spatula_blade in r_gripper_tool_frame -->
+  <node name="r_spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/r_spatula /r_gripper_tool_frame /r_tool_pose -plain"/>
   <!-- pancake (actually mean oven) in base_link -->
   <node name="pancake_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/pancake /base_link /object_pose -plain"/>
   <!-- torso_lift_link in base_link -->
@@ -27,8 +32,9 @@
 
   
   <!-- START RVIZ VISUALIZATION -->
-  <!-- spatula model -->
-  <node name="spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/spatula"/>
+  <!-- spatula models -->
+  <node name="l_spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/l_spatula"/>
+  <node name="r_spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/r_spatula"/>
   <!-- table model with oven -->
   <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
 
@@ -37,25 +43,38 @@
   <include file="$(find ias_mechanism_controllers)/launch/pr2_multi_vel_spawn.launch"/>
 
 
-  <!-- STARTUP FEATURE CONTROLLER WITH TOPIC REMAPS -->
+  <!-- STARTUP FEATURE CONTROLLERS WITH TOPIC REMAPS -->
   <node name="left_arm_feature_controller" type="constraint_controller" pkg="feature_constraints_standalone">
     <param name="~tool_frame" value="l_gripper_tool_frame"/>
     <param name="~base_frame" value="torso_lift_link"/>
     <param name="~joint_limit_avoidance" value="false"/>
     <remap from="~qdot" to="/l_arm_vel/command"/>
-    <remap from="/left_arm_feature_controller/tool_offset" to="tool_pose"/>
+    <remap from="/left_arm_feature_controller/tool_offset" to="l_tool_pose"/>
     <remap from="/left_arm_feature_controller/object_offset" to="object_pose"/>
     <remap from="/left_arm_feature_controller/arm_offset" to="arm_base_pose"/>
     <remap from="/left_arm_feature_controller/base_pose" to="robot_base_pose"/>
+  </node>
+  <node name="right_arm_feature_controller" type="constraint_controller" pkg="feature_constraints_standalone">
+    <param name="~tool_frame" value="r_gripper_tool_frame"/>
+    <param name="~base_frame" value="torso_lift_link"/>
+    <param name="~joint_limit_avoidance" value="false"/>
+    <remap from="~qdot" to="/r_arm_vel/command"/>
+    <remap from="/right_arm_feature_controller/tool_offset" to="r_tool_pose"/>
+    <remap from="/right_arm_feature_controller/object_offset" to="object_pose"/>
+    <remap from="/right_arm_feature_controller/arm_offset" to="arm_base_pose"/>
+    <remap from="/right_arm_feature_controller/base_pose" to="robot_base_pose"/>
   </node>
 
 
   <!-- STARTUP DUMMY EXECUTIVE -->
   <node name="feature_controller_executive" type="feature_controller_executive" pkg="feature_constraints_tests" output="screen">
     <param name="~pancake" value="/pancake"/>
-    <param name="~spatula" value="/spatula"/>
-    <remap from="constraint_config" to="/left_arm_feature_controller/constraint_config"/>
-    <remap from="constraint_command" to="/left_arm_feature_controller/constraint_command"/>
-    <remap from="constraint_state" to="/left_arm_feature_controller/constraint_state"/>
- </node>
+    <param name="~spatula" value="/l_spatula"/>
+    <remap from="l_constraint_config" to="/left_arm_feature_controller/constraint_config"/>
+    <remap from="l_constraint_command" to="/left_arm_feature_controller/constraint_command"/>
+    <remap from="l_constraint_state" to="/left_arm_feature_controller/constraint_state"/>
+    <remap from="r_constraint_config" to="/right_arm_feature_controller/constraint_config"/>
+    <remap from="r_constraint_command" to="/right_arm_feature_controller/constraint_command"/>
+    <remap from="r_constraint_state" to="/right_arm_feature_controller/constraint_state"/>
+  </node>
 </launch>
