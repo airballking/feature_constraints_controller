@@ -21,7 +21,7 @@ def publishCube(pos, ori, scale, id):
   m = Marker()
 
   m.id = id
-  m.ns = 'spatula'
+  m.ns = frame_name
   m.action = m.ADD
   m.type = m.CUBE
 
