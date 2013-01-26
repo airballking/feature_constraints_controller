@@ -1,25 +1,22 @@
 <launch>
 
-  <!-- Start nodes that handle visualization of spatula and table -->
-  <node name="spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/spatula" />
+  <!-- Start nodes that handle visualization of the spatulas and the table -->
+  <node name="l_spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/l_spatula" />
   <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table" />
 
   <!-- Publish relevant poses directly (decouple from realtime node) -->
-  <node name="spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/spatula /l_gripper_tool_frame /tool_pose -plain"/>
+  <node name="l_spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/l_spatula /l_gripper_tool_frame /l_tool_pose -plain"/>
   <node name="pancake_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/pancake /base_link /object_pose -plain"/>
   <node name="arm_base_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/torso_lift_link /base_link /arm_base_pose -plain"/>
   <node name="robot_base_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/base_link /base_link /robot_base_pose -plain"/>
 
-  <!-- Publish the relevant transforms -->
+  <!-- Publish the relevant transforms to tf-->
   <node name="table_transform" pkg="tf" type="static_transform_publisher"
         args="0.1 0.0 -0.763  0 0 0 /pancake /table 100"/>
-<!--
-  <node name="spatula_transform" pkg="tf" type="static_transform_publisher"
-        args="0.19 0.0 -0.03  0.0 2.1 0.0  /l_gripper_tool_frame /spatula 100"/> -->
-  <node name="spatula_handle_transform" pkg="tf" type="static_transform_publisher"
-        args="0.0 0.0 0.0  0.0 0.0 1.57  /l_gripper_tool_frame /spatula_handle 100"/>
-  <node name="spatula_transform" pkg="tf" type="static_transform_publisher"
-        args="0.245 0.0 -0.015  0.0 2.1 0.0  /spatula_handle /spatula 100"/>
+  <node name="l_spatula_handle_transform" pkg="tf" type="static_transform_publisher"
+        args="0.0 0.0 0.0  0.0 0.0 1.57  /l_gripper_tool_frame /l_spatula_handle 100"/>
+  <node name="l_spatula_transform" pkg="tf" type="static_transform_publisher"
+        args="0.245 0.0 -0.015  0.0 2.1 0.0  /l_spatula_handle /l_spatula 100"/>
 
   <!-- replace with a pose2tf node for reachability test,
        so the test can set this! -->
@@ -58,7 +55,7 @@
     <param name="~base_frame" value="torso_lift_link"/>
     <param name="~joint_limit_avoidance" value="false"/>
     <remap from="~qdot" to="/l_arm_vel/command"/>
-    <remap from="/left_arm_feature_controller/tool_offset" to="tool_pose"/>
+    <remap from="/left_arm_feature_controller/tool_offset" to="l_tool_pose"/>
     <remap from="/left_arm_feature_controller/object_offset" to="object_pose"/>
     <remap from="/left_arm_feature_controller/arm_offset" to="arm_base_pose"/>
     <remap from="/left_arm_feature_controller/base_pose" to="robot_base_pose"/>
@@ -73,10 +70,10 @@
   <!-- startup dummy executive -->
   <node name="feature_controller_executive" type="feature_controller_executive" pkg="feature_constraints_tests" output="screen">
     <param name="~pancake" value="/pancake"/>
-    <param name="~spatula" value="/spatula"/>
-    <remap from="constraint_config" to="/left_arm_feature_controller/constraint_config"/>
-    <remap from="constraint_command" to="/left_arm_feature_controller/constraint_command"/>
-    <remap from="constraint_state" to="/left_arm_feature_controller/constraint_state"/>
+    <param name="~spatula" value="/l_spatula"/>
+    <remap from="l_constraint_config" to="/left_arm_feature_controller/constraint_config"/>
+    <remap from="l_constraint_command" to="/left_arm_feature_controller/constraint_command"/>
+    <remap from="l_constraint_state" to="/left_arm_feature_controller/constraint_state"/>
  </node>
 
  <!-- Start rxplot to see what is going on -->

@@ -13,20 +13,20 @@
 #include "feature_constraints_tests/ApplicationStateMachine.h"
 
 // constraints_fulfilled_ triggers state transitions, i.e. it's an event
-bool constraints_fulfilled_ = false;
+bool left_constraints_fulfilled_ = false;
 
 // callback function listens to controller state and figures out when all constraints are met
-void controllerStateCallback(const constraint_msgs::ConstraintState::ConstPtr& msg)
+void leftControllerStateCallback(const constraint_msgs::ConstraintState::ConstPtr& msg)
 {
-  constraints_fulfilled_ = !constraints_fulfilled_;
+  left_constraints_fulfilled_ = !left_constraints_fulfilled_;
   
   for(unsigned int i=0; i<msg->weights.size(); i++)
   {
-    constraints_fulfilled_ &= (msg->weights[i] < 1.0);
+    left_constraints_fulfilled_ &= (msg->weights[i] < 1.0);
   }  
 
-  if(constraints_fulfilled_){
-    ROS_INFO("All constraints are fulfilled.");
+  if(left_constraints_fulfilled_){
+    ROS_INFO("[LEFT ARM] All constraints are fulfilled.");
   }
 }
 
@@ -37,59 +37,69 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   // advertise topics
-  ros::Publisher constraint_config_publisher = n.advertise<constraint_msgs::ConstraintConfig>("constraint_config", 1, true);
-  ros::Publisher constraint_command_publisher = n.advertise<constraint_msgs::ConstraintCommand>("constraint_command", 1, true);
+  ros::Publisher l_constraint_config_publisher = n.advertise<constraint_msgs::ConstraintConfig>("l_constraint_config", 1, true);
+  ros::Publisher l_constraint_command_publisher = n.advertise<constraint_msgs::ConstraintCommand>("l_constraint_command", 1, true);
 
   ros::Publisher executive_state_publisher = n.advertise<std_msgs::String>("executive_state", 1, true);
 
   // subscribe to state topic
-  ros::Subscriber constraint_state_subscriber = n.subscribe("constraint_state", 1, controllerStateCallback);
+  ros::Subscriber l_constraint_state_subscriber = n.subscribe("l_constraint_state", 1, leftControllerStateCallback);
 
   // construct messages...
   // ... features
-  constraint_msgs::Feature spatula_axis, spatula_front, pancake_plane, spatula_plane;
+  // LEFT
+  constraint_msgs::Feature l_spatula_axis, l_spatula_front, l_spatula_plane;
+  // PANCAKE
+  constraint_msgs::Feature pancake_plane;
+
   // ... constraints
-  constraint_msgs::Constraint pointing_constraint, distance_constraint, align_constraint, align_front_constraint, height_constraint, facing_constraint;
-  // ... entire configuration
-  constraint_msgs::ConstraintConfig constraint_config_msg;
-    // ... command
-  constraint_msgs::ConstraintCommand constraint_command_msg;
+  // LEFT
+  constraint_msgs::Constraint l_pointing_constraint, l_distance_constraint, l_align_constraint, l_align_front_constraint, l_height_constraint, l_facing_constraint;
+
+  // ... entire configurations
+  constraint_msgs::ConstraintConfig l_constraint_config_msg;
+    // ... commands
+  constraint_msgs::ConstraintCommand l_constraint_command_msg;
   
   // fill messages...
   // ... features
-  fillLineFeature(spatula_axis, "main axis", "spatula");
-  spatula_axis.direction.z = 0.125;
+  // LEFT TOOL FEATURES
+  fillLineFeature(l_spatula_axis, "left spatula: main axis", "l_spatula");
+  l_spatula_axis.direction.z = 0.125;
 
-  fillLineFeature(spatula_front, "front spatula", "spatula");
-  spatula_front.position.z = 0.0475;
-  spatula_front.direction.y = 0.125;
+  fillLineFeature(l_spatula_front, "left spatula: front axis", "l_spatula");
+  l_spatula_front.position.z = 0.0475;
+  l_spatula_front.direction.y = 0.125;
 
+  fillPlaneFeature(l_spatula_plane, "left spatula: plane", "l_spatula");
+  l_spatula_plane.direction.x = 0.1;
+  l_spatula_plane.contact_direction.z = 0.1;
+
+  // PANCAKE FEATURES
   fillPlaneFeature(pancake_plane, "pancake plane", "pancake");
   pancake_plane.direction.z = 0.25;
   pancake_plane.contact_direction.x = 0.25;
 
-  fillPlaneFeature(spatula_plane, "spatula plane", "spatula");
-  spatula_plane.direction.x = 0.1;
-  spatula_plane.contact_direction.z = 0.1;
-
   // ...constraints
-  fillPointingAtConstraint(pointing_constraint, spatula_axis, pancake_plane, "spatula at pancake");
-  fillPerpendicularConstraint(align_constraint, spatula_axis, pancake_plane, "spatula pointing downwards");
-  fillPerpendicularConstraint(align_front_constraint, spatula_front, pancake_plane, "align spatula front");
-  fillDistanceConstraint(distance_constraint, spatula_axis, pancake_plane, "distance from pancake");
-  fillHeightConstraint(height_constraint, spatula_axis, pancake_plane, "keep over");
-  fillPerpendicularConstraint(facing_constraint, spatula_plane, pancake_plane, "spatula facing pancake");
+  // LEFT
+  fillPointingAtConstraint(l_pointing_constraint, l_spatula_axis, pancake_plane, "left spatula: at pancake");
+  fillPerpendicularConstraint(l_align_constraint, l_spatula_axis, pancake_plane, "left spatula: pointing downwards");
+  fillPerpendicularConstraint(l_align_front_constraint, l_spatula_front, pancake_plane, "left spatula: align front");
+  fillDistanceConstraint(l_distance_constraint, l_spatula_axis, pancake_plane, "left spatula: distance from pancake");
+  fillHeightConstraint(l_height_constraint, l_spatula_axis, pancake_plane, "left spatula: keep over");
+  fillPerpendicularConstraint(l_facing_constraint, l_spatula_plane, pancake_plane, "left spatula: facing pancake");
 
-  // ... entire configuration
-  constraint_config_msg.constraints.push_back(pointing_constraint);
-  constraint_config_msg.constraints.push_back(distance_constraint);
-  constraint_config_msg.constraints.push_back(align_constraint);
-  constraint_config_msg.constraints.push_back(height_constraint);
-  constraint_config_msg.constraints.push_back(align_front_constraint);
-  constraint_config_msg.constraints.push_back(facing_constraint);
+  // ... entire configurations
+  // LEFT
+  l_constraint_config_msg.constraints.push_back(l_pointing_constraint);
+  l_constraint_config_msg.constraints.push_back(l_distance_constraint);
+  l_constraint_config_msg.constraints.push_back(l_align_constraint);
+  l_constraint_config_msg.constraints.push_back(l_height_constraint);
+  l_constraint_config_msg.constraints.push_back(l_align_front_constraint);
+  l_constraint_config_msg.constraints.push_back(l_facing_constraint);
 
   // publish constraint configuration message
-  constraint_config_publisher.publish(constraint_config_msg);
+  l_constraint_config_publisher.publish(l_constraint_config_msg);
 
   // start application which sends different command messages
   ros::Rate loop_rate(1);
@@ -105,9 +115,9 @@ int main(int argc, char **argv)
   {
     
     // the mean state machine that michael should not see ;)
-    state_machine_finished = updateStateMachineAndWriteCommand(constraint_command_msg, constraints_fulfilled_);
+    state_machine_finished = updateStateMachineAndWriteCommand(l_constraint_command_msg, left_constraints_fulfilled_);
     
-    constraint_command_publisher.publish(constraint_command_msg);
+    l_constraint_command_publisher.publish(l_constraint_command_msg);
   
     ros::spinOnce();
     loop_rate.sleep();
