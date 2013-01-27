@@ -79,7 +79,7 @@ void fillCommandBothTouchOven(constraint_msgs::ConstraintCommand& left_target, c
   // ... distance command
   addConstraintCommand(right_target, 1.0, 0.0, 0.02, -0.1, 0.1);
   // ... height command
-  addConstraintCommand(right_target, 1.0, 0.00, 0.01, -0.1, 0.1);
+  addConstraintCommand(right_target, 1.0, -0.005, 0.005, -0.1, 0.1);
   // ... align front command
   addConstraintCommand(right_target, 1.0, -0.05, 0.05, -0.1, 0.1);
   // ... align side command
@@ -132,7 +132,8 @@ void fillCommandLeftLift(constraint_msgs::ConstraintCommand& left_target)
   // ...align command
   addConstraintCommand(left_target, 1.0, -0.08, 0.08, -0.1, 0.1);
   // ...height command
-  addConstraintCommand(left_target, 1.0, 0.15, 0.3, -0.1, 0.1);
+//  addConstraintCommand(left_target, 1.0, 0.15, 0.3, -0.1, 0.1); // WAS WORKING BUT LOOKED PRETTY HIGH!!
+  addConstraintCommand(left_target, 1.0, 0.1, 0.15, -0.1, 0.1);
   // ...align front command
   addConstraintCommand(left_target, 1.0, -0.1, -0.05, -0.1, 0.1);
   // ... facing constraint
@@ -151,7 +152,8 @@ void fillCommandLeftFlip(constraint_msgs::ConstraintCommand& left_target)
   // ...align command
   addConstraintCommand(left_target, 1.0, -0.2, 0.2, -0.2, 0.2);
   // ...height command
-  addConstraintCommand(left_target, 1.0, 0.1, 0.3, -0.2, 0.2);
+//  addConstraintCommand(left_target, 1.0, 0.1, 0.3, -0.2, 0.2); // WAS WORKING BUT LOOKED PRETTY HIGH!!
+  addConstraintCommand(left_target, 1.0, 0.1, 0.15, -0.2, 0.2);
   // ...align front command
   // use facing constraint instead of align front to avoid singularity 
   // note: direction vectors of spatula front and plane are perpencicular but relate

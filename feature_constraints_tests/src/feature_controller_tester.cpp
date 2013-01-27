@@ -128,12 +128,12 @@ int main(int argc, char **argv)
   pancake_plane.contact_direction.x = 0.1;
 
   fillLineFeature(pancake_right_rim, "pancake right rim", "pancake");
-  pancake_right_rim.position.y = -0.06;
+  pancake_right_rim.position.y = -0.08;
   pancake_right_rim.direction.x = 0.1;
 
   fillPlaneFeature(pancake_right_rim_plane, "pancake right rim plane", "pancake");
   pancake_right_rim_plane.direction.z = 0.1;
-  pancake_right_rim_plane.position.y = -0.1;
+  pancake_right_rim_plane.position.y = -0.07;
   pancake_right_rim_plane.contact_direction.x = 0.1;
 
   // ...constraints
