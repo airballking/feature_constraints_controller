@@ -28,13 +28,18 @@
   <include file="$(find ias_mechanism_controllers)/launch/rosie_loopback.launch"/>
 
   <node name="feature_controller" launch-prefix="xterm -e gdb --args" type="constraint_controller" pkg="feature_constraints_standalone" >
-    <remap from="~qdot" to="/l_arm_vel/command"/>
+    <remap from="~qdot" to="~qdot"/>
     <param name="~tool_frame" value="left_arm_7_link"/>
     <param name="~base_frame" value="base_link"/>
     <param name="~object_frame" value="/object"/>
     <remap from="~tool_offset" to="/tool_pose"/>
     <remap from="~object_offset" to="/object_pose"/>
+    <param name="~joint_limit_avoidance" value="false"/>
   </node>
+
+  <!-- kill this relay to 'stop' the controller -->
+  <node name="qdot_relay" type="relay" pkg="topic_tools"
+        args="/feature_controller/qdot /l_arm_vel/command"/>
 
   <node name="constraint_config_sender" type="constraint_config.py" pkg="feature_constraints_standalone" >
     <remap from="/constraint_config" to="feature_controller/constraint_config"/>
