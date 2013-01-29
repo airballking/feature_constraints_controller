@@ -1,0 +1,22 @@
+console interface for feature_constraint_controller:
+
+command line script 'state' in feature_constraints
+or feature_constraint_controller.
+
+state get
+[print: chi, chi_des, joint_angles in the form:
+chi:
+1.1 2.2 -4.44 ...
+joints:
+1 2 3
+...
+]
+(state get yaml ?)
+state set angles [angles]
+state set chi [chi-angles]
+state set chi -
+[(repeatedly) get values from stdin]
+state set param [rosparam name]
+state reset
+[get the reset data from param server. TODO: define standard name for this param]
+
