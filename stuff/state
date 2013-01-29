@@ -64,9 +64,10 @@ while (not (data.has_key('jointstate') and data.has_key('chi'))
   rospy.sleep(0.1)
 
 for k in data.iterkeys():
-  print str(k) + ': ' + str(data[k])
+  print str(k) + ':'
+  try:
+    print ' '.join(['%.3f' % d for d in data[k]])
+  except:
+    print data[k]
+  print ''
 
-str_c = ''
-for c in data['chi']:
-  str_c += " %.2f" % c
-print 'chi:'+str_c
