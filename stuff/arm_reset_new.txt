@@ -3,13 +3,14 @@
 command line script 'state' in feature_constraints
 or feature_constraint_controller.
 
-  * state get : print the current values of chi, chi_des, joint_angles, tool_pose and object_pose in the form: <code>
+  * ''state get'' : print the current values of chi, chi_des, joint_angles, tool_pose and object_pose in the form: <code>
 chi:
 1.1 2.2 -4.44 ...
 joints:
 1 2 3
 ...
-</code>
+</code> For clarity, the number of decimal digits are limited to 3 and can be set using the rosparam ''~digits''.
+
 
   * ''state set angles //angles//''
   * ''state set chi //chi-angles//''
@@ -45,14 +46,14 @@ In theory, this command could be unified with ''state set angles'', maybe
 ''state set angles init''? But then again, ''state reset'' is much shorter.
 
 **TODO**:
-  * define standard name for this param (proposal: /robot_initial_joints)
+  * define standard name for the initial joint state param (proposal: /robot_initial_joints)
   * define standard names for topics so command line tools have a chance to be useful. Proposal:
     * ''~constraint_config''
     * ''~constraint_command''
     * ''~constraint_state''
-    * have a prefix parameter for the ''state'' command, which defaults to ''/constraint_controller''.
+    * have a rosparam ''prefix'' which is used by the ''state'' command to know the controller's name. It defaults to ''/constraint_controller''.
     * Joint angles and poses are taken from ''/tf'' and ''/joint_states''.
-  * (Future): What shall we do if two arms and/or several constraint sets are active in the same controller? Give names to arms and constraint sets and use them with every invocation of ''state''? Have a rosparam, that holds the default name, for convenience?
+  * (Future): What shall we do if two arms and/or several constraint sets are active in the same controller? Give names to arms and constraint sets and use these names with every invocation of ''state''? Have a rosparam, that holds the default name, for convenience? This becomes important when implementing multi-robot functionality.
 
 For the situation with several constraint_controllers, the prefix for the
 controller name (and thus the topic names) would do. Joint angle names could
