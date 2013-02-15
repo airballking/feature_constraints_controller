@@ -6,7 +6,7 @@
     args="0.1 0.0 -0.763  0 0 0 /pancake /table 100"/>
   <!-- pancake transform relative to base_link -->
   <node name="pancake_transform" pkg="tf" type="static_transform_publisher"
-    args="0.677 -0.007 0.763 0 0 0 /base_link /pancake 100"/>
+    args="0.598 -0.002 0.757 0 0 0 /base_link /pancake 100"/>
   <!-- spatula handle transform relative to left gripper -->
   <node name="l_spatula_handle_transform" pkg="tf" type="static_transform_publisher"
     args="0.0 0.0 0.0 0 0 1.57 /l_gripper_tool_frame /l_spatula_handle 100"/>
@@ -38,6 +38,15 @@
   <!-- table model with oven -->
   <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
 
+<!-- startup the feature visualization -->
+  <node name="left_feature_viz" pkg="stuff" type="feature_viz.py" output="screen">
+    <param name="~base_frame" value="/pancake"/>
+    <remap from="constraint_config" to="/left_arm_feature_controller/constraint_config"/>
+  </node>
+  <node name="right_feature_viz" pkg="stuff" type="feature_viz.py" output="screen">
+    <param name="~base_frame" value="/pancake"/>
+    <remap from="constraint_config" to="/right_arm_feature_controller/constraint_config"/>
+  </node>
 
   <!-- STARTUP PR2 VELOCITY-RESOLVED CONTROLLERS IN STOPPED STATE -->
   <include file="$(find ias_mechanism_controllers)/launch/pr2_multi_vel_spawn.launch"/>
