@@ -1,0 +1,6 @@
+<launch>
+  <node name="analyse_human_observations" pkg="analyse_human_observations" type="analyse_human_observations">
+    <!--remap from="/analyse_human_observations/human_observation_input" to="your_observation_data_publisher_topic"/-->
+    <!--remap from="/analyse_human_observations/analysis_output" to="your_data_logging_subscription_topic"/-->
+  </node>
+</launch>
