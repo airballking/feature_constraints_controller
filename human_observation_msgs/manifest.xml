@@ -1,0 +1,16 @@
+<package>
+  <description brief="human_observation_msgs">
+
+     human_observation_msgs
+
+  </description>
+  <author>Georg Bartels</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/human_observation_msgs</url>
+  <depend package="roscpp"/>
+  <depend package="constraint_msgs"/>
+
+</package>
+
+
