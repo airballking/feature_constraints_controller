@@ -3,14 +3,14 @@
 command line script 'state' in feature_constraints
 or feature_constraint_controller.
 
-  * ''state get'' : print the current values of chi, chi_des, joint_angles, tool_pose and object_pose in the form: <code>
+  * ''state get'' : Print the current values of chi, chi_des, joint_angles, tool_pose and object_pose in the form: <code>
 chi:
 1.1 2.2 -4.44 ...
 joints:
 1 2 3
 ...
 </code> For clarity, the number of decimal digits are limited to 3 and can be set using the rosparam ''~digits''.
-
+  * ''state get //item//'': Print ''//item//'' in a single line, where ''//item//'' is one of chi, chi_des, joint_angles, tool_pose and object_pose.
 
   * ''state set angles //angles//''
   * ''state set chi //chi-angles//''
@@ -20,6 +20,10 @@ The semantics of ''//chi-angles//'' is as follows: A numeric values translates
 into a small range around this value, a string becomes 'not important' and sets
 the respective weight to zero. The command ''state set angles'' only accepts
 numeric values.
+
+  * ''state prefix'': Get the current feature controller namem which is used as a prefix in topic names.
+  * ''state prefix //name//'': Set the prefix. This name is stored in the rosparam '''/constraint_controller'''.
+  * ''state prefixes'': Search topic names and display potential prefixes.
 
 ---
 
@@ -46,18 +50,20 @@ In theory, this command could be unified with ''state set angles'', maybe
 ''state set angles init''? But then again, ''state reset'' is much shorter.
 
 **TODO**:
+  * It would //really// be convenient, if the ~constraint_state topic was sending always, not only after the first command was set.
   * define standard name for the initial joint state param (proposal: /robot_initial_joints)
   * define standard names for topics so command line tools have a chance to be useful. Proposal:
     * ''~constraint_config''
     * ''~constraint_command''
     * ''~constraint_state''
-    * have a rosparam ''prefix'' which is used by the ''state'' command to know the controller's name. It defaults to ''/constraint_controller''.
+    * have a rosparam ''prefix'' which is used by the ''state'' command to know the controller's name. It defaults to ''/feature_controller''.
     * Joint angles and poses are taken from ''/tf'' and ''/joint_states''.
-  * (Future): What shall we do if two arms and/or several constraint sets are active in the same controller? Give names to arms and constraint sets and use these names with every invocation of ''state''? Have a rosparam, that holds the default name, for convenience? This becomes important when implementing multi-robot functionality.
+  * (Future): What shall we do if two arms and/or several constraint sets are active in the same controller? Give names to arms and constraint sets and use these names with every invocation of ''state''? Have a rosparam, that holds the default name, for convenience? This also becomes important when implementing multi-robot functionality.
 
 For the situation with several constraint_controllers, the prefix for the
 controller name (and thus the topic names) would do. Joint angle names could
 be recovered from the URDF using the package 'urdf_parser_py', using the name
 of the first and last joint which in turn is taken from the
 constraint_controller parameters.
+
 

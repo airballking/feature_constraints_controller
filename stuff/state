@@ -6,7 +6,9 @@ This script prints out the current constraint values, desired state,
 the current joint state and the task cartesian pose.
 """
 
+import os
 import sys
+
 import roslib
 roslib.load_manifest('constraint_msgs')
 roslib.load_manifest('motion_viz')
@@ -15,59 +17,308 @@ import tf
 import tf_conversions.posemath as pm
 
 from sensor_msgs.msg import JointState
-from constraint_msgs.msg import ConstraintState
+from constraint_msgs.msg import ConstraintState, ConstraintCommand
 
-data = {}
 
-joint_names = ['left_arm_0_joint', 'left_arm_1_joint', 'left_arm_2_joint', 'left_arm_3_joint', 'left_arm_4_joint', 'left_arm_5_joint', 'left_arm_6_joint']
+def joint_names_fallback(prefix):
+  """Get joint names using a heuristic.
 
-shutdown_signal = False
-
-def jointstate_cb(msg):
-  global data
-  if data.has_key('jointstate'):
-    return
-  pos = []
+  Inspect the tool frame name and pick one of Rosie's or PR2's arms."""
   try:
-    for jn in joint_names:
-      index = msg.name.index(jn)
-      pos.append(msg.position[index])
+    tool_frame = rospy.get_param(prefix+'/tool_frame')
   except:
+    return []
+
+  if tool_frame.startswith('left_'):
+    return ['left_arm_0_joint', 'left_arm_1_joint', 'left_arm_2_joint',
+            'left_arm_3_joint', 'left_arm_4_joint', 'left_arm_5_joint',
+            'left_arm_6_joint']
+  elif tool_frame.startswith('right_'):
+    return ['right_arm_0_joint', 'right_arm_1_joint', 'right_arm_2_joint',
+            'right_arm_3_joint', 'right_arm_4_joint', 'right_arm_5_joint',
+            'right_arm_6_joint']
+  elif tool_frame.startwith('l_'):
+    return [] #TODO: left PR2 arm joints
+  elif tool_frame.startwith('r_'):
+    return [] #TODO: right PR2 arm joints
+  else:
+    return []
+
+
+def joint_names(prefix):
+  try:
+    roslib.load_manifest('urdf_parser_py')
+    import urdf_parser_py.urdf as urdf
+ 
+    tool_frame = rospy.get_param(prefix+'/tool_frame')
+    base_frame = rospy.get_param(prefix+'/base_frame')
+ 
+    model = urdf.URDF.load_from_parameter_server()
+    names_unicode = model.get_chain(base_frame, tool_frame, True, False, False)
+    return [n.encode('ascii', 'ignore') for n in names_u]
+  except:
+    return joint_names_fallback(prefix)
+
+
+
+class Collector:
+  def __init__(self, prefix):
+    self.prefix = prefix
+    self.determine_joint_names()
+
+    self.data = {}
+    self.messages = {}
+    self.sub_js = rospy.Subscriber('/joint_states',
+                                   JointState, self._jointstate_cb)
+    self.sub_cs = rospy.Subscriber(self.prefix+'/constraint_state',
+                                   ConstraintState, self._constraint_cb)
+    self.listener = tf.TransformListener()
+
+  def determine_joint_names(self):
+    """Determine joint names from feature controller rosparams."""
+    self.joint_names = joint_names(self.prefix)
+
+  def _jointstate_cb(self, msg):
+    self.messages['jointstate'] = msg
+    self._process_jointstate(msg)
+
+  def _process_jointstate(self, msg):
+    length = len(self.joint_names)
+    if not self.data.has_key('jointstate'):
+      self.data['jointstate'] = [float('nan')]*length
+    else:
+      self.data['jointstate'].extend([float('nan')]*length)
+      self.data['jointstate'] = self.data['jointstate'][0:length]
+
+    for i,jn in enumerate(self.joint_names):
+      try:
+        self.data['jointstate'][i] = msg.position[msg.name.index(jn)]
+      except:
+        pass
+
+  def _constraint_cb(self, msg):
+    self.messages['constraint_state'] = msg
+    self._process_constraint(msg)
+
+  def _process_constraint(self, msg):
+    self.data['chi_desired'] = (msg.chi_desired, msg.weights)
+    self.data['singular_values'] = msg.singular_values
+    self.data['chi'] = msg.chi
+
+  def _process_tf(self):
+    tool_frame = rospy.get_param(self.prefix + '/tool_frame')
+    base_frame = rospy.get_param(self.prefix + '/base_frame')
+
+    frames = [(base_frame, '/object'),
+              (tool_frame, '/tool')]
+    while not rospy.is_shutdown():
+      try:
+        for frame in frames:
+          self.data[frame[1].strip('/')+'_pose'] = (
+             self.listener.lookupTransform(frame[0], frame[1], rospy.Time(0)))
+          self.data[frame[1].strip('/')+'_parent'] = frame[0]
+        break
+      except:
+        pass
+
+  def get(self, item=''):
+    if item.endswith('_pose') or item.endswith('_parent') or item == '':
+      self._process_tf()
+
+    if item != '':
+      required_items = [item]
+    else:
+      required_items = ['jointstate', 'chi', 'object_pose']
+
+    while (not set(required_items).issubset(self.data.keys())
+          and not rospy.is_shutdown()):
+      rospy.sleep(0.1)
+
+    if item != '':
+      return self.data[item]
+    else:
+      return self.data
+
+
+def format_pretty(data):
+  s = ''
+  for k in data.iterkeys():
+    s += k + ':\n'
+    if k == 'chi_desired':
+      for chi, weight in zip(data[k][0], data[k][1]):
+        if weight == 0.0:
+          s += ' _'
+        else:
+          s += ' %.3f' % chi
+    else:
+      try:
+        s += ' '.join(['%.3f' % d for d in data[k]])
+      except:
+        s += str(data[k])
+    s += '\n\n'
+  return s
+
+def make_command(tokens, cmd_range):
+  msg = ConstraintCommand()
+  for t in tokens:
+    pos_lo = float('-inf')
+    pos_hi = float( 'inf')
+    weight = 0
+    try:
+      value = float(t)
+      pos_lo = value - cmd_range/2.0
+      pos_hi = value + cmd_range/2.0
+      weight = 1
+    except:
+      pass
+    msg.pos_lo.append(pos_lo)
+    msg.pos_hi.append(pos_hi)
+    msg.weight.append(weight)
+  return msg
+
+def wait_for_connection(conn, timeout=3.0):
+  import rosgraph.masterapi
+  master = rosgraph.masterapi.Master('/rostopic')
+  _, subs, _ = master.getSystemState()
+  num_subs = sum([len(s[1]) for s in subs if s[0] == conn.name])
+
+  deadline = rospy.Time.now() + rospy.Duration(timeout)
+  while deadline > rospy.Time.now() and conn.get_num_connections() < num_subs:
+    rospy.sleep(0.1)
+  return conn.get_num_connections() >= num_subs
+
+
+def get_prefixes():
+  # get topic list
+  import rosgraph.masterapi
+  master = rosgraph.masterapi.Master('/rostopic')
+  pubs, subs, _ = master.getSystemState()
+  topics = [p[0] for p in pubs] + [s[0] for s in subs]
+
+  prefixes_state = set()
+  prefixes_command = set()
+  for topic in topics:
+    if topic.endswith('/constraint_state'):
+      prefixes_state.add(topic[0:-17])
+    if topic.endswith('/constraint_command'):
+      prefixes_command.add(topic[0:-19])
+  return list(prefixes_state & prefixes_command)
+
+def usage():
+  return """ USAGE: %s <command>
+
+commands:
+  get : print robot state
+  set chi <constraint values> : set desired constraint values
+""" % (os.path.basename(sys.argv[0]))
+
+
+def usage_set():
+  return """ writeme. """
+
+def main():
+  rospy.init_node('fc_state')
+  prefix = rospy.get_param('/constraint_controller', '/feature_controller')
+  if len(sys.argv) < 2:
+    print usage()
+    sys.exit(0)
+
+  cmd  = sys.argv[1]
+  args = sys.argv[2:]
+
+  if cmd == 'get':
+    coll = Collector(prefix)
+    data = coll.get()
+    if len(args) == 0:
+      print format_pretty(coll.get())
+    elif args[0] in data:
+      key = args[0]
+      print format_pretty({key: data[key]}).split('\n')[1]
+
+  if cmd == 'set':
+    if len(args) > 0 and args[0] == 'chi':
+      if len(args) == 1:
+        print usage_set()
+        return
+
+      cmd_range = rospy.get_param('~range', 0.01)
+      pub = rospy.Publisher(prefix+'/constraint_command', ConstraintCommand)
+      wait_for_connection(pub)
+
+      if args[1] == '-':  # read from stdin
+        print 'reading from stdin'
+        while not sys.stdin.closed:
+          try:
+            line = sys.stdin.readline()
+          except:
+            break
+          if not line:
+            break
+          pub.publish(make_command(line.split(), cmd_range))
+
+      else: # send command line args
+        pub.publish(make_command(sys.argv[3:], cmd_range))
+
+    if args[0] == 'jointstate':
+      try:
+        angles = [float(angle) for angle in args[1:]]
+      except ValueError, error:
+        print error
+        return
+
+      coll = Collector(prefix)
+      length = len(coll.get('chi'))
+      pub_cmd = rospy.Publisher(prefix+'/constraint_command', ConstraintCommand)
+      wait_for_connection(pub_cmd)
+      pub_cmd.publish(make_command(['x']*length, 0.01))
+
+      rospy.sleep(0.1)
+
+      pub_jnt = rospy.Publisher('loopback_controllers/desired_joints', JointState)
+      wait_for_connection(pub_jnt)
+      msg = JointState()
+      msg.name = joint_names(prefix)
+      msg.position = angles
+      pub_jnt.publish(msg)
+
+  if cmd == 'reset':
+    initial_state = rospy.get_param('/loopback_controllers/joints')
+
+    for prefix in get_prefixes():
+      collector = Collector(prefix)
+      length = len(collector.get('chi'))
+      pub_cmd = rospy.Publisher(prefix+'/constraint_command', ConstraintCommand)
+      wait_for_connection(pub_cmd)
+      pub_cmd.publish(make_command(['x']*length, 0.01))
+
+    rospy.sleep(0.1)
+
+    pub_jnt = rospy.Publisher('loopback_controllers/desired_joints', JointState)
+    wait_for_connection(pub_jnt)
+    msg = JointState()
+    msg.name = initial_state['name']
+    msg.position = initial_state['position']
+    pub_jnt.publish(msg)
+
+
+  if cmd == 'prefix':
+    if len(args) == 1:
+      rospy.set_param('/constraint_controller', args[0])
+    else:
+      print prefix
+  if cmd == 'prefixes':
+    print '\n'.join(get_prefixes())
+
+
+  # exit without printing stupid tf backtrace
+  try:
+    sys._exit(0)
+# Unhandled exception in thread started by 
+# sys.excepthook is missing
+# lost sys.stderr
+  except:
+    #print 'have exception'
     pass
-  data['jointstate'] = pos
 
-
-def constraint_cb(msg):
-  global data
-  if data.has_key('chi'):
-    return
-  data['chi_desired'] = msg.chi_desired
-  data['singular_values'] = msg.singular_values
-  data['chi'] = msg.chi
-
-rospy.init_node('get_robot_state')
-sub = rospy.Subscriber('/joint_states', JointState, jointstate_cb)
-sub = rospy.Subscriber('/feature_controller/constraint_state', ConstraintState, constraint_cb)
-
-listener = tf.TransformListener()
-while not rospy.is_shutdown():
-  try:
-    data['pancake_pose'] = listener.lookupTransform(
-                              '/base_link', '/pancake', rospy.Time(0))
-    break
-  except:
-    pass
-    
-
-while (not (data.has_key('jointstate') and data.has_key('chi'))
-       and not rospy.is_shutdown()):
-  rospy.sleep(0.1)
-
-for k in data.iterkeys():
-  print str(k) + ':'
-  try:
-    print ' '.join(['%.3f' % d for d in data[k]])
-  except:
-    print data[k]
-  print ''
-
+if __name__ == '__main__':
+  main()
