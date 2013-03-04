@@ -50,7 +50,7 @@ class Controller
 public:
   // input variables
   std::vector<Constraint> constraints;
-  Ranges command;
+  Ranges command, intermediate_command;
   KDL::JntArray gains;
 
   // output variables
@@ -104,6 +104,32 @@ void control(KDL::JntArray& ydot,
 	     const Ranges& command,
              const KDL::JntArray gains);
 
+//! Do range-based control with intermediate goal.
+/*! This controller accepts ranges of accepted positions and
+    lowers the weight to zero when inside that range.
+    It also takes an intermediate (interpolated) range as
+    input which is used to calculate to control error.
+
+    \param ydot    [out] desired velocities in constraint space
+    \param weights [out] constraint weights for the solver
+    \param chi_desired [out] desired values of the constraints
+(a border of the range when not fulfilled, equal to chi otherwise)
+    \param chi     [in] current value of the constraints
+    \param command [in] desired ranges of the commands, used to calculate the weights
+    \param intermediate_command [in] interpolated ranges of the commands, used to
+                                     calculate the control error and ydot
+    \param gains   [in] K_p for the P-controller that is active when
+                        a constraint is not fulfilled.
+ */
+void control(KDL::JntArray& ydot,
+             KDL::JntArray& weights,
+	     KDL::JntArray& chi_desired,
+             const KDL::JntArray& chi,
+	     const Ranges& command,
+             const Ranges& intermediate_command,
+             const KDL::JntArray gains);
+
+
 /* Auxiliary convenience function to clamp --for example-- output
    velocities that come from a controller.
    \param joint_velocities [in AND out] the original velocities to clamp
@@ -117,6 +143,16 @@ void clamp(KDL::JntArray& joint_velocities,
 double clamp(double input_velocity,
              double min_velocity,
              double max_velocity);
-             
+            
+/* Auxiliary function to interpolate constraints between feature function output
+   and desired final feature constraints.
+   \param chi [in] the current output value of the feature functions
+   \param command [in] desired final constraints for the movement
+   \param delta_time [in] time between two control cycles
+   \param intermediate_command [out] interpolation constraint to get us to final
+*/
+void interpolateCommand(const KDL::JntArray& chi, const Ranges& command, 
+                        double delta_time, Ranges& intermediate_command);
+ 
 #endif //FEATURE_CONSTRAINTS_CONTROLLER_H
 

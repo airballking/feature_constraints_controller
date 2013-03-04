@@ -142,6 +142,10 @@ void toMsg(Controller& c, constraint_msgs::ConstraintState& msg)
   toMsg(c.J, msg.jacobian);
   toMsg(c.Ht, msg.interaction_matrix);
   toMsg(c.singularValues, msg.singular_values);
+  toMsg(c.intermediate_command.pos_lo, msg.lower_interpolated_boundary);
+  toMsg(c.intermediate_command.pos_hi, msg.upper_interpolated_boundary);
+  toMsg(c.command.pos_lo, msg.lower_boundary);
+  toMsg(c.command.pos_hi, msg.upper_boundary);
   for(unsigned int i=0; i < c.constraints.size(); i++)
     msg.constraint_names[i] = c.constraints[i].name;
 }
@@ -210,6 +214,10 @@ void resize(constraint_msgs::ConstraintState &msg, unsigned int number_constrain
   msg.chi_desired.resize(number_constraints);
   msg.ydot_desired.resize(number_constraints);
   msg.weights.resize(number_constraints);
+  msg.lower_boundary.resize(number_constraints);
+  msg.upper_boundary.resize(number_constraints);
+  msg.lower_interpolated_boundary.resize(number_constraints);
+  msg.upper_interpolated_boundary.resize(number_constraints);
   msg.jacobian.resize(number_constraints);
   msg.interaction_matrix.resize(number_constraints);
   msg.singular_values.resize(6);
