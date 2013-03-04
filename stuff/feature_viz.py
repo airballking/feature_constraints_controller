@@ -12,7 +12,6 @@ is modeled as a class, having a method compute() and a method show(), the
 latter of which returns a ROS Marker array that visualizes this function and
 it's components. Compositions of these functions are defined in the map
 constraint_functions.
-
 The display is configured from a ConstraintConfig message, the locations are
 computed using a tf listener, using the frame_ids which are taken from the
 ConstraintConfig message.
@@ -208,6 +207,7 @@ class Feature:
         return [marker_line(self.pos - self.dir/2, self.pos + self.dir/2,
                             color=feature_color)]
       elif self.type == 1: #PLANE
+        #TODO: handle dir.Norm() == 0
         dir = (self.dir / self.dir.Norm()) * _config_['line_width']/2
         return [marker_line(self.pos - dir, self.pos + dir, color=feature_color, line_width=self.dir.Norm())]
       elif self.type == 2: #POINT
@@ -253,13 +253,16 @@ class Proj_P:
   def __init__(self, vec, ref):
     self.vec = vec
     self.ref = ref
-    self.result = kdl.Vector()
 
   def compute(self):
     vec = self.vec.compute()
     ref = self.ref.compute()
-    self.result_dir = ref * (kdl.dot(ref.dir, vec.dir) / ref.dir.Norm()**2) - vec
-    return LocatedVector(ref.pos, self.result_dir.dir)
+    denom = ref.dir.Norm()**2
+    if denom == 0:
+      res = kdl.Vector()
+    else:
+      res = ref.dir * (kdl.dot(ref.dir, vec.dir) / denom) - vec.dir
+    return LocatedVector(ref.pos, res)
 
   def show(self, style=NORMAL):
     vec = self.vec.compute()
@@ -283,8 +286,11 @@ class Cos:
   def compute(self):
     vec1 = self.vec1.compute()
     vec2 = self.vec2.compute()
-
-    return kdl.dot(vec1, vec2) / (vec1.Norm() * vec2.Norm())
+    denom = vec1.Norm() * vec2.Norm()
+    if denom == 0:
+      return 0
+    else:
+      return kdl.dot(vec1, vec2) / denom
 
   def show(self, style=NORMAL):
     global _config_
@@ -297,7 +303,17 @@ class Cos:
     vec1_l = vec1.dir.Norm()
     vec2_l = vec2.dir.Norm()
 
-    mrk = marker.sector(vec1.dir / vec1_l * w, vec2.dir / vec2_l * w, vec1.pos)
+    if vec1_l == 0:
+      v1 = kdl.Vector()
+    else:
+      v1 = vec1.dir / vec1_l * w
+
+    if vec2_l == 0:
+      v2 = kdl.Vector()
+    else:
+      v2 = vec2.dir / vec2_l * w
+
+    mrk = marker.sector(v1, v2, vec1.pos)
     mrk.ns = _config_['ns']
     mrk.id = _config_['marker_id']
     mrk.header.frame_id = _config_['frame_id']
@@ -317,8 +333,12 @@ class Proj_A:
   def compute(self):
     vec = self.vec.compute()
     ref = self.ref.compute()
-    res = ref * (kdl.dot(ref.dir, vec.dir) / ref.dir.Norm()**2)
-    return LocatedVector(vec.pos, res.dir)
+    denom = ref.dir.Norm()**2
+    if denom == 0:
+      res = kdl.Vector()
+    else:
+      res = ref.dir * (kdl.dot(ref.dir, vec.dir) / denom)
+    return LocatedVector(vec.pos, res)
 
   def show(self, style=NORMAL):
     vec = self.vec.compute()
@@ -334,8 +354,15 @@ class Proj_A:
 constraint_functions = {
   'distance':  lambda (f_t, f_w) : Len(Proj_P(D(f_t, f_w), f_w)),
   'height':    lambda (f_t, f_w) : Len(Proj_A(D(f_t, f_w), f_w)),
-  'perpendicular':  lambda (f_t, f_w) : Cos(f_t, f_w)}
+  'perpendicular':  lambda (f_t, f_w) : Cos(f_t, f_w),
+  'pointing_at':    lambda (f_t, f_w) : Cos(Proj_P(D(f_t, f_w), f_w),
+                                            Proj_P(f_t, f_w))
+  }
 
+#TODO: introduce the function At(f1, f2) which returns
+# LocatedVector(f2.pos, f1.dir)
+# or: LocatedVector.at(vec2) _and_ Feature.at(f2)
+# maybe add LocatedVector.__neg__()
 
 class ConstraintDisplay:
   """Collect features and constraint functions for displaying."""

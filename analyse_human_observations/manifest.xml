@@ -1,0 +1,16 @@
+<package>
+  <description brief="analyse_human_observations">
+
+     analyse_human_observations
+
+  </description>
+  <author>Georg Bartels</author>
+  <license>BSD</license>
+  <depend package="roscpp"/>
+  <depend package="human_observation_msgs"/>
+  <depend package="feature_constraints"/>
+  <depend package="tf_conversions"/>
+  <depend package="kdl"/>
+</package>
+
+

@@ -166,7 +166,6 @@ double null(const KDL::Frame& frame, const Feature& tool_feature, const Feature&
 
 //////////////////////////////////////////////////////////////////////////////
 
-
 //! Compute the values of the constraints, given the transform between tool and object.
 /*!
     \param values      [out] The computed values of the constraints

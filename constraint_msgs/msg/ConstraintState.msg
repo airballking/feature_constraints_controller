@@ -18,6 +18,12 @@ float64[] chi_desired        # desired constraint values
 # depends on whether or not constraint is currently fulfilled
 float64[] weights            # actual weights of constraints
 
+# current lower and upper boundary of the constraints
+float64[] lower_interpolated_boundary
+float64[] upper_interpolated_boundary
+float64[] lower_boundary
+float64[] upper_boundary
+
 # current desired output feature velocities from controller
 float64[] ydot_desired
 

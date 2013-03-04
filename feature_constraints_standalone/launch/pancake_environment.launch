@@ -3,6 +3,10 @@
   <node name="spatula_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/spatula /left_arm_7_link /tool_pose -plain"/>
   <node name="pancake_rt_frame" type="tf2pose.py" pkg="motion_viz" args="/pancake /base_link /object_pose -plain"/>
 
+  <!-- publish the same poses as PoseStamped for rviz -->
+  <node name="spatula_viz_frame" type="tf2pose.py" pkg="motion_viz" args="/spatula /left_arm_7_link /tool_pose_stamped -stamped"/>
+  <node name="pancake_viz_frame" type="tf2pose.py" pkg="motion_viz" args="/pancake /base_link /object_pose_stamped -stamped"/>
+
   <!-- Publish the relevant transforms -->
   <node name="table_transform" pkg="tf" type="static_transform_publisher"
         args="0.1 0.0 -0.763  0 0 0 /pancake /table 100"/>
@@ -18,7 +22,7 @@
   <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/spatula" />
   <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
 
-  <node name="feature_viz" pkg="stuff" type="feature_viz.py">
+  <node name="feature_viz" pkg="stuff" type="feature_viz.py" output="screen">
     <remap from="/constraint_config" to="/feature_controller/constraint_config"/>
     <param name="base_frame" value="/pancake"/>
   </node>
