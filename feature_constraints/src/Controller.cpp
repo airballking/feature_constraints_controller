@@ -51,13 +51,13 @@ void Controller::prepare(int max_constraints)
 }
 
 
-void Controller::update(KDL::Frame& frame, bool with_control)
+void Controller::update(KDL::Frame& frame, bool with_control, double dt)
 {
   differentiateConstraints(Ht, chi, frame, constraints, 0.001, tmp);
   if(with_control)
   {
     // interpolate command
-    interpolateCommand(chi, command, 0.01, intermediate_command);
+    interpolateCommand(chi, command, dt, intermediate_command);
     control(ydot, weights, chi_desired, chi, command, intermediate_command, gains);
   }
   // TODO: check if we are still using J

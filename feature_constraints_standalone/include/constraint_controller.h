@@ -31,7 +31,7 @@ public:
   bool init(ros::NodeHandle& n);  //!< initialize controller, solver and ROS communication
 
   // realtime
-  void update();
+  void update(double dt);
 
 private:
   // callback functions
@@ -111,5 +111,8 @@ private:
   // flag to turn joint limit avoidance on and off
   // will be set once during init
   bool joint_limit_avoidance_on_;
+
+  // slot to remember last time we were called to calc time between control cycles
+  ros::Time last_time_;
 };
 

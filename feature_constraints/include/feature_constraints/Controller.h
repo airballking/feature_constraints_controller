@@ -74,7 +74,7 @@ public:
   void prepare(int max_constraints=-1);
 
   // calls deriveConstraints(), control() and analyzeH()
-  void update(KDL::Frame& frame, bool with_control);
+  void update(KDL::Frame& frame, bool with_control, double dt);
 
   // calls clamp(KDL::JntArray, const KDL::JntArray, const KDL::JntArray)
   void clampOutput();

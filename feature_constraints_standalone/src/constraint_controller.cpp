@@ -160,8 +160,16 @@ void FeatureConstraintsController::joint_state_callback(const sensor_msgs::Joint
 {
   // parse message with joint state interpreter
   if(joint_state_interpreter_->parseJointState(msg, q_))
+  {
     // assertion: parsing was successful
-    update();
+    // calculate delta_t between the control cycles, i.e. joint-state messages
+    ros::Time time = msg->header.stamp;
+    ros::Duration dt = time - last_time_;
+    last_time_ = time;
+    
+    // perform actual controller calculation
+    update(dt.toSec());
+  }
   else
     ROS_WARN("[Feature Controller] Could not parse joint state message.");
 }
@@ -242,7 +250,7 @@ void FeatureConstraintsController::constraint_command_callback(const constraint_
   }
 }
 
-void FeatureConstraintsController::update()
+void FeatureConstraintsController::update(double dt)
 {
   if(configured_)
   {
@@ -259,9 +267,16 @@ void FeatureConstraintsController::update()
     // calculate output of joint limit avoidance controller for this cycle
     joint_limit_avoidance_controller_.update(q_);
 
+    // make sure that dt has a useful content
+    if(!(dt > 0.0))
+    {
+      ROS_ERROR("[FeatureControllerStandalone] Skipping update because dt is not bigger than 0.0s: '%f'", dt);
+      return;
+    }
+
     // evaluate constraints, i.e. update the feature constraints and 
     // (depending on started_-flag) run feature controller for this cycle
-    feature_controller_.update(T_tool_in_object, started_);
+    feature_controller_.update(T_tool_in_object, started_, dt);
 
     // if we have enough constraints and have been started: do the remaining calculations
     // and send commands to the robot
