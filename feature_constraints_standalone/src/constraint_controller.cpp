@@ -244,7 +244,7 @@ void FeatureConstraintsController::constraint_command_callback(const constraint_
 
 void FeatureConstraintsController::update()
 {
-  if(configured_ && started_)
+  if(configured_)
   {
     // assemble frame between tool and object
     KDL::Frame ff_kinematics;
@@ -256,10 +256,18 @@ void FeatureConstraintsController::update()
 
     KDL::Frame T_tool_in_object = T_object_in_world_.Inverse() * T_base_in_world_ * T_arm_in_base_ * ff_kinematics * T_tool_in_ee_;
 
-    if(feature_controller_.constraints.size() > 0)
-    {  
-      // evaluate constraints, i.e. run feature controller for this cycle
-      feature_controller_.update(T_tool_in_object);
+    // calculate output of joint limit avoidance controller for this cycle
+    joint_limit_avoidance_controller_.update(q_);
+
+    // evaluate constraints, i.e. update the feature constraints and 
+    // (depending on started_-flag) run feature controller for this cycle
+    feature_controller_.update(T_tool_in_object, started_);
+
+    // if we have enough constraints and have been started: do the remaining calculations
+    // and send commands to the robot
+    // TODO: check if this check for constraints.size() is still necessary
+    if((feature_controller_.constraints.size() > 0) && started_)
+    {
       // and clamp desired feature velocities
       feature_controller_.clampOutput();
 
@@ -280,10 +288,7 @@ void FeatureConstraintsController::update()
       // call the solver to get desired joint angles that achieve task and
       // weighted pseudoinverse of A_ to perform Nullspace projection
       solver_.solve(A_, ydot_, Wq_, Wy_, qdot_.data, A_inv_);
-
-      // calculate output of joint limit avoidance controller for this cycle
-      joint_limit_avoidance_controller_.update(q_);
-      
+            
       // NULLSPACE PROJECTION: joint limit avoidance
       if(joint_limit_avoidance_on_)
       {
@@ -306,17 +311,16 @@ void FeatureConstraintsController::update()
         qdot_msg_.data[i] = qdot_(i);
       }
       qdot_publisher_.publish(qdot_msg_);
-
-      // END OF ACTUAL CONTROLLER -- START OF DEBUG PUBLISHING
-      // publish constraint state for debugging purposes
-      toMsg(feature_controller_, state_msg_);
-      state_msg_.header.stamp = ros::Time::now();
-      state_publisher_.publish(state_msg_);
-      // publish state of joint limit avoidance
-      toMsg(joint_limit_avoidance_controller_, joint_avoidance_state_msg_);
-      joint_avoidance_state_msg_.header.stamp = ros::Time::now();
-      limit_avoidance_state_publisher_.publish(joint_avoidance_state_msg_);
     }  
+    // END OF ACTUAL CONTROLLER -- START OF DEBUG PUBLISHING
+    // publish constraint state for debugging purposes
+    toMsg(feature_controller_, state_msg_);
+    state_msg_.header.stamp = ros::Time::now();
+    state_publisher_.publish(state_msg_);
+    // publish state of joint limit avoidance
+    toMsg(joint_limit_avoidance_controller_, joint_avoidance_state_msg_);
+    joint_avoidance_state_msg_.header.stamp = ros::Time::now();
+    limit_avoidance_state_publisher_.publish(joint_avoidance_state_msg_);  
   }
 }
 
