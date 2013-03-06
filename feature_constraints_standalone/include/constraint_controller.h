@@ -84,6 +84,11 @@ private:
   //! Controller component to translate feature constraints into interaction matrix and output velocities
   Controller feature_controller_;
 
+  //! The feature controller uses filters to smooth the estimated constraint velocities.
+  //  The ROS filter_chain that is used for this expects the filter parameters on the parameter server.
+  //  This is the namespace under which the filter parameters can be found.
+  std::string filter_namespace_;
+
   //! Controller component that avoids joint limits
   JointLimitAvoidanceController joint_limit_avoidance_controller_;
 

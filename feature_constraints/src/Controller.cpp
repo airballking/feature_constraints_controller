@@ -25,12 +25,9 @@ void Ranges::resize(int size)
 }
 
 
-void Controller::prepare(int max_constraints)
+bool Controller::prepare(std::string& filter_namespace)
 {
-  // TODO(Ingo & Georg): Discuss whether this is still necessary? Or
-  //     whether the semantics of these variables have changed because
-  //     right now prepare(n) will be called with every new Config-msg.
-  int n = (max_constraints == -1) ? constraints.size() : max_constraints;
+  int n = constraints.size();
 
   chi.resize(n);
   chi_desired.resize(n);
@@ -48,12 +45,22 @@ void Controller::prepare(int max_constraints)
 
   tmp.resize(n);
   analysis.resize(n);  // maximum number of constraints
+
+  // stuff for constraint velocity estimation
+  last_chi.resize(n);
+  chi_dot.resize(n);
+  tmp_vector1.resize(n);
+  tmp_vector2.resize(n);
+  filter_chain.clear();
+  return filter_chain.configure(n, filter_namespace);
 }
 
 
 void Controller::update(KDL::Frame& frame, bool with_control, double dt)
 {
   differentiateConstraints(Ht, chi, frame, constraints, 0.001, tmp);
+  estimateVelocities(chi, last_chi, dt, filter_chain, chi_dot, tmp,
+    tmp_vector1, tmp_vector2);
   if(with_control)
   {
     // interpolate command
@@ -307,4 +314,40 @@ void interpolateCommand(const KDL::JntArray& chi, const Ranges& command,
       }
     }
   }
+}
+
+void estimateVelocities(const KDL::JntArray& chi, KDL::JntArray& chi_old, double dt,
+                        filters::MultiChannelFilterChain<double>& filters,
+                        KDL::JntArray& chi_dot, KDL::JntArray& tmp,
+                        std::vector<double>& tmp_vector1, std::vector<double>& tmp_vector2)
+{
+  assert(chi.rows() == chi_old.rows());
+  assert(chi.rows() == chi_dot.rows());
+  assert(chi.rows() == tmp.rows());
+  assert(chi.rows() == tmp_vector1.size());
+  assert(chi.rows() == tmp_vector2.size());
+
+  // calculate instantaneous velocities through numerical differentiation
+  // NOTE: in the next line I'm using chi_dot as a second 'tmp'
+  KDL::Subtract(chi, chi_old, chi_dot);
+  KDL::Divide(chi_dot, dt, tmp);
+
+  // copy the result into a std::vector to send it to the filters
+  // TODO: write a convenience conversion function for this because we already use it twice
+  for(unsigned int i=0; i<tmp.rows(); i++)
+  {
+    tmp_vector1[i] = tmp(i);
+  }
+
+  // perform the filtering
+  filters.update(tmp_vector1, tmp_vector2);
+
+  // copy the filtered velocities into the resulting JntArray
+  for(unsigned int i=0; i<chi_old.rows(); i++)
+  {
+    chi_old(i) = tmp_vector2[i];
+  }
+  
+  // update chi_old
+  chi_old = chi;
 }

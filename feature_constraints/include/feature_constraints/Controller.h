@@ -13,12 +13,10 @@
 
 #include <vector>
 
+#include <filters/filter_chain.h>
+
 #include <feature_constraints/FeatureConstraints.h>
 #include <feature_constraints/Analysis.h>
-
-
-#define MAX_CONSTRAINTS 64
-
 
 //! Describes the instantaneous constraint command
 class Ranges
@@ -62,16 +60,29 @@ public:
   KDL::JntArray ydot;  //!< output velocities (in constraint coordinates)
   KDL::JntArray weights;
 
+  // state variables used for estimation of constraint velocities
+  KDL::JntArray last_chi; //< the constraint values from the last control cycle
+  KDL::JntArray chi_dot; //< estimated constraint velocities
+
+  // filter chain to smooth estimated constraint velocities
+  filters::MultiChannelFilterChain<double> filter_chain; //< low-pass filters for estimated constraint velocities
+
   // extra data
   KDL::Jacobian J;
   KDL::JntArray singularValues;
   KDL::JntArray tmp;
   Analysis analysis;
+  std::vector<double> tmp_vector1, tmp_vector2; //!< input and output containers for filter_chain
+
+  Controller(): filter_chain("double")
+  {}
 
   // does non-realtime preparation work
-  // assumes that either constraints is set
-  // or max_constraints is given
-  void prepare(int max_constraints=-1);
+  // assumes that constraints have been set
+  // also assumes that the parameter server holds suitable
+  // filter parameters at given filter_namespace
+  // returns true if no error occurred
+  bool prepare(std::string& filter_namespace);
 
   // calls deriveConstraints(), control() and analyzeH()
   void update(KDL::Frame& frame, bool with_control, double dt);
@@ -153,6 +164,23 @@ double clamp(double input_velocity,
 */
 void interpolateCommand(const KDL::JntArray& chi, const Ranges& command, 
                         double delta_time, Ranges& intermediate_command);
+
+/* Auxiliary function to estimate velocity of JntArray through numerical differentiation.
+   NOTE: ALL JntArrays and the filter_chain are assumed to be of equal size.
+   NOTE: chi_old will be update to the values in chi
+   \param chi [in] current values of constraints
+   \param chi_old [in and out] last values of constraints; will be set to chi
+   \param dt [in] time passed between chi and chi_old
+   \param filters [in] filter chain used to low-pass filter estimate velocities
+   \param chi_dot [out] estimated constraint velocities
+   \param tmp [in] some memory for intermediate results
+   \param tmp_vector1 [in] some memory to talk to the filter
+   \param tmp_vector2 [in] some more memory to talk to the filter
+*/
+void estimateVelocities(const KDL::JntArray& chi, KDL::JntArray& chi_old, double dt,
+                        filters::MultiChannelFilterChain<double>& filters,
+                        KDL::JntArray& chi_dot, KDL::JntArray& tmp,
+                        std::vector<double>& tmp_vector1, std::vector<double>& tmp_vector2);
  
 #endif //FEATURE_CONSTRAINTS_CONTROLLER_H
 

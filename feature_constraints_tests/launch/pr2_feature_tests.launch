@@ -1,5 +1,8 @@
 <launch>
 
+  <!-- load the filter parameters for the constraint velocity estimation onto the server -->
+  <rosparam command="load" file="$(find feature_controller_standalone)/launch/constraint_velocity_filter_chain_params.yaml"/>
+
   <!-- Start nodes that handle visualization of the spatulas and the table -->
   <node name="r_spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/r_spatula" />
   <node name="l_spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/l_spatula" />

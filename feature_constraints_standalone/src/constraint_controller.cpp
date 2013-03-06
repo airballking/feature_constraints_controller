@@ -147,6 +147,10 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   Wq_ = Eigen::MatrixXd::Identity(dof, dof);
   n.param<std::string>("object_frame", state_msg_.header.frame_id, "/base_link");
 
+  // construct namespace to find filter-chain parameters (provided to and used
+  // by feature_controller)
+  filter_namespace_ = n.getNamespace() + std::string("/filter_chain");
+
   // set flags to signal that we are not ready, yet
   configured_ = false;
   started_ = false;
@@ -210,7 +214,7 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   // get new constraints into controller and re-prepare it
   // i.e. adjust size of internal variables
   fromMsg(*msg, feature_controller_.constraints);
-  feature_controller_.prepare();
+  bool success = feature_controller_.prepare(filter_namespace_);
   resize(state_msg_, num_constraints);
 
   // set gains of feature controller to whatever we want
@@ -231,7 +235,10 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   solver_.reinitialise(num_constraints, q_.rows());
 
   // set flags to indicate that we are configured but not started, yet
-  configured_ = true;
+  if(success)
+    configured_ = true;
+  else
+    configured_ = false;
   started_ = false;
 }
 
