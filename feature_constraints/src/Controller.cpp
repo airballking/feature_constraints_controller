@@ -1,6 +1,7 @@
 
 #include <feature_constraints/FeatureConstraints.h>
 #include <feature_constraints/Controller.h>
+#include <feature_constraints/Conversions.h>
 
 #include <Eigen/Core>
 
@@ -333,21 +334,16 @@ void estimateVelocities(const KDL::JntArray& chi, KDL::JntArray& chi_old, double
   KDL::Divide(chi_dot, dt, tmp);
 
   // copy the result into a std::vector to send it to the filters
-  // TODO: write a convenience conversion function for this because we already use it twice
-  for(unsigned int i=0; i<tmp.rows(); i++)
-  {
-    tmp_vector1[i] = tmp(i);
-  }
-
+  // use one of our existing message-conversion functions to do the job
+  toMsg(tmp, tmp_vector1);
+  
   // perform the filtering
   filters.update(tmp_vector1, tmp_vector2);
 
-  // copy the filtered velocities into the resulting JntArray
-  for(unsigned int i=0; i<chi_old.rows(); i++)
-  {
-    chi_old(i) = tmp_vector2[i];
-  }
-  
+  // copy the filtered velocities back into the resulting JntArray
+  // again use one of our message-conversion functions
+  fromMsg(tmp_vector2, chi_dot);
+
   // update chi_old
   chi_old = chi;
 }
