@@ -136,6 +136,7 @@ void toMsg(Controller& c, constraint_msgs::ConstraintState& msg)
 {
   toMsg(c.frame, msg.pose);
   toMsg(c.chi, msg.chi);
+  toMsg(c.chi_dot, msg.chi_dot);
   toMsg(c.chi_desired, msg.chi_desired);
   toMsg(c.ydot, msg.ydot_desired);
   toMsg(c.weights, msg.weights);
@@ -211,6 +212,7 @@ constraint_msgs::ConstraintState toMsg(Controller& c)
 void resize(constraint_msgs::ConstraintState &msg, unsigned int number_constraints)
 {
   msg.chi.resize(number_constraints);
+  msg.chi_dot.resize(number_constraints);
   msg.chi_desired.resize(number_constraints);
   msg.ydot_desired.resize(number_constraints);
   msg.weights.resize(number_constraints);

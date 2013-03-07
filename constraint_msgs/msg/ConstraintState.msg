@@ -11,6 +11,9 @@ string[] constraint_names
 # current values of evaluating the constraint functions on the 
 # specified Features
 float64[] chi                # current constraint values
+# current velocity estimate for the constraint functions
+# derived through numerical differentiation
+float64[] chi_dot            # current constraint velocities
 # desired values of constraint controllers, i.e. either borders of ranges
 # for active case of current value of 'chi' for inactive case
 float64[] chi_desired        # desired constraint values
