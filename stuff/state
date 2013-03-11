@@ -205,11 +205,31 @@ def get_prefixes():
   return list(prefixes_state & prefixes_command)
 
 def usage():
-  return """ USAGE: %s <command>
+  return """
+USAGE: %s <command>
 
-commands:
-  get : print robot state
-  set chi <constraint values> : set desired constraint values
+Where <command> is:
+
+  get [variable]              : Print robot state 'variable'. Print the
+                                complete state if 'variable' empty.
+
+  set chi <constraint values> : Set desired constraint values
+                                (any non-number means 'don't care').
+
+  set chi -                   : (Repeatedly) read desired constraint values
+                                from stdin (any non-number means 'don't care').
+
+  set angles <joint angles>   : Set the arm joint angles.
+
+  reset                       : reset arms to start poses (stored in rosparam
+                                '/loopback_controllers/desired_joints').
+
+  prefix [new prefix]         : Get / set current name space for the
+                                constraint controller.
+
+  prefixes                    : Show name spaces of all active
+                                constraint controllers.
+
 """ % (os.path.basename(sys.argv[0]))
 
 
@@ -217,11 +237,12 @@ def usage_set():
   return """ writeme. """
 
 def main():
-  rospy.init_node('fc_state')
-  prefix = rospy.get_param('/constraint_controller', '/feature_controller')
   if len(sys.argv) < 2:
     print usage()
     sys.exit(0)
+
+  rospy.init_node('fc_state')
+  prefix = rospy.get_param('/constraint_controller', '/feature_controller')
 
   cmd  = sys.argv[1]
   args = sys.argv[2:]
@@ -266,6 +287,7 @@ def main():
         print error
         return
 
+      # switch off constraint controller
       coll = Collector(prefix)
       length = len(coll.get('chi'))
       pub_cmd = rospy.Publisher(prefix+'/constraint_command', ConstraintCommand)
@@ -274,6 +296,7 @@ def main():
 
       rospy.sleep(0.1)
 
+      # send new joint angles
       pub_jnt = rospy.Publisher('loopback_controllers/desired_joints', JointState)
       wait_for_connection(pub_jnt)
       msg = JointState()
