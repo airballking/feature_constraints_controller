@@ -32,12 +32,14 @@ bool Controller::prepare(std::string& filter_namespace)
 
   chi.resize(n);
   chi_desired.resize(n);
+  chi_dot_desired.resize(n);
 
   Ht.resize(n);
   ydot.resize(n);
   weights.resize(n);
 
-  gains.resize(n);
+  p_gains.resize(n);
+  d_gains.resize(n);
   command.resize(n);
   intermediate_command.resize(n);
 
@@ -47,6 +49,18 @@ bool Controller::prepare(std::string& filter_namespace)
   tmp.resize(n);
   analysis.resize(n);  // maximum number of constraints
 
+  // stuff for Reflexxes trajectory generation
+  if(command_trajectory_generator)
+    delete command_trajectory_generator;
+  if(command_trajectory_input)
+    delete command_trajectory_input;
+  if(command_trajectory_output)
+    delete command_trajectory_output;
+
+  command_trajectory_generator = new ReflexxesAPI(n, 0.01);
+  command_trajectory_input = new RMLPositionInputParameters(n);
+  command_trajectory_output = new RMLPositionOutputParameters(n);
+  
   // stuff for constraint velocity estimation
   last_chi.resize(n);
   chi_dot.resize(n);
@@ -64,9 +78,9 @@ void Controller::update(KDL::Frame& frame, bool with_control, double dt)
     tmp_vector1, tmp_vector2);
   if(with_control)
   {
-    // interpolate command
-    interpolateCommand(chi, command, dt, intermediate_command);
-    control(ydot, weights, chi_desired, chi, command, intermediate_command, gains);
+    control(ydot, weights, chi_desired, chi_dot_desired, chi, chi_dot, command,
+      *command_trajectory_generator, *command_trajectory_input, *command_trajectory_output,
+      command_trajectory_flags, tmp, p_gains, d_gains);
   }
   // TODO: check if we are still using J
   analysis.analyzeH(Ht, J, singularValues, 1e-7);
@@ -138,14 +152,39 @@ void control(KDL::JntArray& ydot,
   }
 }
 
+
 void control(KDL::JntArray& ydot,
              KDL::JntArray& weights,
              KDL::JntArray& chi_desired,
+             KDL::JntArray& chi_dot_desired,
              const KDL::JntArray& chi,
+             const KDL::JntArray& chi_dot,
              const Ranges& command,
-             const Ranges& intermediate_command,
-             const KDL::JntArray gains)
+             ReflexxesAPI& trajectory_generator,
+             RMLPositionInputParameters& trajectory_input,
+             RMLPositionOutputParameters& trajectory_output,
+             RMLPositionFlags& trajectory_flags,
+             KDL::JntArray& tmp,
+             const KDL::JntArray p_gains,
+             const KDL::JntArray d_gains)
 {
+  // reflexxes library: set max_vel, max_acc and max_jerk
+  trajectory_input.SetMaxVelocityVector(command.max_vel.data.data());
+  trajectory_input.SetMaxAccelerationVector(command.max_vel.data.data()); // implies we reach max_vel within 1sec (with max_jerk-->infinity)
+  KDL::Multiply(command.max_vel, 5.0, tmp);
+  trajectory_input.SetMaxJerkVector(tmp.data.data()); // implies we reach max_acc within 0.2sec
+
+  // reflexxes library: explicitedly enable all trajectory generators
+  for(unsigned int i=0; i<chi.rows(); i++)
+  {
+    trajectory_input.SetSelectionVectorElement(true, i);
+  }
+  
+  // reflexxes library: set current constraint velocities and position
+  trajectory_input.SetCurrentPositionVector(chi.data.data());
+  trajectory_input.SetCurrentVelocityVector(chi_dot.data.data());
+
+  // our algorithm: determine chi_desired and weights based on ranges 
   double s = 0.05;
   for(unsigned int i=0; i < chi.rows(); i++)
   {
@@ -158,32 +197,26 @@ void control(KDL::JntArray& ydot,
 
     double value = chi(i);
 
-    double lo = intermediate_command.pos_lo(i);
-    double hi = intermediate_command.pos_hi(i);
+    double lo = command.pos_lo(i);
+    double hi = command.pos_hi(i);
 
     // adjust margin if range is too small
     double ss = (hi - lo < 2*s) ? (hi - lo) / 2 : s;
 
     if(value > hi - ss)
     {
-      ydot(i) = gains(i)*(hi - ss - value);
       chi_desired(i) = hi - ss;
     }
     else if(value < lo + ss)
     {
-      ydot(i) = gains(i)*(lo + ss - value);
       chi_desired(i) = lo + ss;
     }
     else
     {
-      ydot(i) = 0.0;
       chi_desired(i) = value;
     }
 
     // calc ouput weights based on desired final weights
-    lo = command.pos_lo(i);
-    hi = command.pos_hi(i);
-
     if(value > hi || value < lo)
     {
       //weights(i) = 1.0;
@@ -198,6 +231,38 @@ void control(KDL::JntArray& ydot,
       w_hi = (w_hi > 0.0) ? w_hi : 0.0;
 
       weights(i) = (w_lo > w_hi) ? w_lo : w_hi;
+    }
+  }
+
+  // reflexxes library: set desired positions and desired final velocity (later here hard-coded to zero)
+  // set the desired values
+  trajectory_input.SetTargetPositionVector(chi_desired.data.data());
+  KDL::SetToZero(tmp);
+  trajectory_input.SetTargetVelocityVector(tmp.data.data());
+
+  // reflexxes library: ask for interpolation
+  int return_value = trajectory_generator.RMLPosition(trajectory_input, &trajectory_output, trajectory_flags);
+  if(return_value < 0)
+  {
+    ROS_ERROR("[FEATURE_CONSTRAINTS_CONTROLLER] Reflexxes interpolator returned with error '%d'", return_value);
+    KDL::SetToZero(ydot);
+    return;
+  }
+
+  // reflexess library copy results into chi_desired and chi_dot_desired
+  trajectory_output.GetNewPositionVector(chi_desired.data.data(), chi_desired.rows()*sizeof(double));
+  trajectory_output.GetNewVelocityVector(chi_dot_desired.data.data(), chi_dot_desired.rows()*sizeof(double));
+
+  // perform control to calculate ydot
+  for(unsigned int i=0; i<chi.rows(); i++)
+  {
+    if(chi(i) < command.pos_hi(i) && chi(i) > command.pos_lo(i))
+    {
+      ydot(i) = 0.0;
+    }
+    else
+    {
+      ydot(i) = p_gains(i)*(chi_desired(i) - chi(i)) + d_gains(i)*(chi_dot_desired(i) - chi_dot(i));
     }
   }
 }
@@ -225,95 +290,6 @@ void clamp(KDL::JntArray& joint_velocities, const KDL::JntArray& min_velocities,
   {
     joint_velocities(i) = clamp(joint_velocities(i), min_velocities(i), 
                             max_velocities(i));
-  }
-}
-
-void interpolateCommand(const KDL::JntArray& chi, const Ranges& command,
-                        double delta_time, Ranges& intermediate_command)
-{
-  // do sanity checks on inputs and ouputs
-  unsigned int size = chi.rows();
-  assert(command.pos_lo.rows() == size);
-  assert(command.pos_hi.rows() == size);
-  assert(command.weight.rows() == size);
-  assert(command.max_vel.rows() == size);
-  assert(command.min_vel.rows() == size);
-  assert(intermediate_command.pos_lo.rows() == size);
-  assert(intermediate_command.pos_hi.rows() == size);
-  assert(intermediate_command.weight.rows() == size);
-  assert(intermediate_command.max_vel.rows() == size);
-  assert(intermediate_command.min_vel.rows() == size);
-  assert(delta_time > 0.0);
-
-  for(unsigned int i=0; i<command.pos_lo.rows(); i++)
-  {
-    // copy the the final command to the intermediate command
-    // because in some cases it's just that AND the max/min velocities and
-    // weights just stay untouched
-    // TODO: write assignment operator for Ranges
-    intermediate_command.min_vel(i) = command.min_vel(i);
-    intermediate_command.max_vel(i) = command.max_vel(i);
-    intermediate_command.weight(i) = command.weight(i);
-    intermediate_command.pos_lo(i) = command.pos_lo(i);
-    intermediate_command.pos_hi(i) = command.pos_hi(i);
-
-    // do the actual interpolation
-    if(chi(i) <= command.pos_lo(i) || chi(i) >= command.pos_hi(i))
-    {
-      // we're not there yet --> need to interpolate
-      assert(command.pos_hi(i) >= command.pos_lo(i));
-      // TODO: check for too small ranges, i.e. equalities
-
-      // calculate range of final constraint
-      double range = command.pos_hi(i) - command.pos_lo(i);
-
-      // project range around current value to set up 'virtual' range
-      intermediate_command.pos_lo(i) = chi(i) - 0.5*range;
-      intermediate_command.pos_hi(i) = chi(i) + 0.5*range;
-
-      // calculate the delta between the 'virtual' and the end range
-      double delta = command.pos_hi(i) - intermediate_command.pos_hi(i);
-
-      // move the intermediate towards the desired end range BUT
-      // not more than the maximum velocities allow AND
-      // not further than the desired range...
-      // TODO: refactor this using one variable for the min/max_vel
-      if(delta < 0.0)
-      {
-        // we have to go negative, i.e. min_vel applies
-        if(delta < command.min_vel(i)*delta_time)
-        {
-          // the error is too big, we need to calculate an intermediate range
-          // using the minimum velocity
-          intermediate_command.pos_lo(i)+=command.min_vel(i)*delta_time;
-          intermediate_command.pos_hi(i)+=command.min_vel(i)*delta_time;
-        }
-        else
-        {
-          // the error is not too big, just add the delta --> set original command
-          intermediate_command.pos_lo(i)+=delta;
-          intermediate_command.pos_hi(i)+=delta;
-        }
-      }
-      else
-      {
-        // we have to go positive, i.e. max_vel applies
-        if(delta > command.max_vel(i)*delta_time)
-        {
-          // the error is too big, we need to calculate an intermediate range
-          // using the maximum velocity
-          intermediate_command.pos_lo(i)+=command.max_vel(i)*delta_time;
-          intermediate_command.pos_hi(i)+=command.max_vel(i)*delta_time;
-
-        }
-        else
-        {
-          // the error is not too big, just add the delta --> set original command
-          intermediate_command.pos_lo(i)+=delta;
-          intermediate_command.pos_hi(i)+=delta;
-        }
-      }
-    }
   }
 }
 

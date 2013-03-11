@@ -15,6 +15,8 @@
 
 #include <filters/filter_chain.h>
 
+#include <ReflexxesAPI.h>
+
 #include <feature_constraints/FeatureConstraints.h>
 #include <feature_constraints/Analysis.h>
 
@@ -49,11 +51,13 @@ public:
   // input variables
   std::vector<Constraint> constraints;
   Ranges command, intermediate_command;
-  KDL::JntArray gains;
+  KDL::JntArray p_gains;
+  KDL::JntArray d_gains;
 
   // output variables
   KDL::JntArray chi;         //!< actual values of the constraints
   KDL::JntArray chi_desired; //!< desired values of the constraints i.e. 'controller setpoints'
+  KDL::JntArray chi_dot_desired; //< desired velocities of the constraints
 
   KDL::Jacobian Ht;  //!< Interaction matrix
   KDL::Frame frame;  //!< just a buffer variable. remembers the last input of update()
@@ -67,6 +71,12 @@ public:
   // filter chain to smooth estimated constraint velocities
   filters::MultiChannelFilterChain<double> filter_chain; //< low-pass filters for estimated constraint velocities
 
+  // trajectory generators from REFLEXXES motion library and their input/output containers
+  ReflexxesAPI* command_trajectory_generator;
+  RMLPositionInputParameters* command_trajectory_input;
+  RMLPositionOutputParameters* command_trajectory_output;
+  RMLPositionFlags command_trajectory_flags;
+
   // extra data
   KDL::Jacobian J;
   KDL::JntArray singularValues;
@@ -74,8 +84,16 @@ public:
   Analysis analysis;
   std::vector<double> tmp_vector1, tmp_vector2; //!< input and output containers for filter_chain
 
-  Controller(): filter_chain("double")
+  Controller(): filter_chain("double"), command_trajectory_generator(NULL),
+    command_trajectory_input(NULL), command_trajectory_output(NULL)
   {}
+
+  ~Controller()
+  {
+    delete command_trajectory_generator;
+    delete command_trajectory_input;
+    delete command_trajectory_output;
+  }
 
   // does non-realtime preparation work
   // assumes that constraints have been set
@@ -121,24 +139,37 @@ void control(KDL::JntArray& ydot,
     It also takes an intermediate (interpolated) range as
     input which is used to calculate to control error.
 
-    \param ydot    [out] desired velocities in constraint space
-    \param weights [out] constraint weights for the solver
-    \param chi_desired [out] desired values of the constraints
-(a border of the range when not fulfilled, equal to chi otherwise)
-    \param chi     [in] current value of the constraints
-    \param command [in] desired ranges of the commands, used to calculate the weights
-    \param intermediate_command [in] interpolated ranges of the commands, used to
-                                     calculate the control error and ydot
-    \param gains   [in] K_p for the P-controller that is active when
-                        a constraint is not fulfilled.
- */
+    \param ydot            [out] desired velocities in constraint space (DOF)
+    \param weights         [out] constraint weights for the solver (DOF)
+    \param chi_desired     [out] desired values of the constraints (DOF)
+    \param chi_dot_desired [out] desired velocities of the constraints (DOF)
+    \param chi     [in] current value of the constraints (DOF)
+    \param chi_dot [in] current velocities of the constraints (DOF)
+    \param command [in] desired ranges of the commands, used to calculate the weights (DOF)
+    \param trajectory_generator [in] ReflexxesAPI object for interpolation (DOF)
+    \param trajectory_input     [in] InputObject for ReflexxesAPI; just for memory purposes (DOF)
+    \param trajectory_output    [in] OutputObject for ReflexxesAPI; just for memory purposes (DOF)
+    \param trajectory_flags     [in] FlagObject for ReflexxesAPI; just for memory purposes (no size)
+    \param tmp     [in] some memory for calculations (DOF)
+    \param p_gains [in] K_p for the PD-controller that is active when
+                        a constraint is not fulfilled. (DOF)
+    \param d_gains [in] K_d for the PD-controller that is active when
+                        a constraint is not fulfilled. (DOF)
+*/
 void control(KDL::JntArray& ydot,
              KDL::JntArray& weights,
 	     KDL::JntArray& chi_desired,
+             KDL::JntArray& chi_dot_desired,
              const KDL::JntArray& chi,
-	     const Ranges& command,
-             const Ranges& intermediate_command,
-             const KDL::JntArray gains);
+	     const KDL::JntArray& chi_dot,
+             const Ranges& command,
+             ReflexxesAPI& trajectory_generator,
+             RMLPositionInputParameters& trajectory_input,
+             RMLPositionOutputParameters& trajectory_output,
+             RMLPositionFlags& trajectory_flags,
+             KDL::JntArray& tmp,
+             const KDL::JntArray p_gains,
+             const KDL::JntArray d_gains);
 
 
 /* Auxiliary convenience function to clamp --for example-- output
@@ -155,15 +186,6 @@ double clamp(double input_velocity,
              double min_velocity,
              double max_velocity);
             
-/* Auxiliary function to interpolate constraints between feature function output
-   and desired final feature constraints.
-   \param chi [in] the current output value of the feature functions
-   \param command [in] desired final constraints for the movement
-   \param delta_time [in] time between two control cycles
-   \param intermediate_command [out] interpolation constraint to get us to final
-*/
-void interpolateCommand(const KDL::JntArray& chi, const Ranges& command, 
-                        double delta_time, Ranges& intermediate_command);
 
 /* Auxiliary function to estimate velocity of JntArray through numerical differentiation.
    NOTE: ALL JntArrays and the filter_chain are assumed to be of equal size.

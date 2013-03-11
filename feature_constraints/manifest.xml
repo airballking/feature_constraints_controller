@@ -12,6 +12,7 @@
   <depend package="tf_conversions"/>
   <depend package="constraint_msgs" />
   <depend package="filters"/>
+  <depend package="reflexxes_II"/>
 
   <export> 
     <cpp cflags="-I${prefix}/include"
