@@ -15,15 +15,16 @@ float64[] chi                # current constraint values
 # derived through numerical differentiation
 float64[] chi_dot            # current constraint velocities
 # desired values of constraint controllers, i.e. either borders of ranges
-# for active case of current value of 'chi' for inactive case
+# for active case of current value or 'chi' for inactive case
 float64[] chi_desired        # desired constraint values
+# desired velocities of constraint controllers, i.e. either some value smaller max_vel
+# for active case or 0.0 for inactive case
+float64[] chi_dot_desired
 # weight of constraint controllers, i.e. either 1 for active or 0 inactive,
 # depends on whether or not constraint is currently fulfilled
 float64[] weights            # actual weights of constraints
 
 # current lower and upper boundary of the constraints
-float64[] lower_interpolated_boundary
-float64[] upper_interpolated_boundary
 float64[] lower_boundary
 float64[] upper_boundary
 
