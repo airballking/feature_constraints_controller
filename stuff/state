@@ -37,9 +37,12 @@ def joint_names_fallback(prefix):
     return ['right_arm_0_joint', 'right_arm_1_joint', 'right_arm_2_joint',
             'right_arm_3_joint', 'right_arm_4_joint', 'right_arm_5_joint',
             'right_arm_6_joint']
-  elif tool_frame.startwith('l_'):
-    return [] #TODO: left PR2 arm joints
-  elif tool_frame.startwith('r_'):
+  elif tool_frame.startswith('l_'):
+    return ['l_shoulder_pan_joint', 'l_shoulder_lift_joint',
+            'l_upper_arm_roll_joint', 'l_elbow_flex_joint',
+            'l_forearm_roll_joint', 'l_wrist_flex_joint',
+            'l_wrist_roll_joint']
+  elif tool_frame.startswith('r_'):
     return [] #TODO: right PR2 arm joints
   else:
     return []
@@ -55,7 +58,7 @@ def joint_names(prefix):
  
     model = urdf.URDF.load_from_parameter_server()
     names_unicode = model.get_chain(base_frame, tool_frame, True, False, False)
-    return [n.encode('ascii', 'ignore') for n in names_u]
+    return [n.encode('ascii', 'ignore') for n in names_unicode]
   except:
     return joint_names_fallback(prefix)
 
@@ -242,7 +245,7 @@ def main():
     sys.exit(0)
 
   rospy.init_node('fc_state')
-  prefix = rospy.get_param('/constraint_controller', '/feature_controller')
+  prefix = rospy.get_param('/constraint_controller_prefix', '/feature_controller')
 
   cmd  = sys.argv[1]
   args = sys.argv[2:]
@@ -326,7 +329,7 @@ def main():
 
   if cmd == 'prefix':
     if len(args) == 1:
-      rospy.set_param('/constraint_controller', args[0])
+      rospy.set_param('/constraint_controller_prefix', args[0])
     else:
       print prefix
   if cmd == 'prefixes':
