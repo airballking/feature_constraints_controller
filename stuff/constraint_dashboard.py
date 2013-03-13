@@ -32,6 +32,7 @@ class Painter(wx.Window):
   def __init__(self, parent, id, painter_cb):
     wx.Window.__init__(self, parent, id)
     self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+    self.SetMinSize(wx.Size(400, 50))
     self.Bind(wx.EVT_PAINT, painter_cb)
     self.Bind(wx.EVT_ERASE_BACKGROUND, self._erase)
 
@@ -41,7 +42,7 @@ class Painter(wx.Window):
 
 class ConstraintPanel:
   """A Panel that shows the state of one constraint"""
-  def __init__(self, parent, id, pos_min=-1, pos_max=1):
+  def __init__(self, parent, id, pos_min=-1.0, pos_max=1.0):
     """Display constraint state information.
 
     The arguments pos_min and pos_max are the minimum and maximum position that
@@ -74,13 +75,15 @@ class ConstraintPanel:
     self.pos_max = pos_max
     self.vel_scale = 1.0  # show where the controller wants to be in 1.0 seconds
 
+    # initialize variables
     self.box = (-0.1, 1.1)
     self.pos = 0.5
     self.vel = 0.0
     self.vel_desired = 0.0
     self.background_color = 'white'
-    self.constraint_name_label.SetLabel('blabla')
-    self.constraint_func_label.SetLabel('blubb')
+    self.background_brush = wx.Brush(self.background_color)
+    self.constraint_label = 'blabla'
+    self.func_label = 'blubb'
     self.do_update = False
 
   def set_description(self, constraint_name, constraint_function, feature1, feature2):
@@ -97,16 +100,17 @@ class ConstraintPanel:
     self.do_update = True
 
   def set_command(self, weight, pos_lo, pos_hi, vel_lo, vel_hi):
-    width = self.pos_max - self.pos_min
+    width = float(self.pos_max - self.pos_min)
 
     if weight < 0.1:
       self.background_color = 'cyan'
     else:
       self.background_color = 'white'
+    self.background_brush = wx.Brush(self.background_color)
+    
 
     left  = clamp(-0.1, (pos_lo - self.pos_min) / width, 1.1)
     right = clamp(-0.1, (pos_hi - self.pos_min) / width, 1.1)
-    print 'cmd: (',pos_lo,' ',pos_hi,') -> (',left,', ',right,')'
     self.box = (left, right)
     self.do_update = True
 
@@ -116,16 +120,18 @@ class ConstraintPanel:
 
   def _update(self):
     print 'update'
-    self.canvas.SetBackgroundColour(self.background_color)
+    self.text_panel.SetBackgroundColour(self.background_color)
     self.constraint_name_label.SetLabel(self.constraint_label)
     self.constraint_func_label.SetLabel(self.func_label)
+    self.text_panel.GetParent().Layout()
+    
 
   def set_state(self, weight, pos, vel_desired):
     self.vel_desired = vel_desired
 
-    width = self.pos_max - self.pos_min
+    width = float(self.pos_max - self.pos_min)
     self.pos = clamp(0.0, (pos - self.pos_min) / width, 1.0)
-    self.vel = clamp(0.0, (vel_desired * self.vel_scale) / width, 1.0)
+    self.vel = clamp(-2.0, (vel_desired * self.vel_scale) / width, 2.0)
 
   def _paint(self, event):
     if self.do_update:
@@ -137,12 +143,13 @@ class ConstraintPanel:
     left = self.box[0] * pixel_width
     right = self.box[1] * pixel_width
     dc = wx.PaintDC(self.canvas)
+    dc.SetBackground(self.background_brush)
     dc.Clear()
     dc.SetBrush(wx.GREY_BRUSH)
     dc.DrawRectangle(left, 10, right - left, 15)
     dc.DrawLine(self.pos * pixel_width,  5, self.pos * pixel_width, 30)
     dc.DrawLine(self.pos * pixel_width, 17, (self.pos + self.vel) * pixel_width, 17)
-    dc.DrawText('v=%5.3f  [%dpx = %f * %d]' % (self.vel_desired, int(self.vel * pixel_width), self.vel, pixel_width), 0, 30)
+    dc.DrawText('v_des=% 5.3f' % (self.vel_desired), 0, 30)
 
 
 class ConstraintView(wx.Panel):
@@ -158,8 +165,9 @@ class ConstraintView(wx.Panel):
 
   def reconstruct_panels(self, num): 
     if len(self.panels) != num:
-      #TODO: delete old panels
       print 'Re-creating the panels'
+      for panel in self.panels:
+        self.sizer.Detach(panel)
       for i in range(num):
         panel = ConstraintPanel(self, i)
         self.panels.append(panel)
@@ -242,7 +250,7 @@ class ConstraintDashboard:
 
 if __name__ == "__main__":
   app = wx.PySimpleApp()
-  frame = wx.Frame(None, -1, 'dashboard', size = (200, 200))
+  frame = wx.Frame(None, -1, 'dashboard', size = (800, 200))
 
   view = ConstraintView(frame, -1)
 
