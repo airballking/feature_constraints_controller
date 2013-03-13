@@ -65,6 +65,6 @@
 
 
   <node launch-prefix="$(find itasc)/scripts/exec_in_dir.sh $(find itasc)/launch" name="itasc" type="cdeployer-gnulinux" pkg="ocl" args="-s rosie_joints.ops -l Error -- " output="log" >
-    <remap from="qdot_mixed_ros" to="/l_arm_vel/command"/>
+    <remap from="/qdot_mixed_ros" to="/l_arm_vel/command"/>
   </node>
 </launch>

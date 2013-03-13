@@ -57,9 +57,9 @@ FeatureTask2::FeatureTask2(const std::string& name) :
   properties()->addProperty("ros_prefix", ros_prefix).doc("prefix for the ROS topic names");
   properties()->addProperty("guard_time", guard_time).doc("number of cycles to wait before initialization");
 
-  controller.prepare();
-
   nc=NC_DEFAULT;
+
+  controller.prepare(nc);
 }
 
 // helper for connecting ports to both ROS and RTT

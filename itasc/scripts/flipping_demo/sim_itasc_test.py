@@ -192,7 +192,7 @@ def execute_constraints(constraints, itasc, frames):
     itasc.setTool(frames[c.tool])
     itasc.setObject(frames[c.obj])
     itasc.setConstraint(c)
-    for i in range(200):
+    for i in range(600):
       if itasc.happy():
         print str(itasc.getAngles())
         break
