@@ -15,6 +15,8 @@
 
 #include <Eigen/Core>
 
+#include <boost/thread/mutex.hpp>
+#include <boost/thread.hpp>
 
 //! A feature-grounded constraint controller
 /*! This class communicates to ROS. It receives constraint configurations and
@@ -45,20 +47,27 @@ private:
   //! Receives the desired ranges for the constraints.
   void constraint_command_callback(const constraint_msgs::ConstraintCommand::ConstPtr& msg);
 
-  //! Receives the offset of the tool from the robots flange
-  void tool_offset_callback(const geometry_msgs::Pose::ConstPtr& msg);
+  // Retrieves the names of the relevant tf-frames from the parameter server during init
+  // returns false if some parameter could not be loaded
+  bool load_frame_names(ros::NodeHandle& n);
 
-  //! Receives the offset of the object from the world's origin
-  void object_offset_callback(const geometry_msgs::Pose::ConstPtr& msg);
-
-  //! Receives the offset of the arm_base from the robot base  
-  void robot_arm_offset_callback(const geometry_msgs::Pose::ConstPtr& msg);
-
-  // Receives the position of the robot base in the world frame
-  void robot_base_callback(const geometry_msgs::Pose::ConstPtr& msg);
+  // Receives all four of the below transforms from tf
+  void tf_poses_lookup();
 
   //! These transforms will be looked up from tf
   KDL::Frame T_tool_in_ee_, T_object_in_world_, T_base_in_world_, T_arm_in_base_;
+  std::string robot_base_frame_, world_frame_, arm_base_frame_, arm_ee_frame_, tool_frame_, object_frame_;
+  
+  // tf interfacing
+  tf::TransformListener tf_listener_;
+  tf::StampedTransform aux_transform_;
+
+  // mutex to protect look ups from tf
+  boost::mutex tf_lookup_mutex_;
+  // thread that does the tf lookups
+  boost::thread *tf_lookup_thread_;
+  // flag to tell the tf lookup thread to pause and stop
+  bool stop_tf_lookup_, pause_tf_lookup_;
 
   //! Internal representation of robot state
   KDL::JntArray q_, qdot_;
@@ -96,10 +105,6 @@ private:
   ros::Subscriber joint_state_subscriber_;
   ros::Subscriber feature_constraints_subscriber_;
   ros::Subscriber constraint_command_subscriber_;
-  ros::Subscriber tool_offset_subscriber_;
-  ros::Subscriber object_offset_subscriber_;
-  ros::Subscriber arm_offset_subscriber_;
-  ros::Subscriber base_pose_subscriber_;
 
   //! Publishers
   ros::Publisher qdot_publisher_;
@@ -111,7 +116,7 @@ private:
   constraint_msgs::JointAvoidanceState joint_avoidance_state_msg_;
 
   // flags to remember the state of the feature controller
-  bool configured_, started_;
+  bool configured_, started_, tf_poses_available_;
 
   // flag to turn joint limit avoidance on and off
   // will be set once during init

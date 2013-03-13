@@ -57,7 +57,7 @@ Matrix<double, 6, 6> inverse_twist_proj(KDL::Frame f)
 
 
 FeatureConstraintsController::FeatureConstraintsController()
-   : robot_kinematics_(0), joint_state_interpreter_(0)
+   : robot_kinematics_(0), joint_state_interpreter_(0), tf_lookup_thread_(0)
 {
 
 }
@@ -65,6 +65,12 @@ FeatureConstraintsController::FeatureConstraintsController()
 
 FeatureConstraintsController::~FeatureConstraintsController()
 {
+  // stop and delete thread that does the tf-lookup
+  stop_tf_lookup_ = true;
+  tf_lookup_thread_->join();
+  delete tf_lookup_thread_;
+
+  // clean up all the rest
   delete joint_state_interpreter_;
   delete robot_kinematics_;
 }
@@ -72,9 +78,6 @@ FeatureConstraintsController::~FeatureConstraintsController()
 
 bool FeatureConstraintsController::init(ros::NodeHandle &n)
 {
-  // set frames from tf to dummy value
-  // TODO: later put this into separate thread listening to TF
- 
   // set correspondes between constraint function names and constraint functions
   Constraint::init();
  
@@ -99,18 +102,15 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   // subscribe to constraint command topic
   constraint_command_subscriber_ = n.subscribe<constraint_msgs::ConstraintCommand>("constraint_command", 1, &FeatureConstraintsController::constraint_command_callback, this);
 
-  // subscribe to tool offset pose
-  tool_offset_subscriber_ = n.subscribe<geometry_msgs::Pose>("tool_offset", 1, &FeatureConstraintsController::tool_offset_callback, this);
-
-  // subscribe to world offset pose
-  object_offset_subscriber_ = n.subscribe<geometry_msgs::Pose>("object_offset", 1, &FeatureConstraintsController::object_offset_callback, this);
-
-  // subscribe to robot arm offset pose
-  arm_offset_subscriber_ = n.subscribe<geometry_msgs::Pose>("arm_offset", 1, &FeatureConstraintsController::robot_arm_offset_callback, this);
-
-  // subscribe to robot arm offset pose
-  base_pose_subscriber_ = n.subscribe<geometry_msgs::Pose>("base_pose", 1, &FeatureConstraintsController::robot_base_callback, this);
-
+  // load relevant tf-frame-names from parameter server
+  if(!load_frame_names(n))
+    return false;
+  
+  // start thread that looks up tf-frames in paused-state
+  stop_tf_lookup_ = false;
+  pause_tf_lookup_ = true;
+  tf_lookup_thread_ = new boost::thread( boost::bind( &FeatureConstraintsController::tf_poses_lookup, this) );
+  
   // advertise publisher
   qdot_publisher_ = n.advertise<std_msgs::Float64MultiArray>("qdot", 1);
   state_publisher_ = n.advertise<constraint_msgs::ConstraintState>("constraint_state", 1);
@@ -154,6 +154,7 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   // set flags to signal that we are not ready, yet
   configured_ = false;
   started_ = false;
+  tf_poses_available_ = false;
 
   return true;
 }
@@ -178,24 +179,117 @@ void FeatureConstraintsController::joint_state_callback(const sensor_msgs::Joint
     ROS_WARN("[Feature Controller] Could not parse joint state message.");
 }
 
-void FeatureConstraintsController::tool_offset_callback(const geometry_msgs::Pose::ConstPtr& msg)
+void FeatureConstraintsController::tf_poses_lookup()
 {
-  tf::PoseMsgToKDL(*msg, T_tool_in_ee_);
+  while(ros::ok() && !stop_tf_lookup_)
+  {
+    if(!pause_tf_lookup_)
+    {
+    boost::mutex::scoped_lock scoped_lock(tf_lookup_mutex_);
+    // lookup pose of tool-frame in ee-frame
+    try
+    {
+      tf_listener_.lookupTransform(arm_ee_frame_, tool_frame_,
+                                   ros::Time(0), aux_transform_);
+    }
+    catch (tf::TransformException ex)
+    {
+      if(started_) 
+        ROS_ERROR("Lookup of pose of tool-frame in ee-frame failed.");
+      tf_poses_available_ = false;
+      continue;
+    }
+    tf::TransformTFToKDL(aux_transform_, T_tool_in_ee_);
+    
+    // lookup pose of object-frame in world-frame
+    try
+    {
+      tf_listener_.lookupTransform(world_frame_, object_frame_, 
+                                   ros::Time(0), aux_transform_);
+    }
+    catch (tf::TransformException ex)
+    {
+      if(started_)
+        ROS_ERROR("Lookup of pose of object-frame in world-frame failed.");
+      tf_poses_available_ = false;
+      continue;
+    }
+    tf::TransformTFToKDL(aux_transform_, T_object_in_world_);
+
+    // lookup pose of base-frame in world-frame
+    try
+    {
+      tf_listener_.lookupTransform(world_frame_, robot_base_frame_,
+                                   ros::Time(0), aux_transform_);
+    }
+    catch (tf::TransformException ex)
+    {
+      if(started_)
+        ROS_ERROR("Lookup of pose of robot-base-frame in world-frame failed.");
+      tf_poses_available_ = false;
+      continue;
+    }
+    tf::TransformTFToKDL(aux_transform_, T_base_in_world_);
+
+    // lookup pose of arm-base-frame in robot-base-frame
+    try
+    {
+      tf_listener_.lookupTransform(robot_base_frame_, arm_base_frame_,
+                                  ros::Time(0), aux_transform_);
+    }
+    catch (tf::TransformException ex)
+    {
+      if(started_)
+        ROS_ERROR("Lookup of pose of arm-base-frame in robot-base-frame failed.");
+      tf_poses_available_ = false;
+      continue;
+    }
+    tf::TransformTFToKDL(aux_transform_, T_arm_in_base_);
+
+    // all lookups worked out fine
+    tf_poses_available_ = true;
+    }
+  }
 }
 
-void FeatureConstraintsController::object_offset_callback(const geometry_msgs::Pose::ConstPtr& msg)
+bool FeatureConstraintsController::load_frame_names(ros::NodeHandle& n)
 {
-  tf::PoseMsgToKDL(*msg, T_object_in_world_);
-}
+  // get frame names from parameter server
+  // TODO: change that name into 'arm_tool_frame'
+  // note: launch-file...
+  if (!n.getParam("tool_frame", arm_ee_frame_)){
+    ROS_ERROR("No tool_frame given in namespace: '%s')",
+              n.getNamespace().c_str());
+    return false;
+  }
 
-void FeatureConstraintsController::robot_arm_offset_callback(const geometry_msgs::Pose::ConstPtr& msg)
-{
-  tf::PoseMsgToKDL(*msg, T_arm_in_base_);
-}
+  // TODO: change that name into 'arm_base_frame'
+  // note: launch-file... 
+  if (!n.getParam("base_frame", arm_base_frame_)){
+    ROS_ERROR("No base_frame given in namespace: '%s')",
+              n.getNamespace().c_str());
+    return false;
+  }
 
-void FeatureConstraintsController::robot_base_callback(const geometry_msgs::Pose::ConstPtr& msg)
-{
-  tf::PoseMsgToKDL(*msg, T_base_in_world_);
+  // note: launch-file... 
+  if (!n.getParam("robot_base_frame", robot_base_frame_)){
+    ROS_ERROR("No robot_base_frame given in namespace: '%s')",
+              n.getNamespace().c_str());
+    return false;
+  }
+
+  // note: launch-file... 
+  if (!n.getParam("map_frame", world_frame_)){
+    ROS_ERROR("No map_frame given in namespace: '%s')",
+              n.getNamespace().c_str());
+    return false;
+  }
+
+  // note: will be overwritten with data frame constraint_config
+  tool_frame_ = arm_ee_frame_;
+  object_frame_ = arm_base_frame_;
+
+  return true;
 }
 
 /*! This updates the controller and solver.
@@ -207,8 +301,49 @@ void FeatureConstraintsController::robot_base_callback(const geometry_msgs::Pose
  */
 void FeatureConstraintsController::feature_constraints_callback(const constraint_msgs::ConstraintConfig::ConstPtr& msg)
 {
+  boost::mutex::scoped_lock scoped_lock(tf_lookup_mutex_);
+  
+  // get the number of constraints 
   unsigned int num_constraints = msg->constraints.size();
+  if(num_constraints == 0)
+  {
+    ROS_ERROR("Received constraint configuration with 0 constraints. Aborting...");
+    return;
+  }
 
+  // stop controller because we received a new configuration and will resize
+  // the data structure inside the controller
+  started_ = false;
+  tf_poses_available_ = false;
+
+  // extract frame_ids of tool and object from configs
+  // first check, if they are all the same
+  std::string temp_tool_frame = msg->constraints[0].tool_feature.frame_id;
+  std::string temp_object_frame = msg->constraints[0].world_feature.frame_id;
+
+  for(unsigned int i=0; i<num_constraints; i++)
+  {
+    if(temp_tool_frame != msg->constraints[i].tool_feature.frame_id){
+      ROS_ERROR("Constraint Configuration contained two different tool frame-ids: '%s' and '%s'",
+        temp_tool_frame.c_str(), msg->constraints[i].tool_feature.frame_id.c_str());
+      configured_ = false;
+      return;
+    }
+    if(temp_object_frame != msg->constraints[i].world_feature.frame_id){
+      ROS_ERROR("Constraint Configuration contained two different object frame-ids: '%s' and '%s'",
+        temp_object_frame.c_str(), msg->constraints[i].world_feature.frame_id.c_str());
+      configured_ = false;
+      return;
+    }
+  }
+  // now copy frame-ids into class variables
+  object_frame_ = temp_object_frame;
+  tool_frame_ = temp_tool_frame;
+
+  // start looking up tf-frames
+  pause_tf_lookup_ = false;
+ 
+  // resize the constraints inside the controller 
   feature_controller_.constraints.resize(num_constraints);
 
   // get new constraints into controller and re-prepare it
@@ -235,14 +370,12 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   ROS_INFO("Solver gets dimensions %dx%d", num_constraints, q_.rows());
   solver_.reinitialise(num_constraints, q_.rows());
 
-  // set flags to indicate that we are configured but not started, yet
+  // set flags to indicate that we are configured 
   if(success)
     configured_ = true;
   else
     configured_ = false;
-  started_ = false;
 }
-
 
 /*! This updates the Controller 'set points'. A fitting message of this type
  *  must be received after a configuration update in order to activate the
@@ -260,7 +393,9 @@ void FeatureConstraintsController::constraint_command_callback(const constraint_
 
 void FeatureConstraintsController::update(double dt)
 {
-  if(configured_)
+  boost::mutex::scoped_lock scoped_lock(tf_lookup_mutex_);
+
+  if(configured_ && tf_poses_available_)
   {
     // assemble frame between tool and object
     KDL::Frame ff_kinematics;

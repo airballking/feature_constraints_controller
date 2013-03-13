@@ -19,7 +19,7 @@ RobotKinematics::~RobotKinematics()
 bool RobotKinematics::init(ros::NodeHandle& n)
 {
   // get frame names from parameter server
-  // TODO: change that name into 'kinematics_EE_frame'
+  // TODO: change that name into 'arm_tool_frame'
   // note: launch-file...
   if (!n.getParam("tool_frame", tool_frame_id_)){
     ROS_ERROR("No tool_frame given in namespace: '%s')",
@@ -27,7 +27,7 @@ bool RobotKinematics::init(ros::NodeHandle& n)
     return false;
   }
  
-  // TODO: change that name into 'kinematics_base_frame'
+  // TODO: change that name into 'arm_base_frame'
   // note: launch-file... 
   if (!n.getParam("base_frame", base_frame_id_)){
     ROS_ERROR("No base_frame given in namespace: '%s')",
