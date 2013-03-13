@@ -39,7 +39,7 @@ class Painter(wx.Window):
     pass
     
 
-class ConstraintPanel(wx.Panel):
+class ConstraintPanel:
   """A Panel that shows the state of one constraint"""
   def __init__(self, parent, id, pos_min=-1, pos_max=1):
     """Display constraint state information.
@@ -47,15 +47,13 @@ class ConstraintPanel(wx.Panel):
     The arguments pos_min and pos_max are the minimum and maximum position that
     are to be expected. THe whole drawing area is scaled to this range.
     """
-    wx.Panel.__init__(self, parent, id)
-
-    self.SetBackgroundColour('white')
-    self.sizer = wx.GridSizer(1, 0, 0, 0)
-    self.SetSizer(self.sizer)
+    self.text_panel = wx.Panel(parent, id)
+    self.text_panel.SetBackgroundColour('white')
 
     self.label_sizer = wx.GridSizer(0, 1, 0, 0)
+    self.text_panel.SetSizer(self.label_sizer)
 
-    self.constraint_name_label = wx.StaticText(self, id=-1, label='blablabla')
+    self.constraint_name_label = wx.StaticText(self.text_panel, id=-1, label='blablabla')
     self.label_sizer.Add(self.constraint_name_label, 1, wx.ALIGN_BOTTOM)
 
     font = self.constraint_name_label.GetFont()
@@ -63,14 +61,14 @@ class ConstraintPanel(wx.Panel):
     font.SetWeight(wx.FONTWEIGHT_BOLD);
     self.constraint_name_label.SetFont(font);
 
-    self.constraint_func_label = wx.StaticText(self, id=-1, label='blubb')
+    self.constraint_func_label = wx.StaticText(self.text_panel, id=-1, label='blubb')
     self.label_sizer.Add(self.constraint_func_label, 1, wx.LEFT)
 
-    self.sizer.Add(self.label_sizer, 1, wx.EXPAND)
+    parent.sizer.Add(self.text_panel, 1, wx.EXPAND)
 
-    self.canvas = Painter(self, -1, self._paint)
+    self.canvas = Painter(parent, -1, self._paint)
     self.canvas.SetBackgroundColour('white')
-    self.sizer.Add(self.canvas, 1, wx.EXPAND)
+    parent.sizer.Add(self.canvas, 1, wx.EXPAND)
 
     self.pos_min = pos_min
     self.pos_max = pos_max
@@ -144,7 +142,7 @@ class ConstraintPanel(wx.Panel):
     dc.DrawRectangle(left, 10, right - left, 15)
     dc.DrawLine(self.pos * pixel_width,  5, self.pos * pixel_width, 30)
     dc.DrawLine(self.pos * pixel_width, 17, (self.pos + self.vel) * pixel_width, 17)
-    dc.DrawText('v=%5.3f  [%dpx = %f * %d]' % (self.vel_desired, int(self.vel * pixel_width), self.vel, pixel_width), 10, 10)
+    dc.DrawText('v=%5.3f  [%dpx = %f * %d]' % (self.vel_desired, int(self.vel * pixel_width), self.vel, pixel_width), 0, 30)
 
 
 class ConstraintView(wx.Panel):
@@ -152,7 +150,8 @@ class ConstraintView(wx.Panel):
     wx.Panel.__init__(self, parent, id)
 
     self.SetBackgroundColour("grey")
-    self.sizer = wx.GridSizer(0, 1, 3, 3)
+    self.sizer = wx.FlexGridSizer(0, 2, 3, 0)
+    self.sizer.AddGrowableCol(1, 1.0)
     self.SetSizer(self.sizer)
 
     self.panels = []
@@ -164,7 +163,7 @@ class ConstraintView(wx.Panel):
       for i in range(num):
         panel = ConstraintPanel(self, i)
         self.panels.append(panel)
-        self.sizer.Add(panel, 1, wx.EXPAND)
+        self.sizer.AddGrowableRow(i, 1.0)
       self.sizer.Layout()
 
 
