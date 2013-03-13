@@ -37,8 +37,6 @@ class ConstraintPanel(wx.Panel):
     are to be expected. THe whole drawing area is scaled to this range.
     """
     wx.Panel.__init__(self, parent, id)
-    self.Bind(wx.EVT_PAINT, self._paint)
-    self.Bind(wx.EVT_SIZE, self._resize)
 
     self.SetBackgroundColour('white')
     self.sizer = wx.GridSizer(1, 0, 0, 0)
@@ -54,7 +52,6 @@ class ConstraintPanel(wx.Panel):
     font.SetWeight(wx.FONTWEIGHT_BOLD);
     self.constraint_name_label.SetFont(font);
 
-
     self.constraint_func_label = wx.StaticText(self, id=-1, label='blubb')
     self.label_sizer.Add(self.constraint_func_label, 1, wx.LEFT)
 
@@ -68,8 +65,14 @@ class ConstraintPanel(wx.Panel):
     self.pos_max = pos_max
     self.vel_scale = 1.0  # show where the controller wants to be in 1.0 seconds
 
-    self.box = (0.1, 0.9)
+    self.box = (-0.1, 1.1)
     self.pos = 0.5
+    self.background_color = 'white'
+    self.constraint_name_label.SetLabel('blabla')
+    self.constraint_func_label.SetLabel('blubb')
+    self.do_update = False
+    self.Bind(wx.EVT_PAINT, self._paint)
+    #self.Bind(wx.EVT_SIZE, self._resize)
 
 
   def set_description(self, constraint_name, constraint_function, feature1, feature2):
@@ -78,28 +81,36 @@ class ConstraintPanel(wx.Panel):
     All parameters are strings.
     """
     #set constraint name
-    self.constraint_name_label.SetLabel(constraint_name)
+    self.constraint_label = constraint_name
 
     #set constraint function
-    func = constraint_function + '(' + feature1 + ', ' + feature2 + ')'
-    self.constraint_func_label.SetLabel(func)
+    self.func_label = constraint_function + '(' + feature1 + ', ' + feature2 + ')'
+
+    self.do_update = True
 
   def set_command(self, weight, pos_lo, pos_hi, vel_lo, vel_hi):
     width = self.pos_max - self.pos_min
 
     if weight < 0.1:
-      self.canvas.SetBackgroundColour('cyan')
+      self.background_color = 'cyan'
     else:
-      self.canvas.SetBackgroundColour('white')
+      self.background_color = 'white'
 
     left  = clamp(-0.1, (pos_lo - self.pos_min) / width, 1.1)
     right = clamp(-0.1, (pos_hi - self.pos_min) / width, 1.1)
     print 'cmd: (',pos_lo,' ',pos_hi,') -> (',left,', ',right,')'
     self.box = (left, right)
+    self.do_update = True
 
   def _resize(self, event):
     self.Refresh()
     event.Skip()
+
+  def _update(self):
+    print 'update'
+    self.canvas.SetBackgroundColour(self.background_color)
+    self.constraint_name_label.SetLabel(self.constraint_label)
+    self.constraint_func_label.SetLabel(self.func_label)
 
   def set_state(self, weight, pos, vel_desired, singular_value):
     width = self.pos_max - self.pos_min
@@ -107,6 +118,10 @@ class ConstraintPanel(wx.Panel):
     self.vel = clamp(0.0, (vel_desired * self.vel_scale) / width, 1.0)
 
   def _paint(self, event):
+    if self.do_update:
+      self._update()
+      self.do_update = False
+
     #determine size
     pixel_width  = self.canvas.Size[0]
     left = self.box[0] * pixel_width
@@ -137,7 +152,7 @@ class ConstraintView(wx.Panel):
         panel = ConstraintPanel(self, i)
         self.panels.append(panel)
         self.sizer.Add(panel, 1, wx.EXPAND)
-      self.sizer.Layout()
+      #self.sizer.Layout()
 
 
 class ConstraintDashboard:
@@ -222,6 +237,8 @@ if __name__ == "__main__":
   prefix = rospy.get_param('/constraint_controller_prefix', '/feature_controller')
   rospy.loginfo('using topic prefix '+prefix)
   dashboard = ConstraintDashboard(view, prefix)
+
+  rospy.sleep(0.5)
 
   frame.ClientSize = view.BestSize
   frame.Show(True)
