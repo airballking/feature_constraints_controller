@@ -15,8 +15,9 @@
 
 SolverWeighted::SolverWeighted()
 {
+        // TODO(Georg): set this back to lambda=0.1
 	// set lambda parameter
-	lambda = 0.1;
+	lambda = 0.01;
 
 	// TODO: include some mechanism to catch the error of someone calling the un-initialised solve...
 }
@@ -29,7 +30,7 @@ SolverWeighted::SolverWeighted(unsigned int num_constraints,
 	this->num_joints = num_joints;
 
 	// set lambda parameter
-	lambda = 0.1;
+	lambda = 0.01;
 
 	// resize and initialise all internal temporary structures
         A_inv.resize(num_joints, num_constraints);

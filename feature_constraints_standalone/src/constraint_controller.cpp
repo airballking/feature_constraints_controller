@@ -351,11 +351,13 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   fromMsg(*msg, feature_controller_.constraints);
   bool success = feature_controller_.prepare(filter_namespace_);
   resize(state_msg_, num_constraints);
+  // TODO(Georg): remove this because only added for debugging
+  state_msg_.robot_jacobian.resize(7);
 
   // set gains of feature controller to whatever we want
   for(unsigned int i=0; i < num_constraints; i++)
   {
-    feature_controller_.p_gains(i) = 100.0;
+    feature_controller_.p_gains(i) = 1.0;
     feature_controller_.d_gains(i) = 20.0;
   }
 
@@ -427,7 +429,8 @@ void FeatureConstraintsController::update(double dt)
     if((feature_controller_.constraints.size() > 0) && started_)
     {
       // and clamp desired feature velocities
-      feature_controller_.clampOutput();
+      // TODO(Georg): put this back in
+      //feature_controller_.clampOutput();
 
       // transform interaction matrix (ref frame base, ref point base)
       // NOTE: Discuss why we are transposing H_transpose here. --> Not intuitive.
@@ -473,6 +476,9 @@ void FeatureConstraintsController::update(double dt)
     // END OF ACTUAL CONTROLLER -- START OF DEBUG PUBLISHING
     // publish constraint state for debugging purposes
     toMsg(feature_controller_, state_msg_);
+    // TODO(Georg): remove this because it is only needed for debugging
+    toMsg(jacobian_robot_, state_msg_.robot_jacobian);
+
     state_msg_.header.stamp = ros::Time::now();
     state_publisher_.publish(state_msg_);
     // publish state of joint limit avoidance
