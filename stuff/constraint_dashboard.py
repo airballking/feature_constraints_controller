@@ -28,6 +28,17 @@ def extract(item_list, index, default):
   except:
     return default
 
+class Painter(wx.Window):
+  def __init__(self, parent, id, painter_cb):
+    wx.Window.__init__(self, parent, id)
+    self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+    self.Bind(wx.EVT_PAINT, painter_cb)
+    self.Bind(wx.EVT_ERASE_BACKGROUND, self._erase)
+
+  def _erase(self, event):
+    pass
+    
+
 class ConstraintPanel(wx.Panel):
   """A Panel that shows the state of one constraint"""
   def __init__(self, parent, id, pos_min=-1, pos_max=1):
@@ -57,7 +68,7 @@ class ConstraintPanel(wx.Panel):
 
     self.sizer.Add(self.label_sizer, 1, wx.EXPAND)
 
-    self.canvas = wx.Panel(self, id=-1)
+    self.canvas = Painter(self, -1, self._paint)
     self.canvas.SetBackgroundColour('white')
     self.sizer.Add(self.canvas, 1, wx.EXPAND)
 
@@ -67,13 +78,12 @@ class ConstraintPanel(wx.Panel):
 
     self.box = (-0.1, 1.1)
     self.pos = 0.5
+    self.vel = 0.0
+    self.vel_desired = 0.0
     self.background_color = 'white'
     self.constraint_name_label.SetLabel('blabla')
     self.constraint_func_label.SetLabel('blubb')
     self.do_update = False
-    self.Bind(wx.EVT_PAINT, self._paint)
-    #self.Bind(wx.EVT_SIZE, self._resize)
-
 
   def set_description(self, constraint_name, constraint_function, feature1, feature2):
     """Set the textual description for this constraint.
@@ -112,7 +122,9 @@ class ConstraintPanel(wx.Panel):
     self.constraint_name_label.SetLabel(self.constraint_label)
     self.constraint_func_label.SetLabel(self.func_label)
 
-  def set_state(self, weight, pos, vel_desired, singular_value):
+  def set_state(self, weight, pos, vel_desired):
+    self.vel_desired = vel_desired
+
     width = self.pos_max - self.pos_min
     self.pos = clamp(0.0, (pos - self.pos_min) / width, 1.0)
     self.vel = clamp(0.0, (vel_desired * self.vel_scale) / width, 1.0)
@@ -127,10 +139,12 @@ class ConstraintPanel(wx.Panel):
     left = self.box[0] * pixel_width
     right = self.box[1] * pixel_width
     dc = wx.PaintDC(self.canvas)
+    dc.Clear()
     dc.SetBrush(wx.GREY_BRUSH)
     dc.DrawRectangle(left, 10, right - left, 15)
     dc.DrawLine(self.pos * pixel_width,  5, self.pos * pixel_width, 30)
     dc.DrawLine(self.pos * pixel_width, 17, (self.pos + self.vel) * pixel_width, 17)
+    dc.DrawText('v=%5.3f  [%dpx = %f * %d]' % (self.vel_desired, int(self.vel * pixel_width), self.vel, pixel_width), 10, 10)
 
 
 class ConstraintView(wx.Panel):
@@ -141,7 +155,6 @@ class ConstraintView(wx.Panel):
     self.sizer = wx.GridSizer(0, 1, 3, 3)
     self.SetSizer(self.sizer)
 
-    self.frame = parent
     self.panels = []
 
   def reconstruct_panels(self, num): 
@@ -152,7 +165,7 @@ class ConstraintView(wx.Panel):
         panel = ConstraintPanel(self, i)
         self.panels.append(panel)
         self.sizer.Add(panel, 1, wx.EXPAND)
-      #self.sizer.Layout()
+      self.sizer.Layout()
 
 
 class ConstraintDashboard:
@@ -205,7 +218,7 @@ class ConstraintDashboard:
 
   def _dispatch_state(self, state):
     for i in range(len(self.view.panels)):
-      self.view.panels[i].set_state(state.weights[i], state.chi[i], state.ydot_desired[i], state.singular_values[i])
+      self.view.panels[i].set_state(state.weights[i], state.chi[i], state.ydot_desired[i])
 
   def num_constraints(self):
     if self.config != None:
