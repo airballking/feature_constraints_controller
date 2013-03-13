@@ -4,8 +4,10 @@
 
 import roslib
 roslib.load_manifest('constraint_msgs')
+roslib.load_manifest('sensor_msgs')
 import rospy
 
+from sensor_msgs.msg import JointState
 from constraint_msgs.msg import ConstraintConfig, ConstraintCommand, ConstraintState
 
 from math import *
@@ -14,8 +16,7 @@ import numpy
 
 import wx
 
-# TODO: refactor into 2D FlexGrid
-# -> ConstraintPanel no longer inherits from wx.Panel
+from constraint_debugging import *
 
 #helper function
 
@@ -119,36 +120,39 @@ class ConstraintPanel:
     event.Skip()
 
   def _update(self):
-    print 'update'
     self.text_panel.SetBackgroundColour(self.background_color)
     self.constraint_name_label.SetLabel(self.constraint_label)
     self.constraint_func_label.SetLabel(self.func_label)
     self.text_panel.GetParent().Layout()
     
 
-  def set_state(self, weight, pos, vel_desired):
+  def set_state(self, weight, pos, vel_desired, vel_actual):
     self.vel_desired = vel_desired
 
     width = float(self.pos_max - self.pos_min)
     self.pos = clamp(0.0, (pos - self.pos_min) / width, 1.0)
     self.vel = clamp(-2.0, (vel_desired * self.vel_scale) / width, 2.0)
+    self.vel_act = clamp(-2.0, (vel_actual * self.vel_scale) / width, 2.0)
 
   def _paint(self, event):
     if self.do_update:
       self._update()
       self.do_update = False
 
-    #determine size
-    pixel_width  = self.canvas.Size[0]
-    left = self.box[0] * pixel_width
-    right = self.box[1] * pixel_width
+    width  = self.canvas.Size[0]
+    left = self.box[0] * width
+    right = self.box[1] * width
     dc = wx.PaintDC(self.canvas)
     dc.SetBackground(self.background_brush)
     dc.Clear()
     dc.SetBrush(wx.GREY_BRUSH)
     dc.DrawRectangle(left, 10, right - left, 15)
-    dc.DrawLine(self.pos * pixel_width,  5, self.pos * pixel_width, 30)
-    dc.DrawLine(self.pos * pixel_width, 17, (self.pos + self.vel) * pixel_width, 17)
+    dc.DrawLine(self.pos * width,  5, self.pos * width, 30)
+    dc.DrawLine(self.pos * width, 17, (self.pos + self.vel) * width, 17)
+
+    dc.DrawLine(self.pos * width,  5, (self.pos + self.vel_act) * width, 17)
+    dc.DrawLine(self.pos * width, 30, (self.pos + self.vel_act) * width, 17)
+
     dc.DrawText('v_des=% 5.3f' % (self.vel_desired), 0, 30)
 
 
@@ -178,13 +182,16 @@ class ConstraintView(wx.Panel):
 class ConstraintDashboard:
   def __init__(self, view, prefix='/constraint_controller'):
     """Initialize ROS communication."""
+    self.qdot    = [0.0]*7
 
     rospy.init_node('constraint_dashboard')
     self.name = rospy.names.get_name()
+    self.joint_names = joint_names(prefix)
 
     self.sub_config  = rospy.Subscriber(prefix+'/constraint_config', ConstraintConfig, self._config_callback)
     self.sub_command = rospy.Subscriber(prefix+'/constraint_command', ConstraintCommand, self._command_callback)
     self.sub_state   = rospy.Subscriber(prefix+'/constraint_state', ConstraintState, self._state_callback)
+    self.sub_js      = rospy.Subscriber('/joint_states', JointState, self._js_callback)
 
     self.config  = None
     self.command = None
@@ -200,32 +207,27 @@ class ConstraintDashboard:
     print 'config'
     self.config = msg
     self.view.reconstruct_panels(self.num_constraints())
-    self._dispatch_constraint_description(msg)
+    for i in range(len(self.view.panels)):
+      c = msg.constraints[i]
+      self.view.panels[i].set_description(c.name, c.function, c.tool_feature.name, c.world_feature.name)
 
   def _command_callback(self, msg):
-    print 'command'
-    self.command = msg
-    self._dispatch_command(msg)
+    for i in range(len(self.view.panels)):
+      self.view.panels[i].set_command(extract(msg.weight,  i, 0.0),
+                                      extract(msg.pos_lo,  i, 0.0),
+                                      extract(msg.pos_hi,  i, 0.0),
+                                      extract(msg.max_vel, i, 0.0),
+                                      extract(msg.min_vel, i, 0.0))
 
   def _state_callback(self, msg):
     self.state = msg
-    self._dispatch_state(msg)
-
-  def _dispatch_constraint_description(self, config):
+    self.ydot_real = recover_ydot(msg, self.qdot)
     for i in range(len(self.view.panels)):
-      c = config.constraints[i]
-      self.view.panels[i].set_description(c.name, c.function, c.tool_feature.name, c.world_feature.name)
+      self.view.panels[i].set_state(msg.weights[i], msg.chi[i], msg.ydot_desired[i], float(self.ydot_real[i,0]))
 
-  def _dispatch_command(self, command):
-    for i in range(len(self.view.panels)):
-      cmd = self.command
-      self.view.panels[i].set_command(extract(cmd.weight, i,  0.0),
-                                      extract(cmd.pos_lo, i,  0.0), extract(cmd.pos_hi,  i, 0.0),
-                                      extract(cmd.max_vel, i, 0.0), extract(cmd.min_vel, i, 0.0))
-
-  def _dispatch_state(self, state):
-    for i in range(len(self.view.panels)):
-      self.view.panels[i].set_state(state.weights[i], state.chi[i], state.ydot_desired[i])
+  def _js_callback(self, msg):
+    self.js = msg
+    self.qdot = extract_qdot(msg, self.joint_names)
 
   def num_constraints(self):
     if self.config != None:
