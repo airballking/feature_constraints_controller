@@ -78,14 +78,11 @@ void Controller::update(KDL::Frame& frame, bool with_control, double dt)
     tmp_vector1, tmp_vector2);
   if(with_control)
   {
-    control(ydot, weights, chi_desired, chi, command, p_gains);
-
-    // TODO(Georg): redo this
-    //control(ydot, weights, chi_desired, chi_dot_desired, chi, chi_dot, command,
-    //  *command_trajectory_generator, *command_trajectory_input, *command_trajectory_output,
-    //  command_trajectory_flags, tmp, p_gains, d_gains);
+    //control(ydot, weights, chi_desired, chi, command, p_gains);
+    control(ydot, weights, chi_desired, chi_dot_desired, chi, chi_dot, command,
+      *command_trajectory_generator, *command_trajectory_input, *command_trajectory_output,
+      command_trajectory_flags, tmp, p_gains, d_gains);
   }
-  // TODO: check if we are still using J
   analysis.analyzeH(Ht, J, singularValues, 1e-7);
   this->frame = frame;
 }
@@ -172,13 +169,10 @@ void control(KDL::JntArray& ydot,
              const KDL::JntArray d_gains)
 {
   // reflexxes library: set max_vel, max_acc and max_jerk
-  // TODO: redo this
   trajectory_input.SetMaxVelocityVector(command.max_vel.data.data());
-  KDL::Multiply(command.max_vel, 100.0, tmp);
-  trajectory_input.SetMaxAccelerationVector(tmp.data.data()); // implies we reach max_vel within 0.01sec (with max_jerk-->infinity)
-  //trajectory_input.SetMaxAccelerationVector(command.max_vel.data.data()); // implies we reach max_vel within 1sec (with max_jerk-->infinity)
-  //KDL::Multiply(command.max_vel, 5.0, tmp);
-  trajectory_input.SetMaxJerkVector(tmp.data.data()); // implies we reach max_acc within 0.01sec
+  trajectory_input.SetMaxAccelerationVector(command.max_vel.data.data()); // implies we reach max_vel within 1sec (with max_jerk-->infinity)
+  KDL::Multiply(command.max_vel, 5.0, tmp);
+  trajectory_input.SetMaxJerkVector(tmp.data.data()); // implies we reach max_acc within 0.2sec
 
   // reflexxes library: explicitedly enable all trajectory generators
   for(unsigned int i=0; i<chi.rows(); i++)
@@ -188,10 +182,7 @@ void control(KDL::JntArray& ydot,
   
   // reflexxes library: set current constraint velocities and position
   trajectory_input.SetCurrentPositionVector(chi.data.data());
-  // TODO: redo this
-  KDL::SetToZero(tmp);
-  //trajectory_input.SetCurrentVelocityVector(chi_dot.data.data());
-  trajectory_input.SetCurrentVelocityVector(tmp.data.data());
+  trajectory_input.SetCurrentVelocityVector(chi_dot.data.data());
 
   // our algorithm: determine chi_desired and weights based on ranges 
   double s = 0.05;
@@ -265,14 +256,20 @@ void control(KDL::JntArray& ydot,
   // perform control to calculate ydot
   for(unsigned int i=0; i<chi.rows(); i++)
   {
-    // TODO: change this to consider the margins
-    if(chi(i) < command.pos_hi(i) && chi(i) > command.pos_lo(i))
+    double hi = command.pos_hi(i);
+    double lo = command.pos_lo(i);
+    double s = 0.05;
+    double ss = (hi - lo < 2*s) ? (hi - lo) / 2 : s;
+
+    // calculate ydot-control signal
+    // note: if we are in 'reduced' constraint range the constraint function should not change  
+    if(chi(i) < (hi - ss) && chi(i) > (lo + ss))
     {
       ydot(i) = 0.0;
     }
     else
     {
-      ydot(i) = p_gains(i)*(chi_desired(i) - chi(i)); //+ d_gains(i)*(chi_dot_desired(i) - chi_dot(i));
+      ydot(i) = p_gains(i)*(chi_desired(i) - chi(i)) + d_gains(i)*(chi_dot_desired(i) - chi_dot(i));
     }
   }
 }

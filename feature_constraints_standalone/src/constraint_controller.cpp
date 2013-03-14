@@ -371,7 +371,7 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   // set gains of feature controller to whatever we want
   for(unsigned int i=0; i < num_constraints; i++)
   {
-    feature_controller_.p_gains(i) = 1.0;
+    feature_controller_.p_gains(i) = 100.0;
     feature_controller_.d_gains(i) = 20.0;
   }
 
