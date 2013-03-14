@@ -34,6 +34,8 @@
     <remap from="~qdot" to="~qdot"/>
     <param name="~tool_frame" value="left_arm_7_link"/>
     <param name="~base_frame" value="base_link"/>
+    <param name="~robot_base_frame" value="base_link"/>
+    <param name="~map_frame" value="base_link"/>
     <param name="~object_frame" value="/object"/>
     <remap from="~tool_offset" to="/tool_pose"/>
     <remap from="~object_offset" to="/object_pose"/>

@@ -57,8 +57,8 @@ class Itasc(object):
         msg = ConstraintCommand()
         msg.pos_hi = self.desired_hi
         msg.pos_lo = self.desired_lo
-        msg.max_vel =  [0.4]*len(self.desired_hi)
-        msg.min_vel = [-0.4]*len(self.desired_hi)
+        msg.max_vel =  [0.2]*len(self.desired_hi)
+        msg.min_vel = [-0.2]*len(self.desired_hi)
         msg.weight = self.desired_weight
         self.pub_cmd.publish(msg)
 
