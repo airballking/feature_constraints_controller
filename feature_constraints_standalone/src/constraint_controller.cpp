@@ -78,6 +78,9 @@ FeatureConstraintsController::~FeatureConstraintsController()
 
 bool FeatureConstraintsController::init(ros::NodeHandle &n)
 {
+  // remember nodeHandle
+  n_ = n;
+  
   // set correspondes between constraint function names and constraint functions
   Constraint::init();
  
@@ -181,8 +184,16 @@ void FeatureConstraintsController::joint_state_callback(const sensor_msgs::Joint
 
 void FeatureConstraintsController::tf_poses_lookup()
 {
+  double tf_update_duration = 20.0;
+  n_.getParam("tf_update_duration", tf_update_duration);
+  ros::Rate rate(tf_update_duration);
+ 
   while(ros::ok() && !stop_tf_lookup_)
   {
+    // sleep to not swamp the CPU
+    rate.sleep();
+    
+    // actual functionality
     if(!pause_tf_lookup_)
     {
     boost::mutex::scoped_lock scoped_lock(tf_lookup_mutex_);
@@ -350,9 +361,12 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   // i.e. adjust size of internal variables
   fromMsg(*msg, feature_controller_.constraints);
   bool success = feature_controller_.prepare(filter_namespace_);
+
+  // resize message used to report state of controller
   resize(state_msg_, num_constraints);
-  // TODO(Georg): remove this because only added for debugging
+  // TODO(Georg): refactor this because we broke the abstraction between constraint controller and feature controller
   state_msg_.robot_jacobian.resize(7);
+  state_msg_.transformed_interaction_matrix.resize(num_constraints);
 
   // set gains of feature controller to whatever we want
   for(unsigned int i=0; i < num_constraints; i++)
@@ -385,6 +399,8 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
  */
 void FeatureConstraintsController::constraint_command_callback(const constraint_msgs::ConstraintCommand::ConstPtr& msg)
 {
+  // TODO(Georg): this sanity check for correspondence of config and command is naive
+  //              we already encountered race conditions with this
   if(configured_ && (msg->pos_lo.size() == feature_controller_.command.pos_lo.rows())){
     fromMsg(*msg, feature_controller_.command);
     started_ = true;
@@ -437,8 +453,11 @@ void FeatureConstraintsController::update(double dt)
       //       Update: It just dawned on me that we did this so that we could use
       //       KDL::Jacobian as an internal representation.
       H_feature_ = feature_controller_.Ht.data.transpose();
-      H_feature_ = H_feature_*inverse_twist_proj(T_object_in_world_);
 
+      // project interaction matrix from object-frame and to arm-base-frame because we want
+      // to combine it with the robot_jacobian which we already transformed into arm-base-frame above
+      H_feature_ = H_feature_*inverse_twist_proj(T_arm_in_base_.Inverse() * T_base_in_world_.Inverse() * T_object_in_world_);
+      
       // assemble problem for solver out of interaction matrix and robot jacobian
       A_ = H_feature_ * jacobian_robot_.data;
       
@@ -474,11 +493,16 @@ void FeatureConstraintsController::update(double dt)
       qdot_publisher_.publish(qdot_msg_);
     }  
     // END OF ACTUAL CONTROLLER -- START OF DEBUG PUBLISHING
-    // publish constraint state for debugging purposes
+    // publish constraint state for debugging and visualization purposes
     toMsg(feature_controller_, state_msg_);
-    // TODO(Georg): remove this because it is only needed for debugging
+     
+    // TODO(Georg): refactor this because we broke the abstraction between constraint_controller and feature_controller
     toMsg(jacobian_robot_, state_msg_.robot_jacobian);
-
+    for(unsigned int i=0; i<H_feature_.rows(); i++)
+    {
+      toMsg(KDL::Twist(KDL::Vector(H_feature_(i,0), H_feature_(i,1), H_feature_(i,2)),
+                       KDL::Vector(H_feature_(i,3), H_feature_(i,4), H_feature_(i,5))), state_msg_.transformed_interaction_matrix[i]);
+    }
     state_msg_.header.stamp = ros::Time::now();
     state_publisher_.publish(state_msg_);
     // publish state of joint limit avoidance

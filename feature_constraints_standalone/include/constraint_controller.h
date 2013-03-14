@@ -54,6 +54,9 @@ private:
   // Receives all four of the below transforms from tf
   void tf_poses_lookup();
 
+  // our NodeHandle received in init()
+  ros::NodeHandle n_;
+
   //! These transforms will be looked up from tf
   KDL::Frame T_tool_in_ee_, T_object_in_world_, T_base_in_world_, T_arm_in_base_;
   std::string robot_base_frame_, world_frame_, arm_base_frame_, arm_ee_frame_, tool_frame_, object_frame_;
