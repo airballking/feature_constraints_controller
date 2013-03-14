@@ -43,7 +43,12 @@ def joint_names_fallback(prefix):
             'l_forearm_roll_joint', 'l_wrist_flex_joint',
             'l_wrist_roll_joint']
   elif tool_frame.startswith('r_'):
-    return [] #TODO: right PR2 arm joints
+    return ['r_shoulder_pan_joint', 'r_shoulder_lift_joint',
+            'r_upper_arm_roll_joint', 'r_elbow_flex_joint',
+            'r_forearm_roll_joint', 'r_wrist_flex_joint',
+            'r_wrist_roll_joint']
+
+
   else:
     return []
 
