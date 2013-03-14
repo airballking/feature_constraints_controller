@@ -18,6 +18,14 @@ import wx
 
 from constraint_debugging import *
 
+config = {'pos_min':   -1.0, # minimum feature position that is to be expected.
+          'pos_max':    1.0, # maximum feature position that is to be expected.
+          'vel_scale':  1.0, # show where the controller wants to be in x second
+          'active_color':   'white', # background color of active constraints
+          'inactive_color': 'cyan'   # background color of inactive constraints
+}
+
+
 #helper function
 
 def clamp(minimum, x, maximum):
@@ -43,14 +51,10 @@ class Painter(wx.Window):
 
 class ConstraintPanel:
   """A Panel that shows the state of one constraint"""
-  def __init__(self, parent, id, pos_min=-1.0, pos_max=1.0):
-    """Display constraint state information.
-
-    The arguments pos_min and pos_max are the minimum and maximum position that
-    are to be expected. THe whole drawing area is scaled to this range.
-    """
+  def __init__(self, parent, id):
+    """Display constraint state information."""
     self.text_panel = wx.Panel(parent, id)
-    self.text_panel.SetBackgroundColour('white')
+    self.text_panel.SetBackgroundColour(config['active_color'])
 
     self.label_sizer = wx.GridSizer(0, 1, 0, 0)
     self.text_panel.SetSizer(self.label_sizer)
@@ -69,19 +73,15 @@ class ConstraintPanel:
     parent.sizer.Add(self.text_panel, 1, wx.EXPAND)
 
     self.canvas = Painter(parent, -1, self._paint)
-    self.canvas.SetBackgroundColour('white')
+    self.canvas.SetBackgroundColour(config['active_color'])
     parent.sizer.Add(self.canvas, 1, wx.EXPAND)
-
-    self.pos_min = pos_min
-    self.pos_max = pos_max
-    self.vel_scale = 1.0  # show where the controller wants to be in 1.0 seconds
 
     # initialize variables
     self.box = (-0.1, 1.1)
     self.pos = 0.5
     self.vel = 0.0
     self.vel_desired = 0.0
-    self.background_color = 'white'
+    self.background_color = config['active_color']
     self.background_brush = wx.Brush(self.background_color)
     self.constraint_label = 'blabla'
     self.func_label = 'blubb'
@@ -101,17 +101,17 @@ class ConstraintPanel:
     self.do_update = True
 
   def set_command(self, weight, pos_lo, pos_hi, vel_lo, vel_hi):
-    width = float(self.pos_max - self.pos_min)
+    width = float(config['pos_max'] - config['pos_min'])
 
     if weight < 0.1:
-      self.background_color = 'cyan'
+      self.background_color = config['inactive_color']
     else:
-      self.background_color = 'white'
+      self.background_color = config['active_color']
     self.background_brush = wx.Brush(self.background_color)
     
 
-    left  = clamp(-0.1, (pos_lo - self.pos_min) / width, 1.1)
-    right = clamp(-0.1, (pos_hi - self.pos_min) / width, 1.1)
+    left  = clamp(-0.1, (pos_lo - config['pos_min']) / width, 1.1)
+    right = clamp(-0.1, (pos_hi - config['pos_min']) / width, 1.1)
     self.box = (left, right)
     self.do_update = True
 
@@ -129,10 +129,10 @@ class ConstraintPanel:
   def set_state(self, weight, pos, vel_desired, vel_actual):
     self.vel_desired = vel_desired
 
-    width = float(self.pos_max - self.pos_min)
-    self.pos = clamp(0.0, (pos - self.pos_min) / width, 1.0)
-    self.vel = clamp(-2.0, (vel_desired * self.vel_scale) / width, 2.0)
-    self.vel_act = clamp(-2.0, (vel_actual * self.vel_scale) / width, 2.0)
+    width = float(config['pos_max'] - config['pos_min'])
+    self.pos = clamp(0.0, (pos - config['pos_min']) / width, 1.0)
+    self.vel = clamp(-2.0, (vel_desired * config['vel_scale']) / width, 2.0)
+    self.vel_act = clamp(-2.0, (vel_actual * config['vel_scale']) / width, 2.0)
 
   def _paint(self, event):
     if self.do_update:
@@ -153,7 +153,8 @@ class ConstraintPanel:
     dc.DrawLine(self.pos * width,  5, (self.pos + self.vel_act) * width, 17)
     dc.DrawLine(self.pos * width, 30, (self.pos + self.vel_act) * width, 17)
 
-    dc.DrawText('v_des=% 5.3f' % (self.vel_desired), 0, 30)
+    dc.DrawText('v_des=% 5.3f' % (self.vel_desired), width-200, 30)
+    dc.DrawText('v_act=% 5.3f' % (self.vel_act), width-100, 30)
 
 
 class ConstraintView(wx.Panel):
@@ -252,7 +253,7 @@ class ConstraintDashboard:
 
 if __name__ == "__main__":
   app = wx.PySimpleApp()
-  frame = wx.Frame(None, -1, 'dashboard', size = (800, 200))
+  frame = wx.Frame(None, -1, 'constraint dashboard', size = (800, 200))
 
   view = ConstraintView(frame, -1)
 

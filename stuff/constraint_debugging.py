@@ -21,7 +21,7 @@ def jacmsg2matrix(jac):
   return m
 
 def recover_ydot(state, q_dot):
-  H = jacmsg2matrix(state.interaction_matrix).T
+  H = jacmsg2matrix(state.transformed_interaction_matrix).T
   J_R = jacmsg2matrix(state.robot_jacobian)
   q_dot = numpy.matrix(q_dot).T
 

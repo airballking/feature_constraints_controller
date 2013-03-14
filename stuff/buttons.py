@@ -32,7 +32,7 @@ class ButtonPanel(wx.Panel):
 
     #Add buttons
     for i in range(len(self.button_names)):
-      b = wx.StaticText(self, id=i,
+      b = wx.Button(self, id=i,
             label = button_names[i])
       #b.SetSizeHints(300, 40)
 
