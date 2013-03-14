@@ -36,6 +36,8 @@ float64[] ydot_desired
 geometry_msgs/Twist[] interaction_matrix  # H
 # pseudo-inverse of interaction matrix
 geometry_msgs/Twist[] jacobian            # H^+
+# transformed interaction matrix
+geometry_msgs/Twist[] transformed_interaction_matrix # H*T
 # robot-jacobian
 geometry_msgs/Twist[] robot_jacobian #J_R
 # singular values of pseudo-inverse computation
