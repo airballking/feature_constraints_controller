@@ -130,13 +130,13 @@ class Collector:
         pass
 
   def get(self, item=''):
-    if item.endswith('_pose') or item.endswith('_parent') or item == '':
-      self._process_tf()
+    #if item.endswith('_pose') or item.endswith('_parent') or item == '':
+      #self._process_tf()
 
     if item != '':
       required_items = [item]
     else:
-      required_items = ['jointstate', 'chi', 'object_pose']
+      required_items = ['jointstate', 'chi']#, 'object_pose']
 
     while (not set(required_items).issubset(self.data.keys())
           and not rospy.is_shutdown()):
@@ -182,6 +182,8 @@ def make_command(tokens, cmd_range):
     msg.pos_lo.append(pos_lo)
     msg.pos_hi.append(pos_hi)
     msg.weight.append(weight)
+    msg.max_vel.append(0.1)
+    msg.min_vel.append(-0.1)
   return msg
 
 def wait_for_connection(conn, timeout=3.0):
