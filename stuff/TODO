@@ -1,3 +1,13 @@
   * write q and qdot watcher gui
   * write singularity watcher gui
   * fix constraint_dashboard crashes
+  * endless PR2 joints...
+  * state: get tf more general: record 'chain-end-frame_id' to 'tool-feature-frame_id' and 'object-feature-frame_id' to 'chain-start-frame_id'
+  * names of constraints (from state)
+  * make delimiter for chi values, so we can append a _range:=xxx to the commands
+  * make xterm-gdb more convenient - remove it!
+  * rename stuff to feature_constraints_utils
+
+  * remove all the predecessors of state
+  * move state to feature_constraints_controller?
+  * extra params for multivel-controller: put correctly into namespace

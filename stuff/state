@@ -252,7 +252,11 @@ def main():
     sys.exit(0)
 
   rospy.init_node('fc_state')
-  prefix = rospy.get_param('/constraint_controller_prefix', '/feature_controller')
+  try:
+    prefix = rospy.get_param('/constraint_controller_prefix')
+  except: 
+    prefix = get_prefixes()[0]
+    print '### using prefix ',prefix
 
   cmd  = sys.argv[1]
   args = sys.argv[2:]

@@ -30,7 +30,7 @@
   <!-- LOAD FILTER PARAMETERS FOR CONSTRAINT VELOCITY ESTIMATION -->
   <rosparam command="load" file="$(find feature_constraints_standalone)/launch/constraint_velocity_filter_chain_params.yaml"/>
 
-  <node name="feature_controller" launch-prefix="xterm -e gdb --args" type="constraint_controller" pkg="feature_constraints_standalone" >
+  <node name="feature_controller" launch-prefix="xterm -e gdb -ex run --args" type="constraint_controller" pkg="feature_constraints_standalone" >
     <remap from="~qdot" to="~qdot"/>
     <param name="~tool_frame" value="left_arm_7_link"/>
     <param name="~base_frame" value="base_link"/>
