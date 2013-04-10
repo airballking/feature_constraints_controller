@@ -20,7 +20,6 @@
 
   <depend package="loopback_controller_manager"/>
   <depend package="ias_mechanism_controllers"/>
-  <depend package="robot_state_chain_publisher"/>
 
   <depend package="sensor_msgs"/>
   <depend package="std_msgs"/>
