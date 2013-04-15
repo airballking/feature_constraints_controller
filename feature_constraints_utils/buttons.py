@@ -9,7 +9,7 @@ topic /state which is of type std_msgs/String.
 """
 
 import roslib
-roslib.load_manifest('stuff')
+roslib.load_manifest('feature_constraints_utils')
 from std_msgs.msg import String
 import rospy
 

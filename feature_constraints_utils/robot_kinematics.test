@@ -1,4 +1,4 @@
 <launch>
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find rosie_description)/robots/kuka_lwr_arm.urdf.xacro'"/>  
-  <test test-name="robot_kinematics" pkg="stuff" type="robot_test.py"/>
+  <test test-name="robot_kinematics" pkg="feature_constraints_utils" type="robot_test.py"/>
 </launch>

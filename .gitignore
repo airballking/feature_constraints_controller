@@ -14,13 +14,13 @@ feature_constraints/lib/
 cmake_install.cmake
 rviz/
 *_msgs/src/
+rtt_*/src
+rtt_*/lib
+rtt_*/include
+rtt_*/rtt_*-gnulinux.pc
 
 syntax: regexp
 msg\/_.*\.py
-rtt_.*\/src
-rtt_.*\/lib
-rtt_.*\/include
-rtt_.*\/rtt_.*\.pc
 Deployer.ior
 orocos\.log
 \.tb_history

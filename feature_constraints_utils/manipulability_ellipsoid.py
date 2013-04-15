@@ -5,7 +5,7 @@
 # and the current joint angles.
 
 import roslib
-roslib.load_manifest('stuff')
+roslib.load_manifest('feature_constraints_utils')
 
 import rospy
 import marker

@@ -2,7 +2,7 @@
   <node name="constraints" pkg="feature_constraints_standalone"
         type="constraint_config.py"/>
 
-  <node name="feature_viz" pkg="stuff" type="feature_viz.py" output="screen"/>
+  <node name="feature_viz" pkg="feature_constraints_utils" type="feature_viz.py" output="screen"/>
 
   <node name="pancake_spatula_transform" pkg="tf"
         type="static_transform_publisher"
