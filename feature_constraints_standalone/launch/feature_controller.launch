@@ -28,7 +28,8 @@
   <include file="$(find ias_mechanism_controllers)/launch/rosie_loopback.launch"/>
 
   <!-- LOAD FILTER PARAMETERS FOR CONSTRAINT VELOCITY ESTIMATION -->
-  <rosparam command="load" file="$(find feature_constraints_standalone)/launch/constraint_velocity_filter_chain_params.yaml"/>
+  <rosparam command="load" ns="feature_controller"
+            file="$(find feature_constraints_standalone)/launch/constraint_velocity_filter_chain_params.yaml"/>
 
   <node name="feature_controller" launch-prefix="xterm -e gdb -ex run --args" type="constraint_controller" pkg="feature_constraints_standalone" >
     <remap from="~qdot" to="~qdot"/>

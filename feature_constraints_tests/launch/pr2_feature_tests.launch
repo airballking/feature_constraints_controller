@@ -1,7 +1,10 @@
 <launch>
 
   <!-- load the filter parameters for the constraint velocity estimation onto the server -->
-  <rosparam command="load" file="$(find feature_controller_standalone)/launch/constraint_velocity_filter_chain_params.yaml"/>
+  <rosparam command="load" ns="left_arm_feature_controller"
+            file="$(find feature_constraints_standalone)/launch/constraint_velocity_filter_chain_params.yaml"/>
+  <rosparam command="load" ns="right_arm_feature_controller"
+            file="$(find feature_constraints_standalone)/launch/constraint_velocity_filter_chain_params.yaml"/>
 
   <!-- Start nodes that handle visualization of the spatulas and the table -->
   <node name="r_spatula_model" pkg="itasc" type="spatula_model_bremen_1.py" args="/r_spatula" />
@@ -59,9 +62,12 @@
   <include file="$(find ias_mechanism_controllers)/launch/pr2_loopback.launch"/>
 
   <!-- startup feature controller for left arm-->
-  <node name="left_arm_feature_controller" launch-prefix="xterm -e gdb -args" type="constraint_controller" pkg="feature_constraints_standalone">
+  <node name="left_arm_feature_controller" launch-prefix="xterm -e gdb -ex run -args" type="constraint_controller" pkg="feature_constraints_standalone">
     <param name="~tool_frame" value="l_gripper_tool_frame"/>
     <param name="~base_frame" value="torso_lift_link"/>
+    <param name="~robot_base_frame" value="base_link"/>
+    <param name="~map_frame" value="base_link"/>
+    <!--param name="~object_frame" value="object"/-->
     <param name="~joint_limit_avoidance" value="false"/>
     <remap from="~qdot" to="/l_arm_vel/command"/>
     <remap from="/left_arm_feature_controller/tool_offset" to="l_tool_pose"/>
@@ -71,9 +77,11 @@
   </node>
 
   <!-- startup feature controller for right  arm-->
-  <node name="right_arm_feature_controller" launch-prefix="xterm -e gdb -args" type="constraint_controller" pkg="feature_constraints_standalone">
+  <node name="right_arm_feature_controller" launch-prefix="xterm -e gdb -ex run -args" type="constraint_controller" pkg="feature_constraints_standalone">
     <param name="~tool_frame" value="r_gripper_tool_frame"/>
     <param name="~base_frame" value="torso_lift_link"/>
+    <param name="~robot_base_frame" value="base_link"/>
+    <param name="~map_frame" value="base_link"/>
     <param name="~joint_limit_avoidance" value="false"/>
     <remap from="~qdot" to="/r_arm_vel/command"/>
     <remap from="/right_arm_feature_controller/tool_offset" to="r_tool_pose"/>
@@ -83,11 +91,11 @@
   </node>
 
   <!-- startup the feature visualization -->
-  <node name="left_feature_viz" pkg="stuff" type="feature_viz.py" output="screen">
+  <node name="left_feature_viz" pkg="feature_constraints_utils" type="feature_viz.py" output="screen">
     <param name="~base_frame" value="/pancake"/>
     <remap from="constraint_config" to="/left_arm_feature_controller/constraint_config"/>
   </node>
-  <node name="right_feature_viz" pkg="stuff" type="feature_viz.py" output="screen">
+  <node name="right_feature_viz" pkg="feature_constraints_utils" type="feature_viz.py" output="screen">
     <param name="~base_frame" value="/pancake"/>
     <remap from="constraint_config" to="/right_arm_feature_controller/constraint_config"/>
   </node>

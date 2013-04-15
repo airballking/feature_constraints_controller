@@ -22,7 +22,7 @@
   <node name="spatula_model" pkg="itasc" type="spatula_model.py" args="/spatula" />
   <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
 
-  <node name="feature_viz" pkg="stuff" type="feature_viz.py" output="screen">
+  <node name="feature_viz" pkg="feature_constraints_utils" type="feature_viz.py" output="screen">
     <remap from="/constraint_config" to="/feature_controller/constraint_config"/>
     <param name="base_frame" value="/pancake"/>
   </node>

@@ -134,6 +134,9 @@ def sector(vector1, vector2, base, ns='', id=1):
 
     v_last = v
 
+  if marker.points == []:
+      marker.action = 2
+
   return marker
 
 def publish(marker):

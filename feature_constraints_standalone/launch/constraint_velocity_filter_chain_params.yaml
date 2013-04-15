@@ -1,10 +1,4 @@
-feature_controller:
-  filter_chain:
-    - name: constraint_velocity_multi_mean_filter
-      type: filters/MultiChannelMeanFilterDouble
-      params: {number_of_observations: 7}
-left_arm_feature_controller:
-  filter_chain:
-    - name: constraint_velocity_multi_mean_filter
-      type: filters/MultiChannelMeanFilterDouble
-      params: {number_of_observations: 7}
+filter_chain:
+  - name: constraint_velocity_multi_mean_filter
+    type: filters/MultiChannelMeanFilterDouble
+    params: {number_of_observations: 7}

@@ -5,14 +5,15 @@ srv_gen
 msg/lisp/
 lib/orocos
 bin/
-.pyc
-~
+*.pyc
+*~
 feature_constraints/lib/
 .cproject
 .project
 .pydevproject
 cmake_install.cmake
 rviz/
+*_msgs/src/
 
 syntax: regexp
 msg\/_.*\.py
