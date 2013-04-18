@@ -263,6 +263,68 @@ void FeatureConstraintsController::tf_poses_lookup()
   }
 }
 
+bool FeatureConstraintsController::lookup_tf_frames()
+{
+  // lookup pose of tool-frame in ee-frame
+  try
+  {
+    tf_listener_.lookupTransform(arm_ee_frame_, tool_frame_,
+                                 ros::Time(0), aux_transform_);
+  }
+  catch (tf::TransformException ex)
+  {
+    if(started_) 
+      ROS_ERROR("Lookup of pose of tool-frame in ee-frame failed.");
+    return false;
+  }
+  tf::TransformTFToKDL(aux_transform_, T_tool_in_ee_);
+    
+  // lookup pose of object-frame in world-frame
+  try
+  {
+    tf_listener_.lookupTransform(world_frame_, object_frame_, 
+                                 ros::Time(0), aux_transform_);
+  }
+  catch (tf::TransformException ex)
+  {
+    if(started_)
+      ROS_ERROR("Lookup of pose of object-frame in world-frame failed.");
+    return false;
+  }
+  tf::TransformTFToKDL(aux_transform_, T_object_in_world_);
+
+  // lookup pose of base-frame in world-frame
+  try
+  {
+    tf_listener_.lookupTransform(world_frame_, robot_base_frame_,
+                                 ros::Time(0), aux_transform_);
+  }
+  catch (tf::TransformException ex)
+  {
+    if(started_)
+      ROS_ERROR("Lookup of pose of robot-base-frame in world-frame failed.");
+    return false;
+  }
+  tf::TransformTFToKDL(aux_transform_, T_base_in_world_);
+
+  // lookup pose of arm-base-frame in robot-base-frame
+  try
+  {
+  tf_listener_.lookupTransform(robot_base_frame_, arm_base_frame_,
+                               ros::Time(0), aux_transform_);
+  }
+  catch (tf::TransformException ex)
+  {
+    if(started_)
+      ROS_ERROR("Lookup of pose of arm-base-frame in robot-base-frame failed.");
+    return false;
+  }
+  tf::TransformTFToKDL(aux_transform_, T_arm_in_base_);
+
+  // all lookups worked out fine
+  return true;
+}
+
 bool FeatureConstraintsController::load_frame_names(ros::NodeHandle& n)
 {
   // get frame names from parameter server

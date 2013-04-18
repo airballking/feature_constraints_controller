@@ -53,6 +53,8 @@ private:
 
   // Receives all four of the below transforms from tf
   void tf_poses_lookup();
+  // looks up the relevant transforms from tf
+  bool lookup_tf_frames();
 
   // our NodeHandle received in init()
   ros::NodeHandle n_;
