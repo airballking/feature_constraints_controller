@@ -17,7 +17,7 @@ import tf
 import tf_conversions.posemath as pm
 
 from sensor_msgs.msg import JointState
-from constraint_msgs.msg import ConstraintState, ConstraintCommand
+from constraint_msgs.msg import ConstraintState, ConstraintCommand, ConstraintConfig
 
 
 def joint_names_fallback(prefix):
@@ -80,6 +80,8 @@ class Collector:
                                    JointState, self._jointstate_cb)
     self.sub_cs = rospy.Subscriber(self.prefix+'/constraint_state',
                                    ConstraintState, self._constraint_cb)
+    self.sub_cc = rospy.Subscriber(self.prefix+'/constraint_config',
+                                   ConstraintConfig, self._constraint_config_cb)
     self.listener = tf.TransformListener()
 
   def determine_joint_names(self):
@@ -108,17 +110,31 @@ class Collector:
     self.messages['constraint_state'] = msg
     self._process_constraint(msg)
 
+  def _constraint_config_cb(self, msg):
+    self.messages['constraint_config'] = msg
+
   def _process_constraint(self, msg):
-    self.data['chi_desired'] = (msg.chi_desired, msg.weights)
+    #TODO: reflect the commanded weights of the constraints
+    self.data['chi_desired'] = (msg.chi_desired, [1.0]*len(msg.chi_desired))
+    self.data['constraint_names'] = (msg.constraint_names)
     self.data['singular_values'] = msg.singular_values
     self.data['chi'] = msg.chi
 
   def _process_tf(self):
-    tool_frame = rospy.get_param(self.prefix + '/tool_frame')
+    hand_frame = rospy.get_param(self.prefix + '/tool_frame')
     base_frame = rospy.get_param(self.prefix + '/base_frame')
 
-    frames = [(base_frame, '/object'),
-              (tool_frame, '/tool')]
+    tool_frames = {}
+    world_frames = {}
+    try:
+      for constraint in self.messages['constraint_config'].constraints:
+        tool_frames[constraint.tool_feature.frame_id] = 1
+        world_frames[constraint.world_feature.frame_id] = 1
+    except:
+      pass
+
+    frames = ( [(base_frame, world_frame) for world_frame in world_frames.keys()]
+              +[(hand_frame, tool_frame)  for tool_frame in tool_frames.keys()] )
     while not rospy.is_shutdown():
       try:
         for frame in frames:
@@ -130,8 +146,8 @@ class Collector:
         pass
 
   def get(self, item=''):
-    #if item.endswith('_pose') or item.endswith('_parent') or item == '':
-      #self._process_tf()
+    if item.endswith('_pose') or item.endswith('_parent') or item == '':
+      self._process_tf()
 
     if item != '':
       required_items = [item]
@@ -148,32 +164,54 @@ class Collector:
       return self.data
 
 
-def format_pretty(data):
+def format_pretty(data, digits=3):
   s = ''
   for k in data.iterkeys():
     s += k + ':\n'
+
+    # Strings are just printed
+    if isinstance(data[k], str):
+      s += data[k] + '\n\n'
+      continue
+
+    # chi_desired deserves special formatting
     if k == 'chi_desired':
       for chi, weight in zip(data[k][0], data[k][1]):
-        if weight == 0.0:
+        if weight < 0.01:
           s += ' _'
         else:
-          s += ' %.3f' % chi
-    else:
-      try:
-        s += ' '.join(['%.3f' % d for d in data[k]])
-      except:
-        s += str(data[k])
-    s += '\n\n'
+          s += ' %.*f' % (digits, chi)
+      s += '\n\n'
+      continue
+
+    # Try to treat as list of numerical values
+    try:
+      s += ' '.join(['%.*f' % (digits, d) for d in data[k]]) + '\n\n'
+      continue
+    except:
+      pass
+
+    # Just join the items with spaces
+    try:
+      s += ' '.join(data[k]) + '\n\n'
+      continue
+    except:
+      pass
+
+    # Just use the str() method
+    s += str(data[k]) + '\n\n'
   return s
 
 def make_command(tokens, cmd_range):
   msg = ConstraintCommand()
-  for t in tokens:
+  for token in tokens:
+    if token == '--':
+      break
     pos_lo = float('-inf')
     pos_hi = float( 'inf')
     weight = 0
     try:
-      value = float(t)
+      value = float(token)
       pos_lo = value - cmd_range/2.0
       pos_hi = value + cmd_range/2.0
       weight = 1
@@ -256,7 +294,7 @@ def main():
     prefix = rospy.get_param('/constraint_controller_prefix')
   except: 
     prefix = get_prefixes()[0]
-    print '### using prefix ',prefix
+    print '### using prefix ', prefix
 
   cmd  = sys.argv[1]
   args = sys.argv[2:]

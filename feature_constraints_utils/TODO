@@ -1,8 +1,6 @@
   * write q and qdot watcher gui
   * write singularity watcher gui
-  * constraint_state: getting ydot_desired of like 10e+200!
+  * topic /prefix/constraint_state: getting ydot_desired of like 10e+200!
+  * Shall we just reflect the complete command in ConstraintState? This would make the message (and the conversions) easier!
   * endless PR2 joints...
-  * state: get tf more general: record 'chain-end-frame_id' to 'tool-feature-frame_id' and 'object-feature-frame_id' to 'chain-start-frame_id'
-  * names of constraints (from state)
-  * make delimiter for chi values, so we can append a _range:=xxx to the commands
 
