@@ -1,6 +1,6 @@
   * write q and qdot watcher gui
   * write singularity watcher gui
-  * fix constraint_dashboard crashes
+  * constraint_state: getting ydot_desired of like 10e+200!
   * endless PR2 joints...
   * state: get tf more general: record 'chain-end-frame_id' to 'tool-feature-frame_id' and 'object-feature-frame_id' to 'chain-start-frame_id'
   * names of constraints (from state)

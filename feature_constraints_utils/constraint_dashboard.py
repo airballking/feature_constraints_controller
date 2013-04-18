@@ -10,6 +10,8 @@ import rospy
 from sensor_msgs.msg import JointState
 from constraint_msgs.msg import ConstraintConfig, ConstraintCommand, ConstraintState
 
+from threading import Lock
+
 from math import *
 
 import numpy
@@ -81,10 +83,11 @@ class ConstraintPanel:
     self.pos = 0.5
     self.vel = 0.0
     self.vel_desired = 0.0
+    self.vel_act = 0.0
     self.background_color = config['active_color']
     self.background_brush = wx.Brush(self.background_color)
-    self.constraint_label = 'blabla'
-    self.func_label = 'blubb'
+    self.constraint_label = 'Constraint Name'
+    self.func_label = 'function(feature_1, feature_2)'
     self.do_update = False
 
   def set_description(self, constraint_name, constraint_function, feature1, feature2):
@@ -171,8 +174,12 @@ class ConstraintView(wx.Panel):
   def reconstruct_panels(self, num): 
     if len(self.panels) != num:
       print 'Re-creating the panels'
-      for panel in self.panels:
-        self.sizer.Detach(panel)
+      for i in range(self.sizer.GetRows()):
+         self.sizer.RemoveGrowableRow(i)
+      self.sizer.Clear(True)
+      self.panels = []
+
+      self.sizer.SetRows(num)
       for i in range(num):
         panel = ConstraintPanel(self, i)
         self.panels.append(panel)
@@ -197,57 +204,86 @@ class ConstraintDashboard:
     self.config  = None
     self.command = None
     self.state   = None
+    self.do_reconfigure = False
+    self.mutex = Lock()
 
     self.view = view
 
-    self._shutdown_timer = wx.Timer()
-    self._shutdown_timer.Bind(wx.EVT_TIMER, self._on_shutdown_timer)
-    self._shutdown_timer.Start(25)
+    self._redraw_timer = wx.Timer()
+    self._redraw_timer.Bind(wx.EVT_TIMER, self._on_redraw_timer)
+    self._redraw_timer.Start(25)
 
   def _config_callback(self, msg):
-    print 'config'
-    self.config = msg
-    self.view.reconstruct_panels(self.num_constraints())
-    for i in range(len(self.view.panels)):
-      c = msg.constraints[i]
-      self.view.panels[i].set_description(c.name, c.function, c.tool_feature.name, c.world_feature.name)
+    self.mutex.acquire()
+    try:
+      self.config = msg
+      self.do_reconfigure = True 
+    finally:
+      self.mutex.release()
 
   def _command_callback(self, msg):
-    for i in range(len(self.view.panels)):
-      self.view.panels[i].set_command(extract(msg.weight,  i, 0.0),
-                                      extract(msg.pos_lo,  i, 0.0),
-                                      extract(msg.pos_hi,  i, 0.0),
-                                      extract(msg.max_vel, i, 0.0),
-                                      extract(msg.min_vel, i, 0.0))
+    self.mutex.acquire()
+    try:
+      for i in range(len(self.view.panels)):
+        self.view.panels[i].set_command(extract(msg.weight,  i, 0.0),
+                                        extract(msg.pos_lo,  i, 0.0),
+                                        extract(msg.pos_hi,  i, 0.0),
+                                        extract(msg.max_vel, i, 0.0),
+                                        extract(msg.min_vel, i, 0.0))
+    finally:
+      self.mutex.release()
 
   def _state_callback(self, msg):
-    self.state = msg
-    self.ydot_real = recover_ydot(msg, self.qdot)
-    for i in range(len(self.view.panels)):
-      self.view.panels[i].set_state(msg.weights[i], msg.chi[i], msg.ydot_desired[i], float(self.ydot_real[i,0]))
+    self.mutex.acquire()
+    try:
+      self.state = msg
+      self.ydot_real = recover_ydot(msg, self.qdot)
+      for i in range(min(msg.chi, len(self.view.panels))):
+        self.view.panels[i].set_state(msg.weights[i], msg.chi[i], msg.ydot_desired[i], float(self.ydot_real[i,0]))
+    finally:
+      self.mutex.release()
 
   def _js_callback(self, msg):
-    self.js = msg
-    self.qdot = extract_qdot(msg, self.joint_names)
+    self.mutex.acquire()
+    try:
+      self.js = msg
+      self.qdot = extract_qdot(msg, self.joint_names)
+    finally:
+      self.mutex.release()
 
   def num_constraints(self):
+    num = float('inf')
     if self.config != None:
-      return len(self.config.constraints)
-    elif self.command != None:
-      return len(self.command.pos_lo)
-    elif self.state != None:
-      return len(self.state.chi)
-    else:
-      return 0
+      num = min(num, len(self.config.constraints))
+    if self.command != None:
+      num = min(num, len(self.command.pos_lo))
+    if self.state != None:
+      num = min(num, len(self.state.chi))
+    if self.config == None and self.command == None and self.state == None:
+      num = 0
+    return num
 
   def name(self):
     return self.rospy.get_name()
 
-  def _on_shutdown_timer(self, event):
-    """Shut down the program when the node closes."""
-    self.view.Refresh()  # must do the Refresh here because of threading issues.
-    if rospy.is_shutdown():
-      wx.Exit()
+  def _on_redraw_timer(self, event):
+    """Our hook of the wxWidgets loop.
+
+    Here we must call all wxWidgets related functions: Refresh,
+    Widget construction and shutdown."""
+    self.mutex.acquire()
+    try:
+      if self.do_reconfigure:
+        self.do_reconfigure = False
+        self.view.reconstruct_panels(len(self.config.constraints))
+        for i in range(len(self.view.panels)):
+          c = self.config.constraints[i]
+          self.view.panels[i].set_description(c.name, c.function, c.tool_feature.name, c.world_feature.name)
+      self.view.Refresh()
+      if rospy.is_shutdown():
+        wx.Exit()
+    finally:
+      self.mutex.release()
 
 
 
