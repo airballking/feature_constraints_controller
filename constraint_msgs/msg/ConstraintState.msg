@@ -27,6 +27,8 @@ float64[] weights            # actual weights of constraints
 # current lower and upper boundary of the constraints
 float64[] lower_boundary
 float64[] upper_boundary
+# current commanded weights of the constraints
+float64[] command_weights
 
 # current desired output feature velocities from controller
 float64[] ydot_desired

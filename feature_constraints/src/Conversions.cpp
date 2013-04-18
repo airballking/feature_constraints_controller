@@ -57,7 +57,7 @@ void fromMsg(const std::vector<constraint_msgs::Constraint>& msg, std::vector<Co
 
 void fromMsg(const constraint_msgs::ConstraintConfig& msg, std::vector<Constraint>& cc)
 {
-  for(int i=0; i < msg.constraints.size(); i++)
+  for(unsigned int i=0; i < msg.constraints.size(); i++)
     fromMsg(msg.constraints[i], cc[i]);
 }
 
@@ -146,6 +146,7 @@ void toMsg(Controller& c, constraint_msgs::ConstraintState& msg)
   toMsg(c.singularValues, msg.singular_values);
   toMsg(c.command.pos_lo, msg.lower_boundary);
   toMsg(c.command.pos_hi, msg.upper_boundary);
+  toMsg(c.command.weight, msg.command_weights);
   for(unsigned int i=0; i < c.constraints.size(); i++)
     msg.constraint_names[i] = c.constraints[i].name;
 }
@@ -218,6 +219,7 @@ void resize(constraint_msgs::ConstraintState &msg, unsigned int number_constrain
   msg.weights.resize(number_constraints);
   msg.lower_boundary.resize(number_constraints);
   msg.upper_boundary.resize(number_constraints);
+  msg.command_weights.resize(number_constraints);
   msg.jacobian.resize(number_constraints);
   msg.interaction_matrix.resize(number_constraints);
   msg.singular_values.resize(6);

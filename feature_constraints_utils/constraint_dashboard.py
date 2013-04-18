@@ -240,6 +240,10 @@ class ConstraintDashboard:
       self.ydot_real = recover_ydot(msg, self.qdot)
       for i in range(min(msg.chi, len(self.view.panels))):
         self.view.panels[i].set_state(msg.weights[i], msg.chi[i], msg.ydot_desired[i], float(self.ydot_real[i,0]))
+        self.view.panels[i].set_command(extract(msg.command_weights, i, 0.0),
+                                        extract(msg.lower_boundary,  i, 0.0),
+                                        extract(msg.upper_boundary,  i, 0.0),
+                                        0.0, 0.0)
     finally:
       self.mutex.release()
 
