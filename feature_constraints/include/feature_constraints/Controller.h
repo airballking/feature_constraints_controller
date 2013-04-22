@@ -105,7 +105,7 @@ public:
   // calls deriveConstraints(), control() and analyzeH()
   void update(KDL::Frame& frame, bool with_control, double dt);
 
-  // calls clamp(KDL::JntArray, const KDL::JntArray, const KDL::JntArray)
+  // calls clamp(KDL::JntArray, const KDL::JntArray)
   void clampOutput();
 };
 
@@ -175,15 +175,12 @@ void control(KDL::JntArray& ydot,
 /* Auxiliary convenience function to clamp --for example-- output
    velocities that come from a controller.
    \param joint_velocities [in AND out] the original velocities to clamp
-   \param min_velocities [in] desired lower velocity boundaries
-   \param max_velocities [in] desired upper velocity boundariess
+   \param max_velocities [in] desired velocity boundariess
 */
 void clamp(KDL::JntArray& joint_velocities,
-           const KDL::JntArray& min_velocities,
            const KDL::JntArray& max_velocities);
 
 double clamp(double input_velocity,
-             double min_velocity,
              double max_velocity);
             
 

@@ -89,7 +89,7 @@ void Controller::update(KDL::Frame& frame, bool with_control, double dt)
 
 void Controller::clampOutput()
 {
-  clamp(ydot, command.min_vel, command.max_vel);
+  clamp(ydot, command.max_vel);
 }
 
 void control(KDL::JntArray& ydot,
@@ -303,29 +303,24 @@ void control(KDL::JntArray& ydot,
   }
 }
 
-double clamp(double input_velocity, double min_velocity, double max_velocity)
+double clamp(double input_velocity, double max_velocity)
 {
-  assert(min_velocity <= max_velocity);
+  assert(max_velocity >= 0.0);
 
-  if(input_velocity < min_velocity)
-    return min_velocity;
-  if(input_velocity > max_velocity)
+  if(std::fabs(input_velocity) > max_velocity)
     return max_velocity;
 
   // nothing to clamp
   return input_velocity;
 }
 
-void clamp(KDL::JntArray& joint_velocities, const KDL::JntArray& min_velocities,
-           const KDL::JntArray& max_velocities)
+void clamp(KDL::JntArray& joint_velocities, const KDL::JntArray& max_velocities)
 {
-  assert(joint_velocities.rows() == min_velocities.rows());
   assert(joint_velocities.rows() == max_velocities.rows());
 
   for(unsigned int i=0; i<joint_velocities.rows(); i++)
   {
-    joint_velocities(i) = clamp(joint_velocities(i), min_velocities(i), 
-                            max_velocities(i));
+    joint_velocities(i) = clamp(joint_velocities(i), max_velocities(i));
   }
 }
 
