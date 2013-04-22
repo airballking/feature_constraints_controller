@@ -245,6 +245,35 @@ void control(KDL::JntArray& ydot,
   if(return_value < 0)
   {
     ROS_ERROR("[FEATURE_CONSTRAINTS_CONTROLLER] Reflexxes interpolator returned with error '%d'", return_value);
+    // printing chi (current position)
+    std::cout << "\nchi(";
+    for(unsigned int i=0; i<chi.rows(); i++)
+    {
+      std::cout << " " << chi(i);
+    }
+    std::cout << ")\n";
+    // printing chi_dot (current velocity)
+    std::cout << "\nchi_dot(";
+    for(unsigned int i=0; i<chi_dot.rows(); i++)
+    {
+      std::cout << " " << chi_dot(i);
+    }
+    std::cout << ")\n";
+    // printing chi_desired (desired position)
+    std::cout << "\nchi_desired(";
+    for(unsigned int i=0; i<chi_desired.rows(); i++)
+    {
+      std::cout << " " << chi_desired(i);
+    }
+    std::cout << ")\n";
+    // printing chi_dot (desired velocity)
+    std::cout << "\nchi_dot_desired(";
+    for(unsigned int i=0; i<chi_dot_desired.rows(); i++)
+    {
+      std::cout << " " << chi_dot_desired(i);
+    }
+    std::cout << ")\n";
+
     KDL::SetToZero(ydot);
     return;
   }
