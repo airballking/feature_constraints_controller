@@ -121,7 +121,7 @@ private:
   constraint_msgs::JointAvoidanceState joint_avoidance_state_msg_;
 
   // flags to remember the state of the feature controller
-  bool configured_, started_, tf_poses_available_;
+  bool configured_, started_;
 
   // flag to turn joint limit avoidance on and off
   // will be set once during init

@@ -157,7 +157,6 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   // set flags to signal that we are not ready, yet
   configured_ = false;
   started_ = false;
-  tf_poses_available_ = false;
 
   return true;
 }
@@ -197,68 +196,7 @@ void FeatureConstraintsController::tf_poses_lookup()
     if(!pause_tf_lookup_)
     {
     boost::mutex::scoped_lock scoped_lock(tf_lookup_mutex_);
-    // lookup pose of tool-frame in ee-frame
-    try
-    {
-      tf_listener_.lookupTransform(arm_ee_frame_, tool_frame_,
-                                   ros::Time(0), aux_transform_);
-    }
-    catch (tf::TransformException ex)
-    {
-      if(started_) 
-        ROS_ERROR("Lookup of pose of tool-frame in ee-frame failed.");
-      tf_poses_available_ = false;
-      continue;
-    }
-    tf::TransformTFToKDL(aux_transform_, T_tool_in_ee_);
-    
-    // lookup pose of object-frame in world-frame
-    try
-    {
-      tf_listener_.lookupTransform(world_frame_, object_frame_, 
-                                   ros::Time(0), aux_transform_);
-    }
-    catch (tf::TransformException ex)
-    {
-      if(started_)
-        ROS_ERROR("Lookup of pose of object-frame in world-frame failed.");
-      tf_poses_available_ = false;
-      continue;
-    }
-    tf::TransformTFToKDL(aux_transform_, T_object_in_world_);
-
-    // lookup pose of base-frame in world-frame
-    try
-    {
-      tf_listener_.lookupTransform(world_frame_, robot_base_frame_,
-                                   ros::Time(0), aux_transform_);
-    }
-    catch (tf::TransformException ex)
-    {
-      if(started_)
-        ROS_ERROR("Lookup of pose of robot-base-frame in world-frame failed.");
-      tf_poses_available_ = false;
-      continue;
-    }
-    tf::TransformTFToKDL(aux_transform_, T_base_in_world_);
-
-    // lookup pose of arm-base-frame in robot-base-frame
-    try
-    {
-      tf_listener_.lookupTransform(robot_base_frame_, arm_base_frame_,
-                                  ros::Time(0), aux_transform_);
-    }
-    catch (tf::TransformException ex)
-    {
-      if(started_)
-        ROS_ERROR("Lookup of pose of arm-base-frame in robot-base-frame failed.");
-      tf_poses_available_ = false;
-      continue;
-    }
-    tf::TransformTFToKDL(aux_transform_, T_arm_in_base_);
-
-    // all lookups worked out fine
-    tf_poses_available_ = true;
+    lookup_tf_frames();
     }
   }
 }
@@ -387,7 +325,7 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   // stop controller because we received a new configuration and will resize
   // the data structure inside the controller
   started_ = false;
-  tf_poses_available_ = false;
+  pause_tf_lookup_ = true;
 
   // extract frame_ids of tool and object from configs
   // first check, if they are all the same
@@ -414,8 +352,13 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   tool_frame_ = temp_tool_frame;
 
   // start looking up tf-frames
+  if(!lookup_tf_frames())
+  {
+    ROS_ERROR("Aborting configuration of controller because not all tf-transformations could be looked up.");
+    return;
+  }
   pause_tf_lookup_ = false;
- 
+  
   // resize the constraints inside the controller 
   feature_controller_.constraints.resize(num_constraints);
 
@@ -450,9 +393,15 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
 
   // set flags to indicate that we are configured 
   if(success)
+  {
+    ROS_INFO("Received Contraint Configuration, successfully configured controller.");
     configured_ = true;
+  }
   else
+  {
+    ROS_INFO("Received Contraint Configuration, but configurating failed. Aborting.");
     configured_ = false;
+  }
 }
 
 /*! This updates the Controller 'set points'. A fitting message of this type
@@ -464,9 +413,11 @@ void FeatureConstraintsController::constraint_command_callback(const constraint_
   // TODO(Georg): this sanity check for correspondence of config and command is naive
   //              we already encountered race conditions with this
   if(configured_ && (msg->pos_lo.size() == feature_controller_.command.pos_lo.rows())){
+    ROS_INFO("Received valid Constraint Command, starting controller.");
     fromMsg(*msg, feature_controller_.command);
     started_ = true;
   }else{
+    ROS_ERROR("Received Constraint Command, but the controller has not been properly configured. Not Starting.");
     started_ = false;
   }
 }
@@ -475,7 +426,7 @@ void FeatureConstraintsController::update(double dt)
 {
   boost::mutex::scoped_lock scoped_lock(tf_lookup_mutex_);
 
-  if(configured_ && tf_poses_available_)
+  if(configured_)
   {
     // assemble frame between tool and object
     KDL::Frame ff_kinematics;
