@@ -191,6 +191,8 @@ double clamp(double input_velocity,
    \param chi_old [in and out] last values of constraints; will be set to chi
    \param dt [in] time passed between chi and chi_old
    \param filters [in] filter chain used to low-pass filter estimate velocities
+   \param chi_dot_max [in] max velocities, used to clamp numerically-implausible results
+          to something reasonable
    \param chi_dot [out] estimated constraint velocities
    \param tmp [in] some memory for intermediate results
    \param tmp_vector1 [in] some memory to talk to the filter
@@ -198,7 +200,7 @@ double clamp(double input_velocity,
 */
 void estimateVelocities(const KDL::JntArray& chi, KDL::JntArray& chi_old, double dt,
                         filters::MultiChannelFilterChain<double>& filters,
-                        KDL::JntArray& chi_dot, KDL::JntArray& tmp,
+                        KDL::JntArray& chi_dot, const KDL::JntArray& chi_dot_max, KDL::JntArray& tmp,
                         std::vector<double>& tmp_vector1, std::vector<double>& tmp_vector2);
  
 #endif //FEATURE_CONSTRAINTS_CONTROLLER_H

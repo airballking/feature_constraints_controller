@@ -74,8 +74,8 @@ bool Controller::prepare(std::string& filter_namespace)
 void Controller::update(KDL::Frame& frame, bool with_control, double dt)
 {
   differentiateConstraints(Ht, chi, frame, constraints, 0.001, tmp);
-  estimateVelocities(chi, last_chi, dt, filter_chain, chi_dot, tmp,
-    tmp_vector1, tmp_vector2);
+  estimateVelocities(chi, last_chi, dt, filter_chain, chi_dot, command.max_vel,
+    tmp, tmp_vector1, tmp_vector2);
   if(with_control)
   {
     //control(ydot, weights, chi_desired, chi, command, p_gains);
@@ -326,7 +326,7 @@ void clamp(KDL::JntArray& joint_velocities, const KDL::JntArray& max_velocities)
 
 void estimateVelocities(const KDL::JntArray& chi, KDL::JntArray& chi_old, double dt,
                         filters::MultiChannelFilterChain<double>& filters,
-                        KDL::JntArray& chi_dot, KDL::JntArray& tmp,
+                        KDL::JntArray& chi_dot, const KDL::JntArray& chi_dot_max, KDL::JntArray& tmp,
                         std::vector<double>& tmp_vector1, std::vector<double>& tmp_vector2)
 {
   assert(chi.rows() == chi_old.rows());
@@ -334,19 +334,29 @@ void estimateVelocities(const KDL::JntArray& chi, KDL::JntArray& chi_old, double
   assert(chi.rows() == tmp.rows());
   assert(chi.rows() == tmp_vector1.size());
   assert(chi.rows() == tmp_vector2.size());
+  assert(chi.rows() == chi_dot_max.rows());
 
   // calculate instantaneous velocities through numerical differentiation
   // NOTE: in the next line I'm using chi_dot as a second 'tmp'
   KDL::Subtract(chi, chi_old, chi_dot);
   KDL::Divide(chi_dot, dt, tmp);
+  chi_dot = tmp;
 
-  // copy the result into a std::vector to send it to the filters
+  // clamp estimated velocities to something reasonable, i.e. a multiple of max_velocities.
+  // note, this is workaround for some sophisticated velocity-estimation but it was
+  // necessary because sometimes there were numerial problems, i.e. extremely high estimated
+  // instantaneous velocities.
+  // note, tmp is holding the higher velocity boundaries.
+  KDL::Multiply(chi_dot_max, 22.0, tmp);
+  clamp(chi_dot, chi_dot_max);
+
+  // copy the clamped velocity estimates into a std::vector to send it to the filters
   // use one of our existing message-conversion functions to do the job
-  toMsg(tmp, tmp_vector1);
+  toMsg(chi_dot, tmp_vector1);
   
   // perform the filtering
   filters.update(tmp_vector1, tmp_vector2);
-
+  
   // copy the filtered velocities back into the resulting JntArray
   // again use one of our message-conversion functions
   fromMsg(tmp_vector2, chi_dot);
