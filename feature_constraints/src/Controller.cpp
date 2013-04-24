@@ -25,6 +25,20 @@ void Ranges::resize(int size)
   min_vel.resize(size);
 }
 
+void Ranges::reset(double maximum_vel)
+{
+  for(unsigned int i=0; i < pos_lo.rows(); i++)
+    pos_lo(i) = -HUGE_VAL;
+  for(unsigned int i=0; i < pos_hi.rows(); i++)
+    pos_hi(i) =  HUGE_VAL;
+  for(unsigned int i=0; i < weight.rows(); i++)
+    weight(i) =  0.0;
+  for(unsigned int i=0; i < max_vel.rows(); i++)
+    max_vel(i) =  maximum_vel;
+  for(unsigned int i=0; i < min_vel.rows(); i++)
+    min_vel(i) = -maximum_vel;
+}
+
 
 bool Controller::prepare(std::string& filter_namespace)
 {
@@ -106,6 +120,7 @@ void control(KDL::JntArray& ydot,
     {
       ydot(i) = 0.0;
       weights(i) = 0.0;
+      chi_desired(i) = chi(i);
       continue;
     }
 
@@ -192,6 +207,7 @@ void control(KDL::JntArray& ydot,
     {
       ydot(i) = 0.0;
       weights(i) = 0.0;
+      chi_desired(i) = chi(i);
       continue;
     }
 
