@@ -57,7 +57,7 @@ Matrix<double, 6, 6> inverse_twist_proj(KDL::Frame f)
 
 
 FeatureConstraintsController::FeatureConstraintsController()
-   : robot_kinematics_(0), joint_state_interpreter_(0), tf_lookup_thread_(0)
+   : tf_lookup_thread_(0), robot_kinematics_(0), joint_state_interpreter_(0)
 {
 
 }
@@ -359,13 +359,20 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
   }
   pause_tf_lookup_ = false;
   
-  // resize the constraints inside the controller 
+  // resize the constraints inside the controller
+  // NOTE: As implemented, this is not realtime safe!
   feature_controller_.constraints.resize(num_constraints);
 
   // get new constraints into controller and re-prepare it
   // i.e. adjust size of internal variables
   fromMsg(*msg, feature_controller_.constraints);
   bool success = feature_controller_.prepare(filter_namespace_);
+
+  // clear command, since we have no data to fill it, yet.
+  // NOTE: We currently require, that the config arrives first.
+  //       This should probably be revisited!
+  feature_controller_.command.reset();
+  feature_controller_.intermediate_command.reset();
 
   // resize message used to report state of controller
   resize(state_msg_, num_constraints);
@@ -450,7 +457,9 @@ void FeatureConstraintsController::update(double dt)
 
     // evaluate constraints, i.e. update the feature constraints and 
     // (depending on started_-flag) run feature controller for this cycle
-    feature_controller_.update(T_tool_in_object, started_, dt);
+    // TODO(Ingo): Why not always run the controller? If we ensure that the
+    //            command is never 'evil', this should do no harm!
+    feature_controller_.update(T_tool_in_object, true, dt);
 
     // if we have enough constraints and have been started: do the remaining calculations
     // and send commands to the robot
