@@ -28,8 +28,7 @@ def publishCylinder(pos, ori, scale, color, id):
   m.header.stamp = rospy.Time.now()
   m.header.frame_id = frame_name
 
-  m.lifetime.secs = 0
-  m.lifetime.nsecs = 0
+  m.lifetime = rospy.Duration(4.0)
 
   m.color = ColorRGBA(*color)
 
@@ -51,8 +50,7 @@ def publishCube(pos, ori, scale, id):
   m.header.stamp = rospy.Time.now()
   m.header.frame_id = frame_name
 
-  m.lifetime.secs = 0
-  m.lifetime.nsecs = 0
+  m.lifetime = rospy.Duration(4.0)
 
   m.color = ColorRGBA(0.6, 0.4, 0.2, 1)
 

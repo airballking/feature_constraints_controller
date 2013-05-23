@@ -28,9 +28,13 @@ import rospy
 import tf
 import tf_conversions.posemath as pm
 
+
+import threading
+
 from constraint_msgs.msg import ConstraintConfig, Constraint, Feature
 from geometry_msgs.msg import Point, Vector3
 from std_msgs.msg import ColorRGBA
+
 
 
 # some convenience color definitions
@@ -81,7 +85,9 @@ def marker_base(**args):
   m = marker.Marker(id=_config_['marker_id'],
                     ns=_config_['ns'], **args)
   m.header.frame_id = _config_['frame_id']
+  m.header.stamp = rospy.Time.now()
   m.scale.z = line_width
+  m.lifetime = rospy.Duration(0.4)
   if not args.has_key('color'):
     m.color = _config_['marker_color']
 
@@ -317,6 +323,8 @@ class Cos:
     mrk.ns = _config_['ns']
     mrk.id = _config_['marker_id']
     mrk.header.frame_id = _config_['frame_id']
+    mrk.header.stamp = rospy.Time.now()
+    mrk.lifetime = rospy.Duration(0.4)
     _config_['marker_id'] += 1
     mrk.color = constraint_color
 
@@ -368,6 +376,8 @@ class ConstraintDisplay:
   """Collect features and constraint functions for displaying."""
 
   def __init__(self, base_frame_id):
+
+    self.mylock = threading.Lock()
     self.tool_features = {}
     self.world_features = {}
     self.constraints = {}
@@ -376,6 +386,7 @@ class ConstraintDisplay:
 
   def set_constraints(self, constraints):
     """Set constraints from Constraint messages,"""
+    self.mylock.acquire()
     global constraint_functions
     self.tool_features = {}
     self.world_features = {}
@@ -392,6 +403,8 @@ class ConstraintDisplay:
       else:
         print "constraint function '%s' not found!" % c.function
 
+    self.mylock.release()
+
   def transform(self):
     for f in self.tool_features.values() + self.world_features.values():
       try:
@@ -403,6 +416,7 @@ class ConstraintDisplay:
 
   def show(self):
     markers = []
+    self.mylock.acquire()
     for name in self.tool_features:
       _config_['ns'] = 'tool_feature_' + name
       markers += self.tool_features[name].show(FEATURE)
@@ -413,6 +427,7 @@ class ConstraintDisplay:
       _config_['ns'] = name
       markers += self.constraints[name].show(NORMAL)
     _config_['ns'] = 'features'
+    self.mylock.release()
     return markers
 
 

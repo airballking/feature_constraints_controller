@@ -28,8 +28,7 @@ def publishCube(pos, ori, scale, id):
   m.header.stamp = rospy.Time.now()
   m.header.frame_id = frame_name
 
-  m.lifetime.secs = 0
-  m.lifetime.nsecs = 0
+  m.lifetime = rospy.Duration(4.0)
 
   m.color = ColorRGBA(0.3, 0.3, 0.3, 1)
 
