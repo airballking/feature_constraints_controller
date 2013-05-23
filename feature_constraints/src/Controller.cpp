@@ -324,7 +324,7 @@ double clamp(double input_velocity, double max_velocity)
   assert(max_velocity >= 0.0);
 
   if(std::fabs(input_velocity) > max_velocity)
-    return max_velocity;
+    return input_velocity*max_velocity/(std::fabs(input_velocity));
 
   // nothing to clamp
   return input_velocity;
