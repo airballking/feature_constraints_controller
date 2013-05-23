@@ -78,6 +78,7 @@ bool Controller::prepare(std::string& filter_namespace)
   // stuff for constraint velocity estimation
   last_chi.resize(n);
   chi_dot.resize(n);
+  KDL::SetToZero(chi_dot);
   tmp_vector1.resize(n);
   tmp_vector2.resize(n);
   filter_chain.clear();
@@ -88,17 +89,21 @@ bool Controller::prepare(std::string& filter_namespace)
 void Controller::update(KDL::Frame& frame, bool with_control, double dt)
 {
   differentiateConstraints(Ht, chi, frame, constraints, 0.001, tmp);
-  estimateVelocities(chi, last_chi, dt, filter_chain, chi_dot, command.max_vel,
-    tmp, tmp_vector1, tmp_vector2);
+  //estimateVelocities(chi, last_chi, dt, filter_chain, chi_dot, command.max_vel,
+  //  tmp, tmp_vector1, tmp_vector2);
   if(with_control)
   {
     //control(ydot, weights, chi_desired, chi, command, p_gains);
+
     control(ydot, weights, chi_desired, chi_dot_desired, chi, chi_dot, command,
       *command_trajectory_generator, *command_trajectory_input, *command_trajectory_output,
       command_trajectory_flags, tmp, p_gains, d_gains);
   }
   analysis.analyzeH(Ht, J, singularValues, 1e-7);
   this->frame = frame;
+
+  // remember chi_dot_desired as chi_dot for next control cycle
+  chi_dot = chi_dot_desired;
 }
 
 void Controller::clampOutput()
@@ -185,9 +190,10 @@ void control(KDL::JntArray& ydot,
 {
   // reflexxes library: set max_vel, max_acc and max_jerk
   trajectory_input.SetMaxVelocityVector(command.max_vel.data.data());
-  trajectory_input.SetMaxAccelerationVector(command.max_vel.data.data()); // implies we reach max_vel within 1sec (with max_jerk-->infinity)
-  KDL::Multiply(command.max_vel, 5.0, tmp);
-  trajectory_input.SetMaxJerkVector(tmp.data.data()); // implies we reach max_acc within 0.2sec
+  KDL::Multiply(command.max_vel, 2.0, tmp);
+  trajectory_input.SetMaxAccelerationVector(tmp.data.data()); // implies we reach max_vel within 0.5sec (with max_jerk-->infinity)
+  KDL::Multiply(command.max_vel, 2.0, tmp);
+  trajectory_input.SetMaxJerkVector(tmp.data.data()); // implies we reach max_acc within 0.5sec
 
   // reflexxes library: explicitedly enable all trajectory generators
   for(unsigned int i=0; i<chi.rows(); i++)
@@ -217,7 +223,7 @@ void control(KDL::JntArray& ydot,
     double hi = command.pos_hi(i);
 
     // adjust margin if range is too small
-    double ss = (hi - lo < 2*s) ? (hi - lo) / 2 : s;
+    double ss = (hi - lo < 2*s) ? (hi - lo) / 10 : s;
 
     if(value > hi - ss)
     {
@@ -304,7 +310,7 @@ void control(KDL::JntArray& ydot,
     double hi = command.pos_hi(i);
     double lo = command.pos_lo(i);
     double s = 0.05;
-    double ss = (hi - lo < 2*s) ? (hi - lo) / 2 : s;
+    double ss = (hi - lo < 2*s) ? (hi - lo) / 10 : s;
 
     // calculate ydot-control signal
     // note: if we are in 'reduced' constraint range the constraint function should not change  
