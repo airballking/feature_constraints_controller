@@ -33,6 +33,15 @@ void fromMsg(const constraint_msgs::Feature& msg, Feature& feat)
   fromMsg(msg.contact_direction, feat.contact_dir);
 }
 
+void fromMsg(const std::vector<constraint_msgs::Feature>& msg, std::vector<Feature>& features)
+{
+  assert(msg.size() == features.size());
+  for(unsigned int i=0; i<msg.size(); i++)
+  {
+    fromMsg(msg[i], features[i]);
+  }
+}
+
 Feature fromMsg(const constraint_msgs::Feature& msg)
 {
   return Feature(msg.name, fromMsg(msg.position), fromMsg(msg.direction), fromMsg(msg.contact_direction));

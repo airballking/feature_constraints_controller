@@ -24,6 +24,7 @@
 
 void fromMsg(const geometry_msgs::Vector3& msg, KDL::Vector& vec);
 void fromMsg(const constraint_msgs::Feature& msg, Feature& feat);
+void fromMsg(const std::vector<constraint_msgs::Feature>& msg, std::vector<Feature>& features);
 void fromMsg(const constraint_msgs::Constraint& msg, Constraint& c);
 void fromMsg(const std::vector<constraint_msgs::Constraint>& msg, std::vector<Constraint>& c);
 void fromMsg(const constraint_msgs::ConstraintConfig& msg, std::vector<Constraint>& cc);
