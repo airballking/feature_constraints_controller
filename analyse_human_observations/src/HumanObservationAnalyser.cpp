@@ -1,73 +1,47 @@
 #include <analyse_human_observations/HumanObservationAnalyser.h>
-#include <feature_constraints/FeatureConstraints.h>
-#include <feature_constraints/Conversions.h>
-#include <tf_conversions/tf_kdl.h>
+#include <map>
 
-HumanObservationAnalyser::HumanObservationAnalyser(ros::NodeHandle& nh)
+double calculate_observation(const std::string& feature_function, const KDL::Frame& frame,
+  const Feature& tool_feature, const Feature& world_feature)
 {
-  // advertise the topic under which we publish the analysis results
-  analysis_publisher_ = nh.advertise<human_observation_msgs::HumanObservationOutput>("analysis_output", 1);
+  // assemble auxiliary constraint to evaluate constraint
+  Constraint constraint;
+  constraint.setFunction(feature_function);
+  constraint.tool_feature = tool_feature;
+  constraint.object_feature = world_feature;
 
-  // subscribe to the topic which communicates the observations
-  human_observation_subscriber_ = nh.subscribe<human_observation_msgs::HumanObservationInput>
-    ("human_observation_input", 1, &HumanObservationAnalyser::observation_callback, this);
-
-  // set correspondences between constraint function names and constraint functions
-  Constraint::init();
+  // finally, make the call
+  return constraint(frame);
 }
 
-void HumanObservationAnalyser::observation_callback(const human_observation_msgs::HumanObservationInput::ConstPtr& msg)
+void HumanObservationAnalyser::calculate_observations(std::vector<std::string>& functions,
+  std::vector<std::string>& tool_feature_names, std::vector<std::string>& world_feature_names,
+  std::vector<double>& constraint_values)
 {
-  ROS_INFO("[HumanObservationAnalyser] Received %d observations...", ((int) msg->observations.size()));
+  // first, empty all return vectors
+  functions.clear();
+  tool_feature_names.clear();
+  world_feature_names.clear();
+  constraint_values.clear();
 
-  for(unsigned int i=0; i<msg->observations.size(); i++)
+  // create results for cross-product of tool_features_, object_features_ and 
+  // all available feature_functions
+  // push the results into the return vectors
+  for(unsigned int i=0; i<tool_features_.size(); i++)
   {
-    ROS_INFO("[HumanObservationAnalyser] Calculating constraints for timestamp %d...", i);
-    human_observation_msgs::HumanObservationOutput analysis_result;
-    analysis_result.index = i;
-    analyse_observation(msg->observations[i], analysis_result);
-    analysis_publisher_.publish(analysis_result);
-  }
-  ROS_INFO("[HumanObservationAnalyser] Finished.");
-}
-
-void HumanObservationAnalyser::analyse_observation(const human_observation_msgs::SingleHumanObservationInput& observation,
-    human_observation_msgs::HumanObservationOutput& analysis_result)
-{
-  assert(observation.tool_features.size() == observation.object_features.size());
-
-  // extract transform 
-  KDL::Frame T_tool_in_object;
-  tf::PoseMsgToKDL(observation.tool_pose_in_object_frame, T_tool_in_object);
-  
-  // reset result-message
-  analysis_result.constraint_values.clear();
-
-  // create results for cross-product of tool_features, object_features and 
-  // feature_functions, and push them into result-message
-  for(unsigned int i=0; i<observation.tool_features.size(); i++)
-  {
-    for(unsigned int j=0; j<observation.object_features.size(); j++)
+    for(unsigned int j=0; j<world_features_.size(); j++)
     {
       for(std::map<std::string, ConstraintFunc>::iterator it=Constraint::constraint_functions_.begin(); it!=Constraint::constraint_functions_.end(); ++it)
       {
         // make single analysis result
-        human_observation_msgs::SingleHumanObservationOutput single_result;
-        single_result.tool_feature_name = observation.tool_features[i].name;
-        single_result.object_feature_name = observation.object_features[j].name;
-        single_result.function_type = it->first;
+        double constraint_value = calculate_observation(it->first,
+          tool_pose_in_object_frame_, tool_features_[i], world_features_[i]);
 
-        // assemble auxiliary constraint to evaluate constraint
-        Constraint constraint;
-        constraint.setFunction(it->first);
-        fromMsg(observation.tool_features[i], constraint.tool_feature);
-        fromMsg(observation.object_features[j], constraint.object_feature);
-
-        // finally, make the call
-        single_result.constraint_value = constraint(T_tool_in_object);
-
-        // push it into the combined result message
-        analysis_result.constraint_values.push_back(single_result);
+        // save the result in the vectors
+        functions.push_back(it->first);
+        tool_feature_names.push_back(tool_features_[i].name);
+        world_feature_names.push_back(world_features_[i].name);
+        constraint_values.push_back(constraint_value);
       }      
     }
   }
