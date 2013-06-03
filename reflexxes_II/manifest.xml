@@ -1,0 +1,24 @@
+<package>
+  <description brief="reflexxes_II">
+
+     A plain ros-package wrapper around the
+     REFLEXXES Motion Library (type II) from
+     Torsten Kroeger. Accessed and downloaded 
+     from here on March, 7th 2013:
+
+     http://www.reflexxes.com/
+
+  </description>
+  <author>Georg Bartels (georg.bartels@cs.uni-bremen.de)</author>
+  <license>LGPL</license>
+  <review status="unreviewed" notes=""/>
+  <depend package="roscpp"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include"
+         lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lreflexxes_II"/>
+  </export>
+
+</package>
+
+

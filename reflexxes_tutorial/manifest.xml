@@ -1,0 +1,17 @@
+<package>
+  <description brief="reflexxes_tutorial">
+
+     A simple tutorial show-casing the usage of
+     the motion REFLEXESS type II library.
+
+  </description>
+  <author>Georg Bartels (georg.bartels@cs.uni-bremen.de)</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <depend package="roscpp"/>
+  <depend package="kdl"/>
+  <depend package="reflexxes_II"/>
+
+</package>
+
+
