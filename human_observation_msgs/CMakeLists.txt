@@ -3,6 +3,5 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
 rosbuild_init()
 rosbuild_genmsg()
-#uncomment if you have defined services
 rosbuild_gensrv()
 

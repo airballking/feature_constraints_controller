@@ -1,2 +1,0 @@
-int64 index
-SingleHumanObservationOutput[] constraint_values
