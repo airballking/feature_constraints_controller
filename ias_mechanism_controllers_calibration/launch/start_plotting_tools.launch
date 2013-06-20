@@ -1,9 +1,0 @@
-<launch>
-  <!-- start rxplot to generate the plot -->
-  <node name="live_plotter" type="rxplot" pkg="rxtools"
-   args="-p 25
-         -P
-         -l 'qdot_desired','qdot_actual'
-         -t 'l_shoulder_pan_joint'
-         /l_arm_vel/state/desired/velocities[0],/l_arm_vel/state/actual/velocities[0]"/>
-</launch>
