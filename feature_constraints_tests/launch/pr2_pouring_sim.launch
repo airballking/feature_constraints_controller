@@ -1,0 +1,8 @@
+<launch>
+  <!-- load setup and visualization without controllers -->
+  
+  <!-- load velocity controllers in stopped state -->
+
+  <!-- start feature controller for left arm -->
+
+</launch>
