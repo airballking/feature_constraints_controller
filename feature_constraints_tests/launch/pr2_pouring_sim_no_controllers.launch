@@ -13,10 +13,16 @@
   <node name="table_transform" pkg="tf" type="static_transform_publisher"
     args="0.1 0.0 -0.763  0 0 0 /pancake /table 100"/>
 
-
   <!-- start bottle visualization -->
   <node name="pancake_bottle_model" pkg="itasc" type="pancake_bottle_model_simple.py" args="/pancake_bottle"/>  
 
   <!-- start table and oven visualization -->
   <node name="baker_model" pkg="itasc" type="baker_model.py" args="/table"/>
+
+  <!-- start feature controller visualization -->
+  <node name="left_feature_viz" pkg="feature_constraints_utils" type="feature_viz.py" output="screen">
+    <param name="~base_frame" value="/pancake"/>
+    <remap from="constraint_config" to="/left_arm_feature_controller/constraint_config"/>
+  </node>
+
 </launch>
