@@ -1,3 +1,5 @@
+# string identifier for the controller used
+string controller_id
 # specify position ranges for the current constraint set
 # which was specified using ConstraintConfig.msg
 # NOTE: arrays in this and that message all need to have

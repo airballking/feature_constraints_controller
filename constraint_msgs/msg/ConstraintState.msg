@@ -1,7 +1,7 @@
 # The current state of a kinematic chain (joint angles)
 # intended usage as debug message from low-level
 Header header
-string name
+string controller_id
 
 geometry_msgs/Pose base_pose # pose of object w.r.t. header.frame_id
 geometry_msgs/Pose pose      # pose of tool w.r.t. base_pose
