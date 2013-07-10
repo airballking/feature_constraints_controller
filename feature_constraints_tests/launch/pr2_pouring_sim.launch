@@ -3,7 +3,7 @@
   <include file="$(find feature_constraints_tests)/launch/pr2_pouring_sim_no_controllers.launch"/>
  
   <!-- load velocity controllers in stopped state -->
-  <include file="$(find ias_mechanism_controllers)/launch/pr2_multi_vel_load.launch"/>
+  <include file="$(find ias_mechanism_controllers)/launch/pr2_multi_vel_started.launch"/>
 
   <!-- LOAD FILTER PARAMETERS FOR CONSTRAINT VELOCITY ESTIMATION -->
   <rosparam command="load" ns="/left_arm_feature_controller" file="$(find feature_constraints_standalone)/launch/constraint_velocity_filter_chain_params.yaml"/>
@@ -14,6 +14,7 @@
     <param name="~robot_base_frame" value="base_link"/>
     <param name="~map_frame" value="base_link"/>
     <param name="~base_frame" value="torso_lift_link"/> <!-- refactor into 'arm_base_frame' -->
+    <param name="~controller_id" value="pr2_left_arm_feature_controller"/>
     <param name="~joint_limit_avoidance" value="false"/>
     <remap from="~qdot" to="/l_arm_vel/command"/>
   </node>

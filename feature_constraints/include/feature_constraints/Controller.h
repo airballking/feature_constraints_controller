@@ -49,6 +49,11 @@ public:
 class Controller
 {
 public:
+  // string to identify this controller
+  std::string controller_id_;
+  // string to identify the current movement
+  std::string movement_id_;
+
   // input variables
   std::vector<Constraint> constraints;
   Ranges command, intermediate_command;

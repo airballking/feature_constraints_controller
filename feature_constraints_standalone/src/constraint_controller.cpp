@@ -139,6 +139,13 @@ bool FeatureConstraintsController::init(ros::NodeHandle &n)
   if(!joint_limit_avoidance_on_)
     ROS_WARN("Joint limit avoidance controller has been deactivated.");
 
+  // read controller-id from parameter server
+  if (!n.getParam("controller_id", feature_controller_.controller_id_)){
+    ROS_ERROR("No controller_id given in namespace: '%s')",
+              n.getNamespace().c_str());
+    return false;
+  }
+
   // resize size of message that reports the state of the joint limit avoidance
   resize(joint_avoidance_state_msg_, dof);
 
@@ -313,7 +320,15 @@ bool FeatureConstraintsController::load_frame_names(ros::NodeHandle& n)
 void FeatureConstraintsController::feature_constraints_callback(const constraint_msgs::ConstraintConfig::ConstPtr& msg)
 {
   boost::mutex::scoped_lock scoped_lock(tf_lookup_mutex_);
-  
+ 
+  // check if we should really process this message
+  if(feature_controller_.controller_id_.compare(msg->controller_id))
+  {
+    ROS_ERROR("Received constraint configuration with non-matching controller-id!: My id: %s, received id: %s Aborting...", 
+      feature_controller_.controller_id_.c_str(), msg->controller_id.c_str());
+    return;
+  }
+ 
   // get the number of constraints 
   unsigned int num_constraints = msg->constraints.size();
   if(num_constraints == 0)
@@ -417,6 +432,14 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
  */
 void FeatureConstraintsController::constraint_command_callback(const constraint_msgs::ConstraintCommand::ConstPtr& msg)
 {
+  // check if we should really process this message
+  if(feature_controller_.controller_id_.compare(msg->controller_id))
+  {
+    ROS_ERROR("Received constraint command with non-matching controller-id!: My id: %s, received id: %s Not starting...", 
+      feature_controller_.controller_id_.c_str(), msg->controller_id.c_str());
+    return;
+  }
+
   // TODO(Georg): this sanity check for correspondence of config and command is naive
   //              we already encountered race conditions with this
   if(configured_ && (msg->pos_lo.size() == feature_controller_.command.pos_lo.rows())){
