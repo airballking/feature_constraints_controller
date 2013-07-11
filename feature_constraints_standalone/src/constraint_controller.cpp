@@ -328,6 +328,9 @@ void FeatureConstraintsController::feature_constraints_callback(const constraint
       feature_controller_.controller_id_.c_str(), msg->controller_id.c_str());
     return;
   }
+
+  // remember the current movement-id
+  feature_controller_.movement_id_ = msg->movement_id;
  
   // get the number of constraints 
   unsigned int num_constraints = msg->constraints.size();
@@ -437,6 +440,14 @@ void FeatureConstraintsController::constraint_command_callback(const constraint_
   {
     ROS_ERROR("Received constraint command with non-matching controller-id!: My id: %s, received id: %s Not starting...", 
       feature_controller_.controller_id_.c_str(), msg->controller_id.c_str());
+    return;
+  }
+
+  // check if the movement-id of the command matches the one for which we got configured
+  if(feature_controller_.movement_id_ != msg->movement_id)
+  {
+    ROS_ERROR("Received constraint command with non-matching movement-id!: My id: %ld, received id: %ld Not starting...", 
+      feature_controller_.movement_id_, msg->movement_id);
     return;
   }
 

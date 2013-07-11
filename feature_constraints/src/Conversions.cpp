@@ -144,6 +144,7 @@ void toMsg(KDL::Jacobian& jac, std::vector<geometry_msgs::Twist>& jac_msg)
 void toMsg(Controller& c, constraint_msgs::ConstraintState& msg)
 {
   msg.controller_id = c.controller_id_;
+  msg.movement_id = c.movement_id_;
   toMsg(c.frame, msg.pose);
   toMsg(c.chi, msg.chi);
   toMsg(c.chi_dot, msg.chi_dot);
