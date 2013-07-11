@@ -1,7 +1,10 @@
 # The current state of a kinematic chain (joint angles)
 # intended usage as debug message from low-level
 Header header
+# string identifier for the controller used
 string controller_id
+# hash identifier for this motion
+int64 movement_id
 
 geometry_msgs/Pose base_pose # pose of object w.r.t. header.frame_id
 geometry_msgs/Pose pose      # pose of tool w.r.t. base_pose
