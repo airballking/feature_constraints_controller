@@ -7,7 +7,8 @@
   <author>Georg</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-
+  <depend package="roscpp"/>
+  <depend package="kdl"/>
 </package>
 
 
