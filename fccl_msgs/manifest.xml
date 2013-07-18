@@ -1,0 +1,14 @@
+<package>
+  <description brief="fccl_msgs">
+
+      Message definitions for interaction with feature constraints controllers.
+
+  </description>
+  <author>Georg</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes="All state messages are still in a state of flux. Also, I made later add Impedance or F/T control."/>
+  <depend package="std_msgs"/>
+
+</package>
+
+

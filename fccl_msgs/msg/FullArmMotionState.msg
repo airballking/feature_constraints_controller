@@ -1,0 +1,8 @@
+FeatureConstraintMotion end_effector_motion_command
+FeatureConstraintMotionState end_effector_motion_state
+
+FeatureConstraintMotion elbow_motion_command
+FeatureConstraintMotionState elbow_motion_state
+
+JointConstraintMotion joint_motion_command
+JointConstraintMotionState joint_motion_state
