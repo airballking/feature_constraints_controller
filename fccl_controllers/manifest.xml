@@ -9,6 +9,8 @@
   <review status="unreviewed" notes=""/>
   <depend package="roscpp"/>
   <depend package="kdl"/>
+
+  <rosdep name="gtest"/>
 </package>
 
 

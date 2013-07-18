@@ -26,7 +26,7 @@ public:
     frame_id_.reserve(STRING_SIZE);
   }
 
-  virtual ~Feature();
+  virtual ~Feature() {}
 
   // name/id of the feature given by knowledge base
   std::string name_;
@@ -54,7 +54,7 @@ public:
     frame_id_.reserve(STRING_SIZE);
   }
 
-  virtual ~PointFeature();
+  ~PointFeature() {}
 };
 
 class LineFeature: public Feature
@@ -73,7 +73,7 @@ public:
     frame_id_.reserve(STRING_SIZE);
   }
 
-  virtual ~LineFeature();
+  ~LineFeature() {}
 
   // direction-vector of the line feature
   KDL::Vector direction_;
@@ -95,7 +95,7 @@ public:
     frame_id_.reserve(STRING_SIZE);
   }
 
-  virtual ~PlaneFeature();
+  ~PlaneFeature() {}
 
   // normal-vector of the plane feature
   KDL::Vector normal_;
