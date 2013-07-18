@@ -1,0 +1,13 @@
+<package>
+  <description brief="fccl_controllers">
+
+     Implements the core of the feature constraints controller library: The feature functions and the controllers.
+
+  </description>
+  <author>Georg</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+
+</package>
+
+
