@@ -39,7 +39,15 @@ void Ranges::reset(double maximum_vel)
     min_vel(i) = -maximum_vel;
 }
 
+unsigned int Ranges::size() const
+{
+  assert(pos_lo.rows() == pos_hi.rows());
+  assert(pos_lo.rows() == weight.rows());
+  assert(pos_lo.rows() == max_vel.rows());
+  assert(pos_lo.rows() == min_vel.rows());
 
+  return pos_lo.rows();
+}
 bool Controller::prepare(std::string& filter_namespace)
 {
   int n = constraints.size();

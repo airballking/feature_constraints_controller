@@ -27,6 +27,7 @@ public:
   Ranges(int size=0);
   void resize(int size);
   void reset(double max_vel=1.0); //!< reset the command to do nothing
+  unsigned int size() const;
   KDL::JntArray pos_lo;  //!< min values for the constraints
   KDL::JntArray pos_hi;  //!< max values for the constraints
   KDL::JntArray weight;  //!< weights for the constraints (0|1)
