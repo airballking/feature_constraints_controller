@@ -512,6 +512,19 @@ void FeatureConstraintsController::update(double dt)
 
       // project interaction matrix from object-frame and to arm-base-frame because we want
       // to combine it with the robot_jacobian which we already transformed into arm-base-frame above
+      // NOTE: long explanation...
+      //       originally, the interaction matrix (H) maps from task-values-changes to twists.
+      //       hence, the columns of H can be interpreted as twists.
+      //       right now, these twists are expressed w.r.t. to the object frame.
+      //       plücker coordinate transformation X_A_B map such twists from frame B to frame A.
+      //       formula is: t_b = X_B_A * t_a.
+      //       now, we have the transpose of a twist in object frame and want to change the reference frame to the base of the arm.
+      //       in general, this means:
+      //       t_b.transpose = (X_B_A * t_a).transpose
+      //                     = t_a.transpose * X_B_A.transpose
+      //       I just looked at page 39 of the handbook of robotics and proved to myself that:
+      //       X_B_A.transpose = X_A_B
+      //       Therefore, we use post-multiplication with the inverse twist projection to change the reference frame of a transposed twist.
       H_feature_ = H_feature_*inverse_twist_proj(T_arm_in_base_.Inverse() * T_base_in_world_.Inverse() * T_object_in_world_);
       
       // assemble problem for solver out of interaction matrix and robot jacobian
