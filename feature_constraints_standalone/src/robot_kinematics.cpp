@@ -1,4 +1,4 @@
-#include <robot_kinematics.h>
+#include <feature_constraints_standalone/robot_kinematics.h>
 
 #include <urdf/model.h>
 

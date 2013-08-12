@@ -25,7 +25,7 @@
  */
 
 
-#include <constraint_controller.h>
+#include <feature_constraints_standalone/constraint_controller.h>
 #include <tf_conversions/tf_kdl.h>
 
 using namespace Eigen;

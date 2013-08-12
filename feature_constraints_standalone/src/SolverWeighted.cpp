@@ -5,7 +5,7 @@
  *      Author: bartelsg
  */
 
-#include <SolverWeighted.hpp>
+#include <feature_constraints_standalone/SolverWeighted.hpp>
 #include <ros/ros.h>
 #include <kdl/utilities/svd_eigen_HH.hpp>
 
