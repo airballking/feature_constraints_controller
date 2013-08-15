@@ -38,6 +38,8 @@ void printFrame(const KDL::Frame& frame)
 }
 
 std::map<std::string, ConstraintFunc> Constraint::constraint_functions_;
+std::map<ConstraintFunc, std::string> Constraint::constraint_function_names_;
+
 std::set<ConstraintFunc> Constraint::angular_constraints_;
 
 // some feature functions
@@ -324,9 +326,30 @@ void Constraint::init()
   constraint_functions_["direction"] = direction;
   constraint_functions_["angle"] = angle;
   constraint_functions_["null"] = null;
+  
+  constraint_function_names_[perpendicular] = "perpendicular";
+  constraint_function_names_[height] = "height";
+  constraint_function_names_[distance] = "distance";
+  constraint_function_names_[pointing_at] = "pointing_at";
+  constraint_function_names_[direction] = "direction";
+  constraint_function_names_[angle] = "angle";
+  constraint_function_names_[null] = "null";
 
   angular_constraints_.insert(angle);
 
   chain_rpy_init();
 }
 
+bool Equal(const Feature& f1, const Feature& f2)
+{
+  return ((f1.name.compare(f2.name) == 0) &&
+    Equal(f1.pos, f2.pos) && Equal(f1.dir, f2.dir));
+}
+
+bool Equal(const Constraint& c1, const Constraint& c2)
+{
+  return (c1.name.compare(c2.name) == 0) &&
+    (c1.getFunction().compare(c2.getFunction()) == 0) &&
+    Equal(c1.tool_feature, c2.tool_feature) &&
+    Equal(c1.object_feature, c2.object_feature);
+}

@@ -108,12 +108,18 @@ public:
   void setFunction(const std::string& functionName)
     { func = Constraint::constraint_functions_[functionName]; }
 
+  //! get the function name by the constraint function
+  const std::string& getFunction() const
+    { return Constraint::constraint_function_names_[this->func]; }
+
   //// group: static members
 
   //! set the possible constraint functions
   static void init();
   //! A mapping from constraint function name to the constraint function itself.
   static std::map<std::string, ConstraintFunc> constraint_functions_;
+  //! ... and back. 
+  static std::map<ConstraintFunc, std::string> constraint_function_names_;
   //! All these function compute angles and should be treated 'mod 2pi'
   static std::set<ConstraintFunc> angular_constraints_;
 };
@@ -221,5 +227,8 @@ void differentiateConstraints_3point(KDL::Jacobian& Ht,
                                      double dd,
                                      KDL::JntArray& tmp,
                                      KDL::JntArray& tmp2);
+
+bool Equal(const Feature& f1, const Feature& f2);
+bool Equal(const Constraint& f1, const Constraint& f2);
 
 #endif //FEATURE_CONSTRAINTS_FEATURE_CONSTRAINTS_H
