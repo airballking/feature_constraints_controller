@@ -48,6 +48,16 @@ unsigned int Ranges::size() const
 
   return pos_lo.rows();
 }
+
+bool Equal(const Ranges& r1, const Ranges& r2)
+{
+  return Equal(r1.pos_lo, r2.pos_lo) &&
+    Equal(r1.pos_hi, r2.pos_hi) &&
+    Equal(r1.weight, r2.weight) &&
+    Equal(r1.max_vel, r2.max_vel) &&
+    Equal(r1.min_vel, r2.min_vel);
+}
+
 bool Controller::prepare(std::string& filter_namespace)
 {
   int n = constraints.size();

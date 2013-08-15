@@ -35,6 +35,7 @@ public:
   KDL::JntArray min_vel; //!< min velocities for the constraints
 };
 
+bool Equal(const Ranges& r1, const Ranges& r2);
 
 //////////////////////////////////////////////////////////////////////////////
 
