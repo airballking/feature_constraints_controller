@@ -85,7 +85,7 @@ int Analysis::rank(const std::vector<Constraint> &constraints,
     analyzeH(Ht_, J_, lambda_, eps);
 
     int rank=0;
-    for(int i=0; i < size; i++)
+    for(int i=0; i < size && i < 6; i++)
       if(lambda_(i) > eps)
         rank++;
 

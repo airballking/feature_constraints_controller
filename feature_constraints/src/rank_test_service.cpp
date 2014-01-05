@@ -9,7 +9,7 @@
 bool service_callback(constraint_msgs::ConstraintsRank::Request& request, constraint_msgs::ConstraintsRank::Response&  answer)
 {
   Analysis analyzer(request.constraints.size());
-  answer.rank = analyzer.rank(fromMsg(request.constraints), 0.01, 1e-6);
+  answer.rank = analyzer.rank(fromMsg(request.constraints), 0.0001, 1e-6);
   return true;
 }
 
