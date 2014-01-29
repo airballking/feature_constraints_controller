@@ -456,8 +456,10 @@ if __name__ == "__main__":
   # base_frame is an arbitrary frame in which the markers are displayed
   # the marker locations are defined by the feature frame_id's!
   base_frame_id = rospy.get_param('~base_frame', 'baker')
+  line_width = rospy.get_param('~line_width', 0.02)
   rospy.loginfo('base frame: ' + base_frame_id)
   _config_['frame_id'] = base_frame_id
+  _config_['line_width'] = line_width
   constraint_display = ConstraintDisplay(base_frame_id)
 
   sub = rospy.Subscriber('/constraint_config', ConstraintConfig, callback)
