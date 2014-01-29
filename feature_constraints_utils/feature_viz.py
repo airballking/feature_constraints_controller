@@ -364,7 +364,17 @@ constraint_functions = {
   'height':    lambda (f_t, f_w) : Len(Proj_A(D(f_t, f_w), f_w)),
   'perpendicular':  lambda (f_t, f_w) : Cos(f_t, f_w),
   'pointing_at':    lambda (f_t, f_w) : Cos(Proj_P(D(f_t, f_w), f_w),
-                                            Proj_P(f_t, f_w))
+                                            Proj_P(f_t, f_w)),
+  'distance':  lambda (f_t, f_w) : Len(Proj_P(D(f_t, f_w), f_w)),
+
+  'Dir':  lambda (f_t, f_w) : Cos(f_w, f_w),
+  'Dist': lambda (f_t, f_w) : Cos(D(f_t, f_w), D(f_t, f_w)),
+  # NOTE: the placement heuristics for Proj_A and Proj_P is rather specific
+  # for 'distance' and 'height'
+  'Proj_A': lambda (f_t, f_w) : Len(Proj_A(f_t, f_w)),
+  'Proj_P': lambda (f_t, f_w) : Len(Proj_P(f_t, f_w)),
+  'Len':  lambda (f_t, f_w) : Len(D(f_t, f_w)),
+  'Cos':  lambda (f_t, f_w) : Cos(f_t, f_w),
   }
 
 #TODO: introduce the function At(f1, f2) which returns
