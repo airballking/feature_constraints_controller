@@ -469,5 +469,9 @@ if __name__ == "__main__":
     _config_['marker_id'] = 0
     for m in constraint_display.show():
       marker.publish(m)
-    rate.sleep()
+
+    try:
+      rate.sleep()
+    except rospy.exceptions.ROSInterruptException as e:
+      constraint_display.listener.clear()
 
