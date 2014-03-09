@@ -25,6 +25,9 @@ tool_forward   = Feature('spatula', 'forward', Feature.LINE,
 up             = Feature('pancake', 'plane', Feature.PLANE,
                    Vector3(0,0,0), Vector3(0,0,0.3), Vector3(1,0,0))
 
+tool_normal    = Feature('spatula', 'blade_normal', Feature.PLANE,
+                   Vector3(0,0,0), Vector3(0.1,0,0), Vector3(0,0,0))
+
 c = []
 
 c.append(Constraint('angle', 'angle',   tool_center_right, up))
@@ -34,6 +37,9 @@ c.append(Constraint('height', 'height', tool_center, up))
 c.append(Constraint('align_front', 'perpendicular', tool_front_rev, up))
 c.append(Constraint('align_side',  'perpendicular', tool_side,      up))
 c.append(Constraint('pointing_at', 'pointing_at',   tool_forward,   up))
+
+#for turning
+#c.append(Constraint('turned', 'perpendicular', tool_normal, up))
 
 rospy.init_node('constraint_config')
 pub = rospy.Publisher('/constraint_config', ConstraintConfig, latch=True)
