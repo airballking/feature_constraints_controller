@@ -28,7 +28,6 @@ colors = [ColorRGBA(0.6, 0.3, 0.3, 1),
 def axis_marker(tw, id = 0, ns = 'twist'):
   """ make a marker message showing the instantaneous
       rotation axis of a twist message"""
-  min_length = 0.03
 
   t = kdl.Twist(kdl.Vector(tw.linear.x,  tw.linear.y,  tw.linear.z),
                 kdl.Vector(tw.angular.x, tw.angular.y, tw.angular.z))
@@ -66,6 +65,9 @@ def axis_marker(tw, id = 0, ns = 'twist'):
   elif lr < min_length:
     direction = direction / lr * min_length
     m = marker.align(m, location - direction, location + direction, 0.02)
+  elif lr > max_length:
+    direction = direction / lr * max_length
+    m = marker.align(m, location - direction, location + direction, 0.02) 
   else:
     #BAH! How do I make this better?
     m = marker.align(m, location - direction, location + direction, 0.02)
@@ -123,6 +125,10 @@ ref_point = rospy.get_param('~ref_point', ref_frame)
 
 rospy.loginfo('ref_frame=%s, ref_point=%s, target_frame=%s'
                % (ref_frame, ref_point, target_frame))
+
+
+min_length = rospy.get_param('~min_length', 0.03)
+max_length = rospy.get_param('~max_length', 0.30)
 
 use_colors = rospy.get_param('~colors', True)
 marker_id = rospy.get_param('marker_id', 1)

@@ -1,0 +1,15 @@
+<launch>
+
+ <node name="robot_jac" type="robot_jac.py" pkg="motion_viz">
+  <remap from="constraint_state" to="/feature_controller/constraint_state"/>
+ </node>
+
+ <node name="twist_viz" type="twist_viz.py" pkg="motion_viz">
+  <remap from="twist" to="/jacobian"/>
+  <param name="ref_frame" value="base_link"/>
+  <param name="ref_point" value="base_link"/>
+  <param name="target_frame" value="left_arm_4_link"/>
+  <param name="max_length" value="0.3"/>
+ </node>
+
+</launch>
