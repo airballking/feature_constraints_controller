@@ -292,11 +292,11 @@ class Cos:
   def compute(self):
     vec1 = self.vec1.compute()
     vec2 = self.vec2.compute()
-    denom = vec1.Norm() * vec2.Norm()
+    denom = vec1.dir.Norm() * vec2.dir.Norm()
     if denom == 0:
       return 0
     else:
-      return kdl.dot(vec1, vec2) / denom
+      return kdl.dot(vec1.dir, vec2.dir) / denom
 
   def show(self, style=NORMAL):
     global _config_
